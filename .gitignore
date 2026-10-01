@@ -1,6 +1,5 @@
 node_modules/
 build/
-dist/
 coverage/
 .DS_Store
 *.log
@@ -13,4 +12,3 @@ data/*.json
 storage/
 *.sqlite
 slips_backup.json
-
