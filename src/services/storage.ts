@@ -3,6 +3,7 @@ import { AddaProfile, LoadSlip, WhatsAppGroup, AdminStats } from '../types';
 const STORAGE_KEYS = {
   ADDA_PROFILE: 'pkcargolink_adda_profile_v2',
   SLIPS: 'pkcargolink_slips_v2',
+  PERMANENT_USER_SLIPS: 'pkcargolink_permanent_user_slips',
   GROUPS: 'pkcargolink_groups_v2',
   IS_LOGGED_IN: 'pkcargolink_is_logged_in_v2',
   CURRENT_USER_PHONE: 'pkcargolink_user_phone_v2',
@@ -207,13 +208,30 @@ export const StorageService = {
     return localStorage.getItem(STORAGE_KEYS.CURRENT_USER_PHONE) || '0300-7312345';
   },
 
-  // Slips Management
+  // Slips Management with Permanent Preservation across Updates
   getAllSlips(): LoadSlip[] {
+    let permanentSlips: LoadSlip[] = [];
+    try {
+      const permData = localStorage.getItem(STORAGE_KEYS.PERMANENT_USER_SLIPS);
+      if (permData) {
+        permanentSlips = JSON.parse(permData);
+      }
+    } catch {
+      // Ignore
+    }
+
     try {
       const data = localStorage.getItem(STORAGE_KEYS.SLIPS);
       if (data) {
         const parsed: LoadSlip[] = JSON.parse(data);
-        return parsed.map((s) => ({
+        // Merge permanent user slips with parsed slips, ensuring user slips are never deleted
+        const combined = [...permanentSlips];
+        parsed.forEach((p) => {
+          if (!combined.some((c) => c.id === p.id)) {
+            combined.push(p);
+          }
+        });
+        return combined.map((s) => ({
           ...s,
           addaLogo: s.addaLogo || '/adda-logo.png',
         }));
@@ -221,13 +239,22 @@ export const StorageService = {
     } catch (e) {
       console.error('Failed reading slips', e);
     }
-    // Seed initial realistic Pakistani loads
-    const seeded = INITIAL_SLIPS.map((s) => ({
+
+    // Seed initial realistic Pakistani loads combined with any permanent user slips
+    const seeded = [...permanentSlips];
+    INITIAL_SLIPS.forEach((initSlip) => {
+      if (!seeded.some((s) => s.id === initSlip.id)) {
+        seeded.push(initSlip);
+      }
+    });
+
+    const normalized = seeded.map((s) => ({
       ...s,
       addaLogo: s.addaLogo || '/adda-logo.png',
     }));
-    localStorage.setItem(STORAGE_KEYS.SLIPS, JSON.stringify(seeded));
-    return seeded;
+
+    localStorage.setItem(STORAGE_KEYS.SLIPS, JSON.stringify(normalized));
+    return normalized;
   },
 
   getSlipById(id: string): LoadSlip | null {
@@ -238,13 +265,29 @@ export const StorageService = {
 
   createSlip(slip: LoadSlip): LoadSlip {
     const slips = this.getAllSlips();
-    const updated = [slip, ...slips];
+    const updated = [slip, ...slips.filter((s) => s.id !== slip.id)];
+    
+    // Save in general list
     try {
       localStorage.setItem(STORAGE_KEYS.SLIPS, JSON.stringify(updated));
     } catch (e) {
       console.error('Failed saving slip', e);
     }
-    // Also sync to backend server for WhatsApp OpenGraph previews
+
+    // Also ALWAYS save in dedicated permanent user storage (immune to resets / updates)
+    try {
+      let permanent: LoadSlip[] = [];
+      const permData = localStorage.getItem(STORAGE_KEYS.PERMANENT_USER_SLIPS);
+      if (permData) {
+        permanent = JSON.parse(permData);
+      }
+      permanent = [slip, ...permanent.filter((s) => s.id !== slip.id)];
+      localStorage.setItem(STORAGE_KEYS.PERMANENT_USER_SLIPS, JSON.stringify(permanent));
+    } catch (e) {
+      console.error('Failed saving permanent slip', e);
+    }
+
+    // Sync to backend server/Hostinger for permanent persistence across devices
     if (typeof fetch !== 'undefined') {
       fetch('/api/slips', {
         method: 'POST',
@@ -261,6 +304,23 @@ export const StorageService = {
     if (index !== -1) {
       slips[index] = slip;
       localStorage.setItem(STORAGE_KEYS.SLIPS, JSON.stringify(slips));
+
+      // Also update in permanent storage
+      try {
+        let permanent: LoadSlip[] = [];
+        const permData = localStorage.getItem(STORAGE_KEYS.PERMANENT_USER_SLIPS);
+        if (permData) {
+          permanent = JSON.parse(permData);
+          const pIdx = permanent.findIndex((s) => s.id === slip.id);
+          if (pIdx !== -1) {
+            permanent[pIdx] = slip;
+          } else {
+            permanent.unshift(slip);
+          }
+          localStorage.setItem(STORAGE_KEYS.PERMANENT_USER_SLIPS, JSON.stringify(permanent));
+        }
+      } catch {}
+
       if (typeof fetch !== 'undefined') {
         fetch('/api/slips', {
           method: 'POST',
@@ -274,6 +334,82 @@ export const StorageService = {
   deleteSlip(id: string): void {
     const slips = this.getAllSlips().filter((s) => s.id !== id);
     localStorage.setItem(STORAGE_KEYS.SLIPS, JSON.stringify(slips));
+
+    try {
+      const permData = localStorage.getItem(STORAGE_KEYS.PERMANENT_USER_SLIPS);
+      if (permData) {
+        const permanent: LoadSlip[] = JSON.parse(permData);
+        const filtered = permanent.filter((s) => s.id !== id);
+        localStorage.setItem(STORAGE_KEYS.PERMANENT_USER_SLIPS, JSON.stringify(filtered));
+      }
+    } catch {}
+  },
+
+  /**
+   * Syncs with Hostinger server database so driver and manager see loads across all devices
+   */
+  async syncWithServer(): Promise<LoadSlip[]> {
+    try {
+      if (typeof fetch !== 'undefined') {
+        const res = await fetch('/api/slips');
+        if (res.ok) {
+          const serverSlips: LoadSlip[] = await res.json();
+          if (Array.isArray(serverSlips) && serverSlips.length > 0) {
+            const currentSlips = this.getAllSlips();
+            const merged = [...currentSlips];
+            
+            serverSlips.forEach((s) => {
+              const exists = merged.findIndex((m) => m.id === s.id);
+              if (exists !== -1) {
+                merged[exists] = s;
+              } else {
+                merged.unshift(s);
+              }
+            });
+
+            localStorage.setItem(STORAGE_KEYS.SLIPS, JSON.stringify(merged));
+            return merged;
+          }
+        }
+      }
+    } catch {
+      // Fallback to local
+    }
+    return this.getAllSlips();
+  },
+
+  /**
+   * Exports full JSON backup of slips and adda profile for safety
+   */
+  exportSlipsBackup(): string {
+    const backup = {
+      version: '2.0',
+      exportedAt: new Date().toISOString(),
+      profile: this.getAddaProfile(),
+      slips: this.getAllSlips(),
+      groups: this.getWhatsAppGroups(),
+    };
+    return JSON.stringify(backup, null, 2);
+  },
+
+  /**
+   * Imports JSON backup
+   */
+  importSlipsBackup(jsonText: string): boolean {
+    try {
+      const parsed = JSON.parse(jsonText);
+      if (parsed.profile) {
+        this.saveAddaProfile(parsed.profile);
+      }
+      if (Array.isArray(parsed.slips)) {
+        parsed.slips.forEach((s: LoadSlip) => {
+          this.createSlip(s);
+        });
+      }
+      return true;
+    } catch {
+      return false;
+    }
   },
 
   incrementSlipViews(id: string): void {

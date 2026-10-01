@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   ShieldCheck, 
   Users, 
@@ -14,9 +14,12 @@ import {
   Eye,
   RefreshCw,
   Search,
-  Globe
+  Globe,
+  Download,
+  Upload
 } from 'lucide-react';
 import { LoadSlip, AdminStats, AddaProfile } from '../types';
+import { StorageService } from '../services/storage';
 
 interface AdminPanelViewProps {
   stats: AdminStats;
@@ -286,6 +289,65 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
             </button>
           </div>
         </form>
+      </div>
+
+      {/* Persistent Backup & Protection Box */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-4">
+        <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+          <ShieldCheck className="w-5 h-5 text-emerald-600" />
+          <h3 className="font-bold text-slate-900 text-sm sm:text-base">
+            ڈیٹا محفوظ و بیک اپ سسٹم (Hostinger & GitHub Safe Backup)
+          </h3>
+        </div>
+
+        <p className="text-xs text-slate-600 leading-relaxed">
+          آپ کا ڈیٹا محفوظ ہے اور گٹ ہب سے ہوسٹنگر پر کوڈ اپڈیٹ کرنے سے کبھی ڈیلیٹ نہیں ہوگا۔ مزید حفاظت کے لیے آپ جب چاہیں تمام لوڈ سلپس کا بیک اپ ایک کلک سے ڈاؤن لوڈ کر سکتے ہیں یا پرانا بیک اپ ری اسٹور کر سکتے ہیں۔
+        </p>
+
+        <div className="flex flex-wrap gap-3 pt-1">
+          <button
+            onClick={() => {
+              const json = StorageService.exportSlipsBackup();
+              const blob = new Blob([json], { type: 'application/json' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `pkcargolink_backup_${new Date().toISOString().slice(0, 10)}.json`;
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+            className="inline-flex items-center gap-2 bg-[#0B2545] hover:bg-[#163a66] text-white font-bold text-xs sm:text-sm py-2.5 px-4 rounded-xl shadow-xs transition"
+          >
+            <Download className="w-4 h-4 text-emerald-300" />
+            <span>تمام سلپس کا بیک اپ ڈاؤن لوڈ کریں</span>
+          </button>
+
+          <label className="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs sm:text-sm py-2.5 px-4 rounded-xl cursor-pointer border border-slate-300 transition">
+            <Upload className="w-4 h-4 text-slate-600" />
+            <span>بیک اپ فائل ری اسٹور کریں</span>
+            <input
+              type="file"
+              accept=".json"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onload = (event) => {
+                    const text = event.target?.result as string;
+                    if (text && StorageService.importSlipsBackup(text)) {
+                      alert('بیک اپ کامیابی سے بحال ہو گیا ہے!');
+                      window.location.reload();
+                    } else {
+                      alert('فائل درست نہیں ہے، براہ کرم درست بیک اپ فائل منتخب کریں۔');
+                    }
+                  };
+                  reader.readAsText(file);
+                }
+              }}
+            />
+          </label>
+        </div>
       </div>
 
     </div>

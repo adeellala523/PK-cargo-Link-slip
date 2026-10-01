@@ -60,13 +60,28 @@ export default function App() {
           setCurrentTab('slip-detail');
           StorageService.incrementSlipViews(found.id);
         } else {
-          // If not found in local state, still set verification view
-          setCurrentTab('verify');
+          // If not in local state yet, immediately sync with Hostinger server
+          StorageService.syncWithServer().then((latestSlips) => {
+            setSlips(latestSlips);
+            const serverFound = latestSlips.find((s) => s.id.trim().toLowerCase() === targetId!.trim().toLowerCase());
+            if (serverFound) {
+              setActiveSlip(serverFound);
+              setCurrentTab('slip-detail');
+              StorageService.incrementSlipViews(serverFound.id);
+            } else {
+              setCurrentTab('verify');
+            }
+          });
         }
       }
     };
 
     handleUrlRoute();
+    StorageService.syncWithServer().then((synced) => {
+      if (synced && synced.length > 0) {
+        setSlips(synced);
+      }
+    });
     window.addEventListener('popstate', handleUrlRoute);
     return () => window.removeEventListener('popstate', handleUrlRoute);
   }, []);

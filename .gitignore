@@ -6,3 +6,11 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Preserve user uploaded loads and database across Git deployments
+data/
+data/*.json
+storage/
+*.sqlite
+slips_backup.json
+
