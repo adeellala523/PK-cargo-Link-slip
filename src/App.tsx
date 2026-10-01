@@ -85,6 +85,7 @@ export default function App() {
         setSlips(synced);
       }
     });
+    StorageService.syncUsersWithServer();
     window.addEventListener('popstate', handleUrlRoute);
     return () => window.removeEventListener('popstate', handleUrlRoute);
   }, []);

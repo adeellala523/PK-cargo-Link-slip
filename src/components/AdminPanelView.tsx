@@ -19,7 +19,8 @@ import {
   Ban,
   Clock,
   ExternalLink,
-  ChevronRight
+  ChevronRight,
+  RefreshCw
 } from 'lucide-react';
 import { LoadSlip, AdminStats, AddaProfile, UserAccount, PaymentSettings } from '../types';
 import { StorageService } from '../services/storage';
@@ -69,21 +70,36 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
     setTimeout(() => setSettingsSavedToast(false), 3000);
   };
 
-  const handleApproveUser = (userId: string) => {
-    StorageService.updateUserStatus(userId, 'active', 30);
-    setUsers(StorageService.getUsers());
-  };
-
-  const handleLockUser = (userId: string) => {
-    StorageService.updateUserStatus(userId, 'locked_expired', 0);
-    setUsers(StorageService.getUsers());
-  };
-
-  const handleDeleteUser = (userId: string) => {
-    if (confirm('کیا آپ واقعی اس صارف کا اکاؤنٹ ڈیلیٹ کرنا چاہتے ہیں؟')) {
-      StorageService.deleteUser(userId);
-      setUsers(StorageService.getUsers());
+  // Sync users with server on open or tab change
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      StorageService.syncUsersWithServer().then((u) => setUsers(u));
     }
+  }, [isAuthenticated, activeTab]);
+
+  const handleApproveUser = async (userId: string) => {
+    await StorageService.updateUserStatus(userId, 'active', 30);
+    const updated = await StorageService.syncUsersWithServer();
+    setUsers(updated);
+  };
+
+  const handleLockUser = async (userId: string) => {
+    await StorageService.updateUserStatus(userId, 'locked_expired', 0);
+    const updated = await StorageService.syncUsersWithServer();
+    setUsers(updated);
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (confirm('کیا آپ واقعی اس صارف کا اکاؤنٹ ڈیلیٹ کرنا چاہتے ہیں؟')) {
+      await StorageService.deleteUser(userId);
+      const updated = await StorageService.syncUsersWithServer();
+      setUsers(updated);
+    }
+  };
+
+  const handleRefreshUsers = async () => {
+    const updated = await StorageService.syncUsersWithServer();
+    setUsers(updated);
   };
 
   const filteredSlips = slips.filter(
@@ -229,14 +245,26 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
               </p>
             </div>
 
-            <div className="relative w-full sm:w-64">
-              <input
-                type="text"
-                value={searchFilter}
-                onChange={(e) => setSearchFilter(e.target.value)}
-                placeholder="تلاش کریں (فون، اڈا، شہر)..."
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:bg-white outline-none"
-              />
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={handleRefreshUsers}
+                className="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer"
+                title="سرور سے تازہ ترین یوزرز لوڈ کریں"
+              >
+                <RefreshCw className="w-3.5 h-3.5 text-emerald-600" />
+                <span>ریفرش کریں</span>
+              </button>
+
+              <div className="relative w-full sm:w-64">
+                <input
+                  type="text"
+                  value={searchFilter}
+                  onChange={(e) => setSearchFilter(e.target.value)}
+                  placeholder="تلاش کریں (فون، اڈا، شہر)..."
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:bg-white outline-none"
+                />
+              </div>
             </div>
           </div>
 

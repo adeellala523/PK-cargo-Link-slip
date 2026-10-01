@@ -102,10 +102,25 @@ app.get('/api/users-sync', (_req: Request, res: Response) => {
 });
 
 app.post('/api/users-sync', (req: Request, res: Response) => {
+  const current = getStoredUsers();
+  const map = new Map<string, any>();
+  current.forEach((u: any) => {
+    if (u.phone) map.set(u.phone.replace(/[^0-9]/g, ''), u);
+  });
+
   if (Array.isArray(req.body)) {
-    saveStoredUsers(req.body);
+    req.body.forEach((u: any) => {
+      if (u && u.phone) {
+        map.set(u.phone.replace(/[^0-9]/g, ''), u);
+      }
+    });
+  } else if (req.body && req.body.phone) {
+    map.set(req.body.phone.replace(/[^0-9]/g, ''), req.body);
   }
-  res.json({ success: true });
+
+  const updated = Array.from(map.values());
+  saveStoredUsers(updated);
+  res.json({ success: true, count: updated.length, users: updated });
 });
 
 // Payment Settings API

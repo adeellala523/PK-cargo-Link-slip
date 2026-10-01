@@ -96,15 +96,54 @@ export const StorageService = {
     return [];
   },
 
-  saveUsers(users: UserAccount[]): void {
+  async syncUsersWithServer(): Promise<UserAccount[]> {
+    try {
+      if (typeof fetch !== 'undefined') {
+        const res = await fetch('/api/users-sync');
+        if (res.ok) {
+          const serverUsers: UserAccount[] = await res.json();
+          if (Array.isArray(serverUsers)) {
+            const localUsers = this.getUsers();
+            const map = new Map<string, UserAccount>();
+            // Add local users
+            localUsers.forEach((u) => {
+              if (u.phone) {
+                map.set(u.phone.replace(/[^0-9]/g, ''), u);
+              }
+            });
+            // Merge server users (server is the single source of truth across browser resets)
+            serverUsers.forEach((u) => {
+              if (u.phone) {
+                const k = u.phone.replace(/[^0-9]/g, '');
+                if (map.has(k)) {
+                  // Merge fields, prioritize server status/approval
+                  map.set(k, { ...map.get(k)!, ...u });
+                } else {
+                  map.set(k, u);
+                }
+              }
+            });
+            const merged = Array.from(map.values());
+            localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(merged));
+            return merged.map((u) => this.checkUserSubscriptionStatus(u));
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Error syncing users with server', e);
+    }
+    return this.getUsers();
+  },
+
+  async saveUsers(users: UserAccount[]): Promise<void> {
     try {
       localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
       if (typeof fetch !== 'undefined') {
-        fetch('/api/users-sync', {
+        await fetch('/api/users-sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(users),
-        }).catch(() => {});
+        });
       }
     } catch (e) {
       console.error('Error saving users', e);
@@ -129,7 +168,7 @@ export const StorageService = {
     return user;
   },
 
-  registerUser(payload: {
+  async registerUser(payload: {
     phone: string;
     password: string;
     addaName: string;
@@ -142,7 +181,7 @@ export const StorageService = {
     contact2?: string;
     paymentScreenshot?: string;
     paymentTransactionId?: string;
-  }): { success: boolean; message: string; user?: UserAccount; requiresPayment?: boolean } {
+  }): Promise<{ success: boolean; message: string; user?: UserAccount; requiresPayment?: boolean }> {
     const cleanPhone = payload.phone.trim();
     if (!cleanPhone) {
       return { success: false, message: 'موبائل نمبر درج کرنا لازمی ہے۔' };
@@ -153,6 +192,9 @@ export const StorageService = {
     if (!payload.addaName.trim()) {
       return { success: false, message: 'اڈا کا نام درج کرنا لازمی ہے۔' };
     }
+
+    // Sync from server first to check existing accounts accurately
+    await this.syncUsersWithServer();
 
     const existing = this.getUserByPhone(cleanPhone);
     if (existing) {
@@ -190,7 +232,7 @@ export const StorageService = {
 
     const users = this.getUsers();
     users.unshift(newUser);
-    this.saveUsers(users);
+    await this.saveUsers(users);
 
     // If payment is NOT required, activate session immediately
     if (!isPaymentRequired) {
@@ -222,9 +264,16 @@ export const StorageService = {
     };
   },
 
-  loginUser(phone: string, password: string): { success: boolean; message: string; user?: UserAccount; status?: string } {
+  async loginUser(phone: string, password: string): Promise<{ success: boolean; message: string; user?: UserAccount; status?: string }> {
     const cleanPhone = phone.trim();
-    const user = this.getUserByPhone(cleanPhone);
+    let user = this.getUserByPhone(cleanPhone);
+
+    // If user not in local storage (e.g. Incognito or fresh session), sync from server immediately!
+    if (!user) {
+      await this.syncUsersWithServer();
+      user = this.getUserByPhone(cleanPhone);
+    }
+
     if (!user) {
       return { success: false, message: 'یہ موبائل نمبر رجسٹرڈ نہیں ہے۔ پہلے نیا اکاؤنٹ بنائیں!' };
     }
@@ -294,11 +343,11 @@ export const StorageService = {
     }
   },
 
-  updateUserStatus(
+  async updateUserStatus(
     userId: string, 
     status: 'active' | 'pending_payment' | 'locked_expired', 
     extendDays: number = 30
-  ): void {
+  ): Promise<void> {
     const users = this.getUsers();
     const idx = users.findIndex((u) => u.id === userId);
     if (idx !== -1) {
@@ -309,7 +358,7 @@ export const StorageService = {
         users[idx].subscriptionStartedAt = now.toISOString();
         users[idx].subscriptionExpiresAt = new Date(now.getTime() + extendDays * 24 * 3600 * 1000).toISOString();
       }
-      this.saveUsers(users);
+      await this.saveUsers(users);
 
       // If updating currently logged in user
       const current = this.getCurrentUser();
@@ -319,9 +368,9 @@ export const StorageService = {
     }
   },
 
-  deleteUser(userId: string): void {
+  async deleteUser(userId: string): Promise<void> {
     const users = this.getUsers().filter((u) => u.id !== userId);
-    this.saveUsers(users);
+    await this.saveUsers(users);
   },
 
   // -------------------------------------------------------------

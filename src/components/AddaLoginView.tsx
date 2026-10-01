@@ -51,10 +51,16 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
   const [showPaymentStep, setShowPaymentStep] = useState(false);
   const [paymentScreenshot, setPaymentScreenshot] = useState('');
   const [paymentTxId, setPaymentTxId] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const paymentSettings = StorageService.getPaymentSettings();
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  // Sync users from server immediately when login view opens
+  React.useEffect(() => {
+    StorageService.syncUsersWithServer();
+  }, []);
+
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
     setLockedReason(null);
@@ -68,17 +74,24 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
       return;
     }
 
-    const res = StorageService.loginUser(loginPhone, loginPassword);
-    if (res.success && res.user) {
-      onLoginSuccess(res.user.phone);
-    } else {
-      if (res.status === 'locked_expired') {
-        setLockedReason('آپ کا 1 ماہ کا پلان ختم ہو چکا ہے۔ ڈیٹا لاک ہے۔ براہ کرم تجدید کے لیے پیمنٹ کریں۔');
-      } else if (res.status === 'pending_payment') {
-        setLockedReason('آپ کے اکاؤنٹ کی پیمنٹ تصدیق زیر التوا ہے۔ ایڈمن کی منظوری کے بعد اکاؤنٹ فعال ہوگا۔');
+    setIsLoading(true);
+    try {
+      const res = await StorageService.loginUser(loginPhone, loginPassword);
+      if (res.success && res.user) {
+        onLoginSuccess(res.user.phone);
       } else {
-        setLoginError(res.message);
+        if (res.status === 'locked_expired') {
+          setLockedReason('آپ کا 1 ماہ کا پلان ختم ہو چکا ہے۔ ڈیٹا لاک ہے۔ براہ کرم تجدید کے لیے پیمنٹ کریں۔');
+        } else if (res.status === 'pending_payment') {
+          setLockedReason('آپ کے اکاؤنٹ کی پیمنٹ تصدیق زیر التوا ہے۔ ایڈمن کی منظوری کے بعد اکاؤنٹ فعال ہوگا۔');
+        } else {
+          setLoginError(res.message);
+        }
       }
+    } catch {
+      setLoginError('سرور سے رابطہ نہ ہو سکا۔ انٹرنیٹ چیک کریں۔');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -97,7 +110,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
     }
   };
 
-  const handleRegisterSubmit = (e: React.FormEvent) => {
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setRegError('');
     setRegSuccess('');
@@ -121,29 +134,36 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
       return;
     }
 
-    const res = StorageService.registerUser({
-      addaName: regAddaName,
-      managerName: regManagerName,
-      city: regCity,
-      phone: regPhone,
-      password: regPassword,
-      address: regAddress,
-      whatsappNumber: regWhatsapp || regPhone,
-      logoUrl: regLogoUrl || '/adda-logo.png',
-      paymentScreenshot: paymentScreenshot,
-      paymentTransactionId: paymentTxId,
-    });
+    setIsLoading(true);
+    try {
+      const res = await StorageService.registerUser({
+        addaName: regAddaName,
+        managerName: regManagerName,
+        city: regCity,
+        phone: regPhone,
+        password: regPassword,
+        address: regAddress,
+        whatsappNumber: regWhatsapp || regPhone,
+        logoUrl: regLogoUrl || '/adda-logo.png',
+        paymentScreenshot: paymentScreenshot,
+        paymentTransactionId: paymentTxId,
+      });
 
-    if (res.success) {
-      if (res.requiresPayment) {
-        setRegSuccess('اکاؤنٹ کامیابی سے رجسٹر ہو گیا ہے۔ ایڈمن کی طرف سے تصدیق کے بعد آپ لاگ ان کر سکیں گے۔');
-        setShowPaymentStep(false);
+      if (res.success) {
+        if (res.requiresPayment) {
+          setRegSuccess('اکاؤنٹ کامیابی سے رجسٹر ہو گیا ہے۔ ایڈمن کی طرف سے تصدیق کے بعد آپ لاگ ان کر سکیں گے۔');
+          setShowPaymentStep(false);
+        } else {
+          // Automatically logged in
+          onLoginSuccess(regPhone);
+        }
       } else {
-        // Automatically logged in
-        onLoginSuccess(regPhone);
+        setRegError(res.message);
       }
-    } else {
-      setRegError(res.message);
+    } catch {
+      setRegError('اکاؤنٹ بناتے وقت مسئلہ پیش آیا۔ دوبارہ کوشش کریں۔');
+    } finally {
+      setIsLoading(false);
     }
   };
 
