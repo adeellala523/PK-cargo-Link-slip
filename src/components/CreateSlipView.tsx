@@ -62,17 +62,17 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
   onCancel,
 }) => {
   // Loading Details
-  const [loadingCity, setLoadingCity] = useState(prefillSlip?.loadingCity || addaProfile.city || 'ملتان');
-  const [loadingLocation, setLoadingLocation] = useState(prefillSlip?.loadingLocation || 'شیر شاہ بائی پاس');
+  const [loadingCity, setLoadingCity] = useState(prefillSlip?.loadingCity || addaProfile.city || 'لاہور');
+  const [loadingLocation, setLoadingLocation] = useState(prefillSlip?.loadingLocation || '');
 
   // Destination Details
-  const [destinationCity, setDestinationCity] = useState(prefillSlip?.destinationCity || 'لاہور');
-  const [destinationLocation, setDestinationLocation] = useState(prefillSlip?.destinationLocation || 'بادامی باغ');
+  const [destinationCity, setDestinationCity] = useState(prefillSlip?.destinationCity || 'کراچی');
+  const [destinationLocation, setDestinationLocation] = useState(prefillSlip?.destinationLocation || '');
 
   // Goods & Load
-  const [goods, setGoods] = useState(prefillSlip?.goods || 'چاول');
-  const [weight, setWeight] = useState(prefillSlip?.weight || '30 ٹن');
-  const [quantity, setQuantity] = useState(prefillSlip?.quantity || '500 بوریاں');
+  const [goods, setGoods] = useState(prefillSlip?.goods || '');
+  const [weight, setWeight] = useState(prefillSlip?.weight || '25 ٹن');
+  const [quantity, setQuantity] = useState(prefillSlip?.quantity || '');
 
   // Vehicle
   const [vehicleType, setVehicleType] = useState<VehicleType>(prefillSlip?.vehicleType || '22 Wheeler');

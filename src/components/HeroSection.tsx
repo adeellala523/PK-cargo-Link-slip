@@ -193,84 +193,101 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {recentSlips.slice(0, 4).map((slip) => (
-            <div
-              key={slip.id}
-              onClick={() => onViewSlip(slip)}
-              className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md border border-slate-200 hover:border-emerald-500/50 transition-all cursor-pointer group flex flex-col justify-between"
+        {recentSlips.length === 0 ? (
+          <div className="bg-white rounded-3xl p-8 text-center border-2 border-dashed border-slate-200 space-y-3">
+            <Truck className="w-10 h-10 text-emerald-600 mx-auto opacity-70" />
+            <h3 className="font-bold text-slate-800 text-base">ابھی کوئی نیا لوڈ پوسٹ نہیں ہوا</h3>
+            <p className="text-xs text-slate-500 max-w-md mx-auto">
+              اڈا منیجر حضرات نیا لوڈ پوسٹ کرنے کے لیے اوپر '+ نئی لوڈ سلپ' بٹن دبائیں اور واٹس ایپ پر فوراً شیئر کریں۔
+            </p>
+            <button
+              onClick={onOpenCreate}
+              className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition cursor-pointer"
             >
-              <div className="space-y-3">
-                {/* Header row */}
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-mono text-slate-500 ltr-content bg-slate-100 px-2 py-0.5 rounded">
-                    {slip.id}
-                  </span>
-                  <span className={`px-2 py-0.5 rounded font-bold text-xs ${
-                    slip.status === 'active' 
-                      ? 'bg-emerald-100 text-emerald-800' 
-                      : slip.status === 'booked' 
-                      ? 'bg-blue-100 text-blue-800' 
-                      : 'bg-slate-200 text-slate-700'
-                  }`}>
-                    {slip.status === 'active' ? '● دستیاب لوڈ' : slip.status === 'booked' ? '✓ لوڈ ہوچکا' : 'ختم شدہ'}
-                  </span>
+              <PlusCircle className="w-4 h-4" />
+              <span>پہلی لوڈ سلپ بنائیں</span>
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {recentSlips.slice(0, 4).map((slip) => (
+              <div
+                key={slip.id}
+                onClick={() => onViewSlip(slip)}
+                className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md border border-slate-200 hover:border-emerald-500/50 transition-all cursor-pointer group flex flex-col justify-between"
+              >
+                <div className="space-y-3">
+                  {/* Header row */}
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-mono text-slate-500 ltr-content bg-slate-100 px-2 py-0.5 rounded">
+                      {slip.id}
+                    </span>
+                    <span className={`px-2 py-0.5 rounded font-bold text-xs ${
+                      slip.status === 'active' 
+                        ? 'bg-emerald-100 text-emerald-800' 
+                        : slip.status === 'booked' 
+                        ? 'bg-blue-100 text-blue-800' 
+                        : 'bg-slate-200 text-slate-700'
+                    }`}>
+                      {slip.status === 'active' ? '● دستیاب لوڈ' : slip.status === 'booked' ? '✓ لوڈ ہوچکا' : 'ختم شدہ'}
+                    </span>
+                  </div>
+
+                  {/* Route Header */}
+                  <div className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <div className="text-right">
+                      <span className="text-xs text-slate-400 block">لوڈنگ</span>
+                      <span className="text-lg font-bold text-[#0B2545]">{slip.loadingCity}</span>
+                      <span className="text-xs text-slate-600 block truncate max-w-[120px]">{slip.loadingLocation}</span>
+                    </div>
+
+                    <div className="flex flex-col items-center px-2">
+                      <Truck className="w-5 h-5 text-emerald-600 group-hover:scale-110 transition-transform" />
+                      <span className="text-[10px] text-slate-400 font-sans">➔</span>
+                    </div>
+
+                    <div className="text-left">
+                      <span className="text-xs text-slate-400 block">منزل</span>
+                      <span className="text-lg font-bold text-emerald-800">{slip.destinationCity}</span>
+                      <span className="text-xs text-slate-600 block truncate max-w-[120px]">{slip.destinationLocation}</span>
+                    </div>
+                  </div>
+
+                  {/* Goods details */}
+                  <div className="grid grid-cols-2 gap-2 text-xs pt-1">
+                    <div>
+                      <span className="text-slate-400">مال:</span>{' '}
+                      <span className="font-semibold text-slate-800">{slip.goods}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">وزن:</span>{' '}
+                      <span className="font-semibold text-slate-800">{slip.weight}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">گاڑی:</span>{' '}
+                      <span className="font-semibold text-slate-800">{slip.vehicleType}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">باڈی:</span>{' '}
+                      <span className="font-semibold text-slate-800">{slip.bodyType}</span>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Route Header */}
-                <div className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
-                  <div className="text-right">
-                    <span className="text-xs text-slate-400 block">لوڈنگ</span>
-                    <span className="text-lg font-bold text-[#0B2545]">{slip.loadingCity}</span>
-                    <span className="text-xs text-slate-600 block truncate max-w-[120px]">{slip.loadingLocation}</span>
+                {/* Footer actions */}
+                <div className="pt-4 mt-3 border-t border-slate-100 flex items-center justify-between">
+                  <div className="text-xs text-slate-600 font-medium truncate max-w-[180px]">
+                    🏢 {slip.addaName}
                   </div>
-
-                  <div className="flex flex-col items-center px-2">
-                    <Truck className="w-5 h-5 text-emerald-600 group-hover:scale-110 transition-transform" />
-                    <span className="text-[10px] text-slate-400 font-sans">➔</span>
-                  </div>
-
-                  <div className="text-left">
-                    <span className="text-xs text-slate-400 block">منزل</span>
-                    <span className="text-lg font-bold text-emerald-800">{slip.destinationCity}</span>
-                    <span className="text-xs text-slate-600 block truncate max-w-[120px]">{slip.destinationLocation}</span>
-                  </div>
-                </div>
-
-                {/* Goods details */}
-                <div className="grid grid-cols-2 gap-2 text-xs pt-1">
-                  <div>
-                    <span className="text-slate-400">مال:</span>{' '}
-                    <span className="font-semibold text-slate-800">{slip.goods}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400">وزن:</span>{' '}
-                    <span className="font-semibold text-slate-800">{slip.weight}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400">گاڑی:</span>{' '}
-                    <span className="font-semibold text-slate-800">{slip.vehicleType}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400">باڈی:</span>{' '}
-                    <span className="font-semibold text-slate-800">{slip.bodyType}</span>
-                  </div>
+                  <span className="text-xs font-bold text-emerald-600 group-hover:underline flex items-center gap-1">
+                    <span>مکمل سلپ کھولیں</span>
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                  </span>
                 </div>
               </div>
-
-              {/* Footer actions */}
-              <div className="pt-4 mt-3 border-t border-slate-100 flex items-center justify-between">
-                <div className="text-xs text-slate-600 font-medium truncate max-w-[180px]">
-                  🏢 {slip.addaName}
-                </div>
-                <span className="text-xs font-bold text-emerald-600 group-hover:underline flex items-center gap-1">
-                  <span>مکمل سلپ کھولیں</span>
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Adda Manager Value Card */}

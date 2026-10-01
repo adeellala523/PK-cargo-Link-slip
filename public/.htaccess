@@ -12,6 +12,13 @@
   RewriteCond %{DOCUMENT_ROOT}/api/slips.php -f
   RewriteRule ^api/slips/?$ /api/slips.php [L,QSA]
 
+  # Map /api/users-sync to /api/users.php if PHP is present
+  RewriteCond %{DOCUMENT_ROOT}/api/users.php -f
+  RewriteRule ^api/users-sync/?$ /api/users.php [L,QSA]
+
+  # Rewrite admin route /adil
+  RewriteRule ^adil/?$ /index.html [L,QSA]
+
   # Allow direct access to real files and folders
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d

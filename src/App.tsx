@@ -39,7 +39,10 @@ export default function App() {
       const querySlipId = searchParams.get('slip');
       const queryTab = searchParams.get('tab');
 
-      if (queryTab) {
+      // Admin portal is ONLY accessible via /adil or /?tab=admin or #adil
+      if (path === '/adil' || path === '/adil/' || window.location.hash === '#adil' || queryTab === 'admin') {
+        setCurrentTab('admin');
+      } else if (queryTab) {
         setCurrentTab(queryTab);
       }
 
@@ -356,7 +359,7 @@ export default function App() {
         {currentTab === 'login' && (
           <AddaLoginView
             onLoginSuccess={handleLoginSuccess}
-            onNavigateToRegistration={() => setCurrentTab('register')}
+            onNavigateToHome={() => setCurrentTab('home')}
             currentProfile={profile}
           />
         )}

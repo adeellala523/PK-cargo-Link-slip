@@ -1,186 +1,341 @@
-import { AddaProfile, LoadSlip, WhatsAppGroup, AdminStats } from '../types';
+import { AddaProfile, LoadSlip, WhatsAppGroup, AdminStats, UserAccount, PaymentSettings } from '../types';
 
 const STORAGE_KEYS = {
-  ADDA_PROFILE: 'pkcargolink_adda_profile_v2',
-  SLIPS: 'pkcargolink_slips_v2',
-  PERMANENT_USER_SLIPS: 'pkcargolink_permanent_user_slips',
-  GROUPS: 'pkcargolink_groups_v2',
-  IS_LOGGED_IN: 'pkcargolink_is_logged_in_v2',
-  CURRENT_USER_PHONE: 'pkcargolink_user_phone_v2',
+  ADDA_PROFILE: 'pkcargolink_adda_profile_v3',
+  SLIPS: 'pkcargolink_slips_v3',
+  PERMANENT_USER_SLIPS: 'pkcargolink_permanent_user_slips_v3',
+  GROUPS: 'pkcargolink_groups_v3',
+  IS_LOGGED_IN: 'pkcargolink_is_logged_in_v3',
+  CURRENT_USER_PHONE: 'pkcargolink_user_phone_v3',
+  USERS: 'pkcargolink_registered_users_v3',
+  CURRENT_USER: 'pkcargolink_current_user_account_v3',
+  PAYMENT_SETTINGS: 'pkcargolink_payment_settings_v3',
 };
 
-// Default Pakistani transport Adda profile for instant preview & demonstration
+// Default empty Adda template (clean state, no fake demo data)
 export const DEFAULT_ADDA: AddaProfile = {
-  id: 'adda_multan_01',
-  managerName: 'ملک عمران ظفر',
-  addaName: 'نیو پنجاب کارگو گڈز اڈا',
-  city: 'ملتان',
-  address: 'وہاڑی چوک، نزد نیو سبزی منڈی، ملتان',
-  logoUrl: '/adda-logo.png',
-  primaryPhone: '0300-7312345',
-  whatsappNumber: '0300-7312345',
-  contact1: '0301-8654321',
-  contact2: '0321-9876543',
-  contact3: '0333-6123456',
+  id: '',
+  managerName: '',
+  addaName: '',
+  city: '',
+  address: '',
+  logoUrl: '',
+  primaryPhone: '',
+  whatsappNumber: '',
+  contact1: '',
+  contact2: '',
+  contact3: '',
   contact4: '',
   contact5: '',
   isVerified: true,
-  createdAt: new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString(),
+  createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
 };
 
-// Pre-seeded realistic Pakistani transport load slips
-export const INITIAL_SLIPS: LoadSlip[] = [
-  {
-    id: 'PKCL-20261001-000125',
-    addaId: 'adda_multan_01',
-    addaName: 'نیو پنجاب کارگو گڈز اڈا',
-    addaCity: 'ملتان',
-    addaAddress: 'وہاڑی چوک، نزد نیو سبزی منڈی، ملتان',
-    managerName: 'ملک عمران ظفر',
-    primaryPhone: '0300-7312345',
-    whatsappNumber: '0300-7312345',
-    additionalContacts: ['0301-8654321', '0321-9876543'],
-    loadingCity: 'ملتان',
-    loadingLocation: 'شیر شاہ بائی پاس',
-    destinationCity: 'لاہور',
-    destinationLocation: 'بادامی باغ گڈز مارکیٹ',
-    goods: 'کرنل باسمتی چاول',
-    weight: '30 ٹن',
-    quantity: '600 بوریاں (50 کلو)',
-    vehicleType: '22 Wheeler',
-    bodyType: 'فل باڈی',
-    vehicleNumber: 'LEA-4890',
-    fareOffer: 'مارکیٹ ریٹ / 1,45,000 روپے',
-    specialInstructions: 'ترپال لازمی ہے۔ مال فوری لوڈ ہے۔ کیش پیشگی۔',
-    status: 'active',
-    createdAt: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
-    viewsCount: 42,
-    sharesCount: 18,
-  },
-  {
-    id: 'PKCL-20261001-000126',
-    addaId: 'adda_multan_01',
-    addaName: 'نیو پنجاب کارگو گڈز اڈا',
-    addaCity: 'ملتان',
-    addaAddress: 'وہاڑی چوک، نزد نیو سبزی منڈی، ملتان',
-    managerName: 'ملک عمران ظفر',
-    primaryPhone: '0300-7312345',
-    whatsappNumber: '0300-7312345',
-    additionalContacts: ['0301-8654321'],
-    loadingCity: 'کراچی',
-    loadingLocation: 'پورٹ قاسم، ٹرمینل 2',
-    destinationCity: 'فیصل آباد',
-    destinationLocation: 'جھنگ روڈ انڈسٹریل ایریا',
-    goods: 'درآمدی کیمیکل ڈرم',
-    weight: '25 ٹن',
-    quantity: '120 ڈرم',
-    vehicleType: '10 Wheeler',
-    bodyType: 'فل باڈی',
-    fareOffer: '1,90,000 روپے کیش',
-    specialInstructions: 'کیمیکل مال، ڈرائیور کے پاس لائسنس اور ہیلمٹ ضروری ہے۔',
-    status: 'active',
-    createdAt: new Date(Date.now() - 5 * 3600 * 1000).toISOString(),
-    viewsCount: 68,
-    sharesCount: 25,
-  },
-  {
-    id: 'PKCL-20260930-000120',
-    addaId: 'adda_multan_01',
-    addaName: 'نیو پنجاب کارگو گڈز اڈا',
-    addaCity: 'ملتان',
-    addaAddress: 'وہاڑی چوک، نزد نیو سبزی منڈی، ملتان',
-    managerName: 'ملک عمران ظفر',
-    primaryPhone: '0300-7312345',
-    whatsappNumber: '0300-7312345',
-    additionalContacts: ['0321-9876543'],
-    loadingCity: 'گوجرانوالہ',
-    loadingLocation: 'جی ٹی روڈ، نزد موڑ ایمن آباد',
-    destinationCity: 'پشاور',
-    destinationLocation: 'حاجی کیمپ اڈا',
-    goods: 'سینیٹری و لوہا پائپ',
-    weight: '12 ٹن',
-    quantity: 'مکس مال بنڈل',
-    vehicleType: 'Mazda',
-    bodyType: 'ہاف باڈی',
-    vehicleNumber: 'GA-2041',
-    fareOffer: '75,000 روپے',
-    specialInstructions: 'کل صبح پشاور خالی ہونا ہے۔',
-    status: 'booked',
-    createdAt: new Date(Date.now() - 28 * 3600 * 1000).toISOString(),
-    viewsCount: 95,
-    sharesCount: 34,
-  },
-  {
-    id: 'PKCL-20260929-000114',
-    addaId: 'adda_multan_01',
-    addaName: 'نیو پنجاب کارگو گڈز اڈا',
-    addaCity: 'ملتان',
-    addaAddress: 'وہاڑی چوک، نزد نیو سبزی منڈی، ملتان',
-    managerName: 'ملک عمران ظفر',
-    primaryPhone: '0300-7312345',
-    whatsappNumber: '0300-7312345',
-    additionalContacts: [],
-    loadingCity: 'ساہیوال',
-    loadingLocation: 'غلہ منڈی',
-    destinationCity: 'راولپنڈی',
-    destinationLocation: 'پیرودھائی گڈز اڈا',
-    goods: 'مکئی و گندم',
-    weight: '35 ٹن',
-    quantity: '700 بوریاں',
-    vehicleType: '22 Wheeler',
-    bodyType: 'فل باڈی',
-    status: 'expired',
-    createdAt: new Date(Date.now() - 52 * 3600 * 1000).toISOString(),
-    viewsCount: 110,
-    sharesCount: 40,
-  }
-];
+// Zero demo slips (clean state, demo data removed as requested)
+export const INITIAL_SLIPS: LoadSlip[] = [];
 
-export const INITIAL_GROUPS: WhatsAppGroup[] = [
-  {
-    id: 'grp_1',
-    name: 'ملتان و جنوبی پنجاب ٹرک لوڈز',
-    routeHint: 'ملتان، ساہیوال، بہاولپور',
-    description: 'جنوبی پنجاب سے ہر قسم کی گاڑیوں کے دستیاب لوڈز',
-  },
-  {
-    id: 'grp_2',
-    name: 'لاہور بادامی باغ ٹرانسپورٹ یونین',
-    routeHint: 'لاہور تا ملک بھر',
-    description: 'لاہور اڈا کے مصدقہ لوڈ اور واپسی کے ٹرک',
-  },
-  {
-    id: 'grp_3',
-    name: 'کراچی پورٹ تا پنجاب و کے پی کے کنٹینرز',
-    routeHint: 'کراچی پورٹ، پورٹ قاسم',
-    description: 'کنٹینر، ٹرالر اور 22 وہیلر گاڑیاں',
-  },
-  {
-    id: 'grp_4',
-    name: 'فیصل آباد ٹیکسٹائل و لوکل مال سپلائی',
-    routeHint: 'فیصل آباد، گوجرانوالہ، شیخوپورہ',
-    description: 'مزدا اور 10 وہیلر باڈی گاڑیاں',
-  },
-];
+// Default Payment Settings (Disabled by default as requested: "yeh abhi admin se disabled rkhna mein enable krlon ga")
+export const DEFAULT_PAYMENT_SETTINGS: PaymentSettings = {
+  isPaymentRequired: false,
+  monthlyFee: 1500,
+  jazzcashNumber: '0300-1234567',
+  jazzcashTitle: 'محمد عادل',
+  easypaisaNumber: '0300-1234567',
+  easypaisaTitle: 'محمد عادل',
+  bankName: 'حبیب بینک لمیٹڈ (HBL)',
+  bankAccountNumber: '0010023456789012',
+  bankAccountTitle: 'PK Cargo Link',
+  instructions: 'براہ کرم ماہانہ فیس ادا کر کے رسید (Screenshot) اور Transaction ID درج کریں۔ ایڈمن کی تصدیق کے بعد اکاؤنٹ فعال ہو جائے گا۔',
+};
 
 export const StorageService = {
+  // -------------------------------------------------------------
+  // Payment & Subscription Settings
+  // -------------------------------------------------------------
+  getPaymentSettings(): PaymentSettings {
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.PAYMENT_SETTINGS);
+      if (data) {
+        return { ...DEFAULT_PAYMENT_SETTINGS, ...JSON.parse(data) };
+      }
+    } catch (e) {
+      console.error('Error reading payment settings', e);
+    }
+    return DEFAULT_PAYMENT_SETTINGS;
+  },
+
+  savePaymentSettings(settings: PaymentSettings): void {
+    try {
+      localStorage.setItem(STORAGE_KEYS.PAYMENT_SETTINGS, JSON.stringify(settings));
+      if (typeof fetch !== 'undefined') {
+        fetch('/api/payment-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(settings),
+        }).catch(() => {});
+      }
+    } catch (e) {
+      console.error('Error saving payment settings', e);
+    }
+  },
+
+  // -------------------------------------------------------------
+  // User Accounts & Authentication (Persistent & Real)
+  // -------------------------------------------------------------
+  getUsers(): UserAccount[] {
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.USERS);
+      if (data) {
+        const users: UserAccount[] = JSON.parse(data);
+        return users.map((u) => this.checkUserSubscriptionStatus(u));
+      }
+    } catch (e) {
+      console.error('Error reading users', e);
+    }
+    return [];
+  },
+
+  saveUsers(users: UserAccount[]): void {
+    try {
+      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+      if (typeof fetch !== 'undefined') {
+        fetch('/api/users-sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(users),
+        }).catch(() => {});
+      }
+    } catch (e) {
+      console.error('Error saving users', e);
+    }
+  },
+
+  getUserByPhone(phone: string): UserAccount | null {
+    const clean = phone.replace(/[^0-9]/g, '');
+    const users = this.getUsers();
+    return users.find((u) => u.phone.replace(/[^0-9]/g, '') === clean) || null;
+  },
+
+  checkUserSubscriptionStatus(user: UserAccount): UserAccount {
+    // If active and has subscription expiry date, verify if 1 month has passed
+    if (user.status === 'active' && user.subscriptionExpiresAt) {
+      const expiry = new Date(user.subscriptionExpiresAt).getTime();
+      const now = Date.now();
+      if (now > expiry) {
+        user.status = 'locked_expired';
+      }
+    }
+    return user;
+  },
+
+  registerUser(payload: {
+    phone: string;
+    password: string;
+    addaName: string;
+    managerName: string;
+    city: string;
+    address: string;
+    logoUrl?: string;
+    whatsappNumber?: string;
+    contact1?: string;
+    contact2?: string;
+    paymentScreenshot?: string;
+    paymentTransactionId?: string;
+  }): { success: boolean; message: string; user?: UserAccount; requiresPayment?: boolean } {
+    const cleanPhone = payload.phone.trim();
+    if (!cleanPhone) {
+      return { success: false, message: 'موبائل نمبر درج کرنا لازمی ہے۔' };
+    }
+    if (!payload.password || payload.password.length < 4) {
+      return { success: false, message: 'پاس ورڈ کم از کم 4 ہندسوں یا حروف کا ہونا چاہیے۔' };
+    }
+    if (!payload.addaName.trim()) {
+      return { success: false, message: 'اڈا کا نام درج کرنا لازمی ہے۔' };
+    }
+
+    const existing = this.getUserByPhone(cleanPhone);
+    if (existing) {
+      return { success: false, message: 'یہ موبائل نمبر پہلے سے رجسٹرڈ ہے۔ براہ کرم لاگ ان کریں۔' };
+    }
+
+    const paymentSettings = this.getPaymentSettings();
+    const isPaymentRequired = paymentSettings.isPaymentRequired;
+
+    const now = new Date();
+    const expiryDate = new Date(now.getTime() + 30 * 24 * 3600 * 1000); // 30 days / 1 month
+
+    const newUser: UserAccount = {
+      id: `user_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      phone: cleanPhone,
+      password: payload.password,
+      addaName: payload.addaName.trim(),
+      managerName: payload.managerName.trim() || 'اڈا انچارج',
+      city: payload.city.trim() || 'پاکستان',
+      address: payload.address.trim() || '',
+      logoUrl: payload.logoUrl || '/adda-logo.png',
+      whatsappNumber: payload.whatsappNumber?.trim() || cleanPhone,
+      contact1: payload.contact1?.trim() || '',
+      contact2: payload.contact2?.trim() || '',
+      status: isPaymentRequired ? 'pending_payment' : 'active',
+      subscriptionPlan: 'monthly',
+      subscriptionStartedAt: now.toISOString(),
+      subscriptionExpiresAt: expiryDate.toISOString(),
+      paymentScreenshot: payload.paymentScreenshot || '',
+      paymentTransactionId: payload.paymentTransactionId || '',
+      paymentSubmittedAt: isPaymentRequired ? now.toISOString() : undefined,
+      isApprovedByAdmin: !isPaymentRequired,
+      createdAt: now.toISOString(),
+    };
+
+    const users = this.getUsers();
+    users.unshift(newUser);
+    this.saveUsers(users);
+
+    // If payment is NOT required, activate session immediately
+    if (!isPaymentRequired) {
+      this.setCurrentUser(newUser);
+      this.setLoggedIn(true, newUser.phone);
+      this.saveAddaProfile({
+        id: newUser.id,
+        managerName: newUser.managerName,
+        addaName: newUser.addaName,
+        city: newUser.city,
+        address: newUser.address,
+        logoUrl: newUser.logoUrl,
+        primaryPhone: newUser.phone,
+        whatsappNumber: newUser.whatsappNumber,
+        contact1: newUser.contact1,
+        contact2: newUser.contact2,
+        isVerified: true,
+        createdAt: newUser.createdAt,
+        updatedAt: newUser.createdAt,
+      });
+      return { success: true, message: 'اکاؤنٹ کامیابی سے بن گیا اور لاگ ان ہو گیا۔', user: newUser };
+    }
+
+    return { 
+      success: true, 
+      message: 'اکاؤنٹ رجسٹر ہو گیا۔ فیس کی تصدیق کے بعد ایڈمن آپ کا اکاؤنٹ فعال کر دے گا۔', 
+      user: newUser,
+      requiresPayment: true 
+    };
+  },
+
+  loginUser(phone: string, password: string): { success: boolean; message: string; user?: UserAccount; status?: string } {
+    const cleanPhone = phone.trim();
+    const user = this.getUserByPhone(cleanPhone);
+    if (!user) {
+      return { success: false, message: 'یہ موبائل نمبر رجسٹرڈ نہیں ہے۔ پہلے نیا اکاؤنٹ بنائیں!' };
+    }
+
+    if (user.password && user.password !== password.trim()) {
+      return { success: false, message: 'درج کردہ پاس ورڈ غلط ہے!' };
+    }
+
+    // Check subscription / payment status
+    const checkedUser = this.checkUserSubscriptionStatus(user);
+
+    if (checkedUser.status === 'pending_payment') {
+      return {
+        success: false,
+        message: 'آپ کے اکاؤنٹ کی پیمنٹ تصدیق زیر التوا ہے۔ ایڈمن کی منظوری کے بعد اکاؤنٹ فعال ہوگا۔',
+        status: 'pending_payment',
+        user: checkedUser,
+      };
+    }
+
+    if (checkedUser.status === 'locked_expired') {
+      return {
+        success: false,
+        message: 'آپ کے اکاؤنٹ کی 1 ماہ کی میعاد ختم ہو چکی ہے اور ڈیٹا لاک ہے۔ بحالی کے لیے فیس ادا کریں۔',
+        status: 'locked_expired',
+        user: checkedUser,
+      };
+    }
+
+    // Successful login
+    this.setCurrentUser(checkedUser);
+    this.setLoggedIn(true, checkedUser.phone);
+    this.saveAddaProfile({
+      id: checkedUser.id,
+      managerName: checkedUser.managerName,
+      addaName: checkedUser.addaName,
+      city: checkedUser.city,
+      address: checkedUser.address,
+      logoUrl: checkedUser.logoUrl || '/adda-logo.png',
+      primaryPhone: checkedUser.phone,
+      whatsappNumber: checkedUser.whatsappNumber,
+      contact1: checkedUser.contact1,
+      contact2: checkedUser.contact2,
+      isVerified: true,
+      createdAt: checkedUser.createdAt,
+      updatedAt: new Date().toISOString(),
+    });
+
+    return { success: true, message: 'خوش آمدید! آپ کامیابی سے لاگ ان ہو چکے ہیں۔', user: checkedUser };
+  },
+
+  getCurrentUser(): UserAccount | null {
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
+      if (data) {
+        return JSON.parse(data);
+      }
+    } catch {}
+    return null;
+  },
+
+  setCurrentUser(user: UserAccount | null): void {
+    if (user) {
+      localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+    }
+  },
+
+  updateUserStatus(
+    userId: string, 
+    status: 'active' | 'pending_payment' | 'locked_expired', 
+    extendDays: number = 30
+  ): void {
+    const users = this.getUsers();
+    const idx = users.findIndex((u) => u.id === userId);
+    if (idx !== -1) {
+      users[idx].status = status;
+      if (status === 'active') {
+        users[idx].isApprovedByAdmin = true;
+        const now = new Date();
+        users[idx].subscriptionStartedAt = now.toISOString();
+        users[idx].subscriptionExpiresAt = new Date(now.getTime() + extendDays * 24 * 3600 * 1000).toISOString();
+      }
+      this.saveUsers(users);
+
+      // If updating currently logged in user
+      const current = this.getCurrentUser();
+      if (current && current.id === userId) {
+        this.setCurrentUser(users[idx]);
+      }
+    }
+  },
+
+  deleteUser(userId: string): void {
+    const users = this.getUsers().filter((u) => u.id !== userId);
+    this.saveUsers(users);
+  },
+
+  // -------------------------------------------------------------
   // Adda Profile
+  // -------------------------------------------------------------
   getAddaProfile(): AddaProfile {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.ADDA_PROFILE);
       if (data) {
-        const parsed = JSON.parse(data);
-        if (!parsed.logoUrl) {
-          parsed.logoUrl = '/adda-logo.png';
-        }
-        return parsed;
+        return JSON.parse(data);
       }
     } catch (e) {
       console.error('Failed reading adda profile', e);
     }
-    // Return default and save it
-    this.saveAddaProfile(DEFAULT_ADDA);
     return DEFAULT_ADDA;
   },
 
@@ -202,13 +357,18 @@ export const StorageService = {
     if (phone) {
       localStorage.setItem(STORAGE_KEYS.CURRENT_USER_PHONE, phone);
     }
+    if (!status) {
+      this.setCurrentUser(null);
+    }
   },
 
   getCurrentUserPhone(): string {
-    return localStorage.getItem(STORAGE_KEYS.CURRENT_USER_PHONE) || '0300-7312345';
+    return localStorage.getItem(STORAGE_KEYS.CURRENT_USER_PHONE) || '';
   },
 
-  // Slips Management with Permanent Preservation across Updates
+  // -------------------------------------------------------------
+  // Slips Management (Persistent & Real - No Demo Slips)
+  // -------------------------------------------------------------
   getAllSlips(): LoadSlip[] {
     let permanentSlips: LoadSlip[] = [];
     try {
@@ -216,15 +376,12 @@ export const StorageService = {
       if (permData) {
         permanentSlips = JSON.parse(permData);
       }
-    } catch {
-      // Ignore
-    }
+    } catch {}
 
     try {
       const data = localStorage.getItem(STORAGE_KEYS.SLIPS);
       if (data) {
         const parsed: LoadSlip[] = JSON.parse(data);
-        // Merge permanent user slips with parsed slips, ensuring user slips are never deleted
         const combined = [...permanentSlips];
         parsed.forEach((p) => {
           if (!combined.some((c) => c.id === p.id)) {
@@ -240,21 +397,10 @@ export const StorageService = {
       console.error('Failed reading slips', e);
     }
 
-    // Seed initial realistic Pakistani loads combined with any permanent user slips
-    const seeded = [...permanentSlips];
-    INITIAL_SLIPS.forEach((initSlip) => {
-      if (!seeded.some((s) => s.id === initSlip.id)) {
-        seeded.push(initSlip);
-      }
-    });
-
-    const normalized = seeded.map((s) => ({
+    return permanentSlips.map((s) => ({
       ...s,
       addaLogo: s.addaLogo || '/adda-logo.png',
     }));
-
-    localStorage.setItem(STORAGE_KEYS.SLIPS, JSON.stringify(normalized));
-    return normalized;
   },
 
   getSlipById(id: string): LoadSlip | null {
@@ -267,14 +413,12 @@ export const StorageService = {
     const slips = this.getAllSlips();
     const updated = [slip, ...slips.filter((s) => s.id !== slip.id)];
     
-    // Save in general list
     try {
       localStorage.setItem(STORAGE_KEYS.SLIPS, JSON.stringify(updated));
     } catch (e) {
       console.error('Failed saving slip', e);
     }
 
-    // Also ALWAYS save in dedicated permanent user storage (immune to resets / updates)
     try {
       let permanent: LoadSlip[] = [];
       const permData = localStorage.getItem(STORAGE_KEYS.PERMANENT_USER_SLIPS);
@@ -305,7 +449,6 @@ export const StorageService = {
       slips[index] = slip;
       localStorage.setItem(STORAGE_KEYS.SLIPS, JSON.stringify(slips));
 
-      // Also update in permanent storage
       try {
         let permanent: LoadSlip[] = [];
         const permData = localStorage.getItem(STORAGE_KEYS.PERMANENT_USER_SLIPS);
@@ -343,18 +486,19 @@ export const StorageService = {
         localStorage.setItem(STORAGE_KEYS.PERMANENT_USER_SLIPS, JSON.stringify(filtered));
       }
     } catch {}
+
+    if (typeof fetch !== 'undefined') {
+      fetch(`/api/slips/${id}`, { method: 'DELETE' }).catch(() => {});
+    }
   },
 
-  /**
-   * Syncs with Hostinger server database so driver and manager see loads across all devices
-   */
   async syncWithServer(): Promise<LoadSlip[]> {
     try {
       if (typeof fetch !== 'undefined') {
         const res = await fetch('/api/slips');
         if (res.ok) {
           const serverSlips: LoadSlip[] = await res.json();
-          if (Array.isArray(serverSlips) && serverSlips.length > 0) {
+          if (Array.isArray(serverSlips)) {
             const currentSlips = this.getAllSlips();
             const merged = [...currentSlips];
             
@@ -372,29 +516,23 @@ export const StorageService = {
           }
         }
       }
-    } catch {
-      // Fallback to local
-    }
+    } catch {}
     return this.getAllSlips();
   },
 
-  /**
-   * Exports full JSON backup of slips and adda profile for safety
-   */
   exportSlipsBackup(): string {
     const backup = {
-      version: '2.0',
+      version: '3.0',
       exportedAt: new Date().toISOString(),
       profile: this.getAddaProfile(),
       slips: this.getAllSlips(),
+      users: this.getUsers(),
+      paymentSettings: this.getPaymentSettings(),
       groups: this.getWhatsAppGroups(),
     };
     return JSON.stringify(backup, null, 2);
   },
 
-  /**
-   * Imports JSON backup
-   */
   importSlipsBackup(jsonText: string): boolean {
     try {
       const parsed = JSON.parse(jsonText);
@@ -405,6 +543,12 @@ export const StorageService = {
         parsed.slips.forEach((s: LoadSlip) => {
           this.createSlip(s);
         });
+      }
+      if (Array.isArray(parsed.users)) {
+        this.saveUsers(parsed.users);
+      }
+      if (parsed.paymentSettings) {
+        this.savePaymentSettings(parsed.paymentSettings);
       }
       return true;
     } catch {
@@ -430,18 +574,41 @@ export const StorageService = {
     }
   },
 
+  // -------------------------------------------------------------
   // WhatsApp Groups
+  // -------------------------------------------------------------
   getWhatsAppGroups(): WhatsAppGroup[] {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.GROUPS);
       if (data) {
         return JSON.parse(data);
       }
+    } catch {}
+    return [];
+  },
+
+  saveWhatsAppGroups(groups: WhatsAppGroup[]): void {
+    try {
+      localStorage.setItem(STORAGE_KEYS.GROUPS, JSON.stringify(groups));
     } catch (e) {
-      console.error('Failed reading groups', e);
+      console.error('Failed saving groups', e);
     }
-    localStorage.setItem(STORAGE_KEYS.GROUPS, JSON.stringify(INITIAL_GROUPS));
-    return INITIAL_GROUPS;
+  },
+
+  addGroup(group: Omit<WhatsAppGroup, 'id'>): WhatsAppGroup {
+    const groups = this.getWhatsAppGroups();
+    const newGroup: WhatsAppGroup = {
+      ...group,
+      id: `grp_${Date.now()}`,
+    };
+    groups.push(newGroup);
+    this.saveWhatsAppGroups(groups);
+    return newGroup;
+  },
+
+  deleteGroup(id: string): void {
+    const groups = this.getWhatsAppGroups().filter((g) => g.id !== id);
+    this.saveWhatsAppGroups(groups);
   },
 
   saveWhatsAppGroup(group: WhatsAppGroup): void {
@@ -452,25 +619,25 @@ export const StorageService = {
     } else {
       groups.push(group);
     }
-    localStorage.setItem(STORAGE_KEYS.GROUPS, JSON.stringify(groups));
+    this.saveWhatsAppGroups(groups);
   },
 
   deleteWhatsAppGroup(id: string): void {
-    const groups = this.getWhatsAppGroups().filter((g) => g.id !== id);
-    localStorage.setItem(STORAGE_KEYS.GROUPS, JSON.stringify(groups));
+    this.deleteGroup(id);
   },
 
-  // Admin statistics
+  // -------------------------------------------------------------
+  // Admin Statistics
+  // -------------------------------------------------------------
   getAdminStats(): AdminStats {
     const slips = this.getAllSlips();
-    const activeLoads = slips.filter((s) => s.status === 'active').length;
-    const expiredLoads = slips.filter((s) => s.status === 'expired' || s.status === 'booked').length;
-    
-    // Count today's slips
-    const today = new Date().toISOString().slice(0, 10);
-    const todaySlips = slips.filter((s) => s.createdAt.startsWith(today)).length;
+    const users = this.getUsers();
+    const active = slips.filter((s) => s.status === 'active');
+    const expired = slips.filter((s) => s.status === 'expired');
 
-    // Route calculation
+    const today = new Date().toISOString().slice(0, 10);
+    const todaySlips = slips.filter((s) => s.createdAt.slice(0, 10) === today);
+
     const routeMap = new Map<string, number>();
     slips.forEach((s) => {
       const key = `${s.loadingCity} ➔ ${s.destinationCity}`;
@@ -483,11 +650,11 @@ export const StorageService = {
       .slice(0, 5);
 
     return {
-      totalAddas: 48,
-      totalSlips: slips.length + 120, // Real-time cumulative count
-      activeLoads,
-      expiredLoads,
-      todaySlips: todaySlips + 15,
+      totalAddas: Math.max(users.length, 1),
+      totalSlips: slips.length,
+      activeLoads: active.length,
+      expiredLoads: expired.length,
+      todaySlips: todaySlips.length,
       topRoutes,
     };
   },

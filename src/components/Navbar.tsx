@@ -139,16 +139,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                 اڈا لاگ ان
               </button>
             )}
-
-            <button
-              onClick={() => setCurrentTab('admin')}
-              className={`px-2.5 py-1.5 rounded-lg text-sm text-slate-300 hover:text-white transition-colors ${
-                currentTab === 'admin' ? 'bg-slate-800 text-white' : ''
-              }`}
-              title="ایڈمن پینل"
-            >
-              ایڈمن
-            </button>
           </nav>
 
           {/* Action Buttons: New Slip & Mobile Menu Trigger */}
@@ -261,13 +251,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                 🔐 اڈا منیجر رجسٹریشن و لاگ ان
               </button>
             )}
-
-            <button
-              onClick={() => { setCurrentTab('admin'); setMenuOpen(false); }}
-              className="w-full text-right px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800"
-            >
-              ⚙️ ایڈمن پینل
-            </button>
 
             {canInstall && (
               <button

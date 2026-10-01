@@ -1,80 +1,25 @@
 import express, { Request, Response } from 'express';
-import path from 'path';
 import fs from 'fs';
+import path from 'path';
 import sharp from 'sharp';
 
 const app = express();
-const PORT = Number(process.env.PORT) || 3000;
+const PORT = process.env.PORT || 3000;
 const isProd = process.env.NODE_ENV === 'production';
 
 app.use(express.json({ limit: '10mb' }));
 
-// File-based persistence for load slips and Adda profiles
 const DATA_DIR = path.resolve(process.cwd(), 'data');
 const SLIPS_FILE = path.join(DATA_DIR, 'slips.json');
+const USERS_FILE = path.join(DATA_DIR, 'users.json');
+const SETTINGS_FILE = path.join(DATA_DIR, 'payment-settings.json');
 
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
-// Initial realistic Pakistani transport load slips
-const INITIAL_SERVER_SLIPS = [
-  {
-    id: 'PKCL-20261001-000125',
-    addaId: 'adda_multan_01',
-    addaName: 'نیو پنجاب کارگو گڈز اڈا',
-    addaCity: 'ملتان',
-    addaAddress: 'وہاڑی چوک، نزد نیو سبزی منڈی، ملتان',
-    addaLogo: '/adda-logo.png',
-    managerName: 'ملک عمران ظفر',
-    primaryPhone: '0300-7312345',
-    whatsappNumber: '0300-7312345',
-    additionalContacts: ['0301-8654321', '0321-9876543'],
-    loadingCity: 'ملتان',
-    loadingLocation: 'شیر شاہ بائی پاس',
-    destinationCity: 'لاہور',
-    destinationLocation: 'بادامی باغ گڈز مارکیٹ',
-    goods: 'کرنل باسمتی چاول',
-    weight: '30 ٹن',
-    quantity: '600 بوریاں (50 کلو)',
-    vehicleType: '22 Wheeler',
-    bodyType: 'فل باڈی',
-    vehicleNumber: 'LEA-4890',
-    fareOffer: 'مارکیٹ ریٹ / 1,45,000 روپے',
-    specialInstructions: 'ترپال لازمی ہے۔ مال فوری لوڈ ہے۔ کیش پیشگی۔',
-    status: 'active',
-    createdAt: new Date().toISOString(),
-    viewsCount: 42,
-    sharesCount: 18,
-  },
-  {
-    id: 'PKCL-20261001-000126',
-    addaId: 'adda_multan_01',
-    addaName: 'نیو پنجاب کارگو گڈز اڈا',
-    addaCity: 'ملتان',
-    addaAddress: 'وہاڑی چوک، نزد نیو سبزی منڈی، ملتان',
-    addaLogo: '/adda-logo.png',
-    managerName: 'ملک عمران ظفر',
-    primaryPhone: '0300-7312345',
-    whatsappNumber: '0300-7312345',
-    additionalContacts: ['0301-8654321'],
-    loadingCity: 'کراچی',
-    loadingLocation: 'پورٹ قاسم، ٹرمینل 2',
-    destinationCity: 'فیصل آباد',
-    destinationLocation: 'جھنگ روڈ انڈسٹریل ایریا',
-    goods: 'درآمدی کیمیکل ڈرم',
-    weight: '25 ٹن',
-    quantity: '120 ڈرم',
-    vehicleType: '10 Wheeler',
-    bodyType: 'فل باڈی',
-    fareOffer: '1,90,000 روپے کیش',
-    specialInstructions: 'کیمیکل مال، ڈرائیور کے پاس لائسنس ضروری ہے۔',
-    status: 'active',
-    createdAt: new Date().toISOString(),
-    viewsCount: 68,
-    sharesCount: 25,
-  }
-];
+// Clean state, no demo slips
+const INITIAL_SERVER_SLIPS: any[] = [];
 
 function getStoredSlips(): any[] {
   try {
@@ -85,7 +30,6 @@ function getStoredSlips(): any[] {
   } catch (err) {
     console.error('Error reading slips file', err);
   }
-  fs.writeFileSync(SLIPS_FILE, JSON.stringify(INITIAL_SERVER_SLIPS, null, 2));
   return INITIAL_SERVER_SLIPS;
 }
 
@@ -95,6 +39,21 @@ function saveStoredSlips(slips: any[]) {
   } catch (err) {
     console.error('Error saving slips', err);
   }
+}
+
+function getStoredUsers(): any[] {
+  try {
+    if (fs.existsSync(USERS_FILE)) {
+      return JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8'));
+    }
+  } catch {}
+  return [];
+}
+
+function saveStoredUsers(users: any[]) {
+  try {
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+  } catch {}
 }
 
 // -------------------------------------------------------------
@@ -121,6 +80,12 @@ app.post('/api/slips', (req: Request, res: Response) => {
   res.json({ success: true, slip: newSlip });
 });
 
+app.delete('/api/slips/:id', (req: Request, res: Response) => {
+  const slips = getStoredSlips().filter((s) => s.id !== req.params.id);
+  saveStoredSlips(slips);
+  res.json({ success: true });
+});
+
 app.get('/api/slips/:id', (req: Request, res: Response) => {
   const slips = getStoredSlips();
   const slip = slips.find((s) => s.id.toLowerCase() === req.params.id.toLowerCase());
@@ -131,16 +96,53 @@ app.get('/api/slips/:id', (req: Request, res: Response) => {
   res.json(slip);
 });
 
+// Users Sync API
+app.get('/api/users-sync', (_req: Request, res: Response) => {
+  res.json(getStoredUsers());
+});
+
+app.post('/api/users-sync', (req: Request, res: Response) => {
+  if (Array.isArray(req.body)) {
+    saveStoredUsers(req.body);
+  }
+  res.json({ success: true });
+});
+
+// Payment Settings API
+app.get('/api/payment-settings', (_req: Request, res: Response) => {
+  try {
+    if (fs.existsSync(SETTINGS_FILE)) {
+      res.json(JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf-8')));
+      return;
+    }
+  } catch {}
+  res.json({ isPaymentRequired: false });
+});
+
+app.post('/api/payment-settings', (req: Request, res: Response) => {
+  try {
+    fs.writeFileSync(SETTINGS_FILE, JSON.stringify(req.body, null, 2));
+  } catch {}
+  res.json({ success: true });
+});
+
 /**
  * Dynamic Preview Image Generator for WhatsApp Link Previews
- * "note preview image har ada ki apni hogi"
- * Generates or serves a customized 600x600 PNG image for the specific Adda and slip.
+ * Generates a unique 600x600 preview image for the specific Adda and slip.
  */
 app.get('/api/slip-og-image/:id', async (req: Request, res: Response) => {
   try {
     const slipId = req.params.id;
     const slips = getStoredSlips();
-    const slip = slips.find((s) => s.id.toLowerCase() === slipId.toLowerCase()) || slips[0];
+    let slip = slips.find((s) => s.id.toLowerCase() === slipId.toLowerCase());
+
+    const addaName = (req.query.a as string) || slip?.addaName || 'پاکستان کارگو گڈز اڈا';
+    const city = (req.query.c as string) || slip?.addaCity || 'پاکستان';
+    const fromCity = (req.query.from as string) || slip?.loadingCity || 'لوڈنگ مقام';
+    const toCity = (req.query.to as string) || slip?.destinationCity || 'منزل';
+    const cargo = (req.query.g as string) || slip?.goods || 'دستیاب لوڈ';
+    const weight = (req.query.w as string) || slip?.weight || '';
+    const vehicle = (req.query.v as string) || slip?.vehicleType || '22 Wheeler';
 
     // If the Adda uploaded a custom data URL or image file
     if (slip?.addaLogo && slip.addaLogo.startsWith('data:image/')) {
@@ -154,66 +156,58 @@ app.get('/api/slip-og-image/:id', async (req: Request, res: Response) => {
       return;
     }
 
-    const addaName = slip?.addaName || 'نیو پنجاب کارگو گڈز اڈا';
-    const city = slip?.addaCity || 'پاکستان';
-    const route = slip ? `${slip.loadingCity} ➔ ${slip.destinationCity}` : 'پاکستان کارگو لوڈز';
-    const cargo = slip ? `${slip.goods} (${slip.weight})` : 'دستیاب لوڈ';
-    const vehicle = slip?.vehicleType || '22 Wheeler';
-
-    // Generate high-resolution 600x600 card for WhatsApp preview
     const svgCard = `
     <svg width="600" height="600" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stop-color="#0B2545"/>
-          <stop offset="100%" stop-color="#07192F"/>
+          <stop offset="100%" stop-color="#06182D"/>
         </linearGradient>
       </defs>
 
-      <!-- Background -->
-      <rect width="600" height="600" rx="40" fill="url(#bgGrad)"/>
-      <rect x="20" y="20" width="560" height="560" rx="30" fill="none" stroke="#16A34A" stroke-width="8"/>
+      <rect width="600" height="600" rx="30" fill="url(#bgGrad)"/>
+      <rect x="15" y="15" width="570" height="570" rx="25" fill="none" stroke="#10B981" stroke-width="6"/>
 
-      <!-- Top Header Ribbon -->
-      <path d="M40 50 L560 50 L540 100 L60 100 Z" fill="#16A34A"/>
-      <text x="300" y="85" font-family="Arial, sans-serif" font-weight="900" font-size="24" fill="#FFFFFF" text-anchor="middle">
+      <!-- Header Ribbon -->
+      <path d="M30 40 L570 40 L550 85 L50 85 Z" fill="#10B981"/>
+      <text x="300" y="70" font-family="Arial, sans-serif" font-weight="900" font-size="22" fill="#FFFFFF" text-anchor="middle">
         ★ مصدقہ گڈز ٹرانسپورٹ اڈا ★
       </text>
 
       <!-- Adda Name in Massive Bold Text -->
-      <text x="300" y="165" font-family="Arial, sans-serif" font-weight="900" font-size="34" fill="#FFFFFF" text-anchor="middle">
+      <text x="300" y="145" font-family="Arial, sans-serif" font-weight="900" font-size="32" fill="#FFFFFF" text-anchor="middle">
         ${addaName}
       </text>
-      <text x="300" y="205" font-family="Arial, sans-serif" font-weight="bold" font-size="20" fill="#34D399" text-anchor="middle">
-        اڈا مقام: ${city} | رجسٹرڈ ٹرانسپورٹ اڈا
+      <text x="300" y="180" font-family="Arial, sans-serif" font-weight="bold" font-size="18" fill="#34D399" text-anchor="middle">
+        اڈا مقام: ${city} | تصدیق شدہ لوڈ
       </text>
 
-      <!-- White Inner Cargo Card -->
-      <rect x="50" y="235" width="500" height="240" rx="20" fill="#FFFFFF"/>
+      <!-- Inner White Card -->
+      <rect x="40" y="210" width="520" height="270" rx="20" fill="#FFFFFF"/>
 
       <!-- Route Header -->
-      <rect x="50" y="235" width="500" height="60" rx="20" fill="#0B2545"/>
-      <text x="300" y="275" font-family="Arial, sans-serif" font-weight="900" font-size="26" fill="#FBBF24" text-anchor="middle">
-        روٹ: ${route}
+      <rect x="40" y="210" width="520" height="65" rx="20" fill="#0B2545"/>
+      <text x="300" y="252" font-family="Arial, sans-serif" font-weight="900" font-size="24" fill="#FBBF24" text-anchor="middle">
+        ${fromCity} ➔ ${toCity}
       </text>
 
-      <!-- Cargo & Vehicle details -->
-      <text x="300" y="340" font-family="Arial, sans-serif" font-weight="bold" font-size="24" fill="#0B2545" text-anchor="middle">
-        مال: ${cargo}
-      </text>
-      <text x="300" y="385" font-family="Arial, sans-serif" font-weight="bold" font-size="22" fill="#16A34A" text-anchor="middle">
-        مطلوبہ گاڑی: ${vehicle} (${slip?.bodyType || 'فل باڈی'})
-      </text>
-      <text x="300" y="430" font-family="Arial, sans-serif" font-weight="bold" font-size="20" fill="#64748B" text-anchor="middle">
-        Slip ID: ${slip?.id || 'PKCL-OFFICIAL'}
+      <!-- Cargo Details -->
+      <text x="520" y="320" font-family="Arial, sans-serif" font-weight="bold" font-size="22" fill="#0B2545" text-anchor="end">
+        مال: ${cargo} ${weight ? `(${weight})` : ''}
       </text>
 
-      <!-- Footer Brand -->
-      <text x="300" y="520" font-family="Arial, sans-serif" font-weight="bold" font-size="22" fill="#FFFFFF" text-anchor="middle">
-        PK Cargo Link — پاکستان لوڈ سلپ سسٹم
+      <text x="520" y="370" font-family="Arial, sans-serif" font-weight="bold" font-size="20" fill="#047857" text-anchor="end">
+        گاڑی: ${vehicle}
       </text>
-      <text x="300" y="550" font-family="Arial, sans-serif" font-weight="normal" font-size="16" fill="#94A3B8" text-anchor="middle">
-        pkcargolink.com
+
+      <text x="520" y="420" font-family="Arial, sans-serif" font-weight="bold" font-size="20" fill="#1E293B" text-anchor="end">
+        سلپ نمبر: ${slipId}
+      </text>
+
+      <!-- Footer Button -->
+      <rect x="80" y="505" width="440" height="60" rx="15" fill="#10B981"/>
+      <text x="300" y="542" font-family="Arial, sans-serif" font-weight="900" font-size="20" fill="#FFFFFF" text-anchor="middle">
+        مکمل لوڈ سلپ اور رابطہ دیکھنے کے لیے کلک کریں
       </text>
     </svg>
     `;
@@ -228,22 +222,36 @@ app.get('/api/slip-og-image/:id', async (req: Request, res: Response) => {
   }
 });
 
-// -------------------------------------------------------------
-// Serve public assets (e.g. /adda-logo.png, /fonts, etc.)
-// -------------------------------------------------------------
+// Serve public assets
 app.use(express.static(path.resolve(process.cwd(), 'public')));
 
-// -------------------------------------------------------------
 // Intercept /slip/:id to inject Open Graph meta tags for WhatsApp
-// -------------------------------------------------------------
 app.get('/slip/:id', (req: Request, res: Response, next) => {
   const slipId = req.params.id;
   const slips = getStoredSlips();
-  const slip = slips.find((s) => s.id.toLowerCase() === slipId.toLowerCase()) || slips[0];
+  let slip = slips.find((s) => s.id.toLowerCase() === slipId.toLowerCase());
 
-  const host = req.get('host') || 'pkcargolink.com';
-  const proto = req.get('x-forwarded-proto') || 'https';
-  const baseUrl = `${proto}://${host}`;
+  // Prioritize query parameters
+  const queryAdda = req.query.a as string;
+  const queryFrom = req.query.from as string;
+  const queryTo = req.query.to as string;
+  const queryGoods = req.query.g as string;
+  const queryWeight = req.query.w as string;
+  const queryVehicle = req.query.v as string;
+  const queryPhone = req.query.p as string;
+
+  const addaName = queryAdda || slip?.addaName || 'پاکستان کارگو گڈز اڈا';
+  const loadingCity = queryFrom || slip?.loadingCity || 'لوڈنگ مقام';
+  const destinationCity = queryTo || slip?.destinationCity || 'منزل';
+  const goods = queryGoods || slip?.goods || 'دستیاب مال';
+  const weight = queryWeight || slip?.weight || '';
+  const vehicle = queryVehicle || slip?.vehicleType || 'ٹرک';
+  const phone = queryPhone || slip?.primaryPhone || 'اڈا فون';
+
+  const siteUrl = 'https://pkcargolink.com';
+  const ogTitle = `${addaName} – دستیاب لوڈ: ${loadingCity} تا ${destinationCity}`;
+  const ogDesc = `مال: ${goods} ${weight ? `(${weight})` : ''} | مطلوبہ گاڑی: ${vehicle} | اڈا: ${addaName} | رابطہ: ${phone}`;
+  const ogImage = `${siteUrl}/api/slip-og-image/${slipId}?a=${encodeURIComponent(addaName)}&from=${encodeURIComponent(loadingCity)}&to=${encodeURIComponent(destinationCity)}&g=${encodeURIComponent(goods)}&w=${encodeURIComponent(weight)}&v=${encodeURIComponent(vehicle)}`;
 
   const indexPath = isProd 
     ? path.resolve(process.cwd(), 'dist/index.html')
@@ -255,42 +263,37 @@ app.get('/slip/:id', (req: Request, res: Response, next) => {
 
   let html = fs.readFileSync(indexPath, 'utf-8');
 
-  if (slip) {
-    const ogTitle = `${slip.addaName} – دستیاب لوڈ: ${slip.loadingCity} تا ${slip.destinationCity}`;
-    const ogDesc = `مال: ${slip.goods} (${slip.weight}) | مطلوبہ گاڑی: ${slip.vehicleType} | اڈا: ${slip.addaName} (${slip.addaCity}) | رابطہ: ${slip.primaryPhone}`;
-    const siteUrl = 'https://pkcargolink.com';
-    const ogImage = `${siteUrl}/api/slip-og-image/${slip.id}`;
+  // Strip default OG tags
+  html = html.replace(/<meta\s+property="og:title"[^>]*>/gi, '');
+  html = html.replace(/<meta\s+property="og:description"[^>]*>/gi, '');
+  html = html.replace(/<meta\s+property="og:image"[^>]*>/gi, '');
+  html = html.replace(/<meta\s+property="og:site_name"[^>]*>/gi, '');
 
-    // Inject dynamic OpenGraph tags into HTML head
-    const ogTags = `
-    <!-- Dynamic Open Graph for WhatsApp & Social Media Preview -->
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="${slip.addaName}" />
-    <meta property="og:title" content="${ogTitle}" />
-    <meta property="og:description" content="${ogDesc}" />
-    <meta property="og:image" content="${ogImage}" />
-    <meta property="og:image:secure_url" content="${ogImage}" />
-    <meta property="og:image:type" content="image/png" />
-    <meta property="og:image:width" content="600" />
-    <meta property="og:image:height" content="600" />
-    <meta property="og:url" content="${siteUrl}/slip/${slip.id}" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="${ogTitle}" />
-    <meta name="twitter:description" content="${ogDesc}" />
-    <meta name="twitter:image" content="${ogImage}" />
-    <title>${ogTitle}</title>
-    `;
+  const ogTags = `
+  <!-- Dynamic Open Graph for WhatsApp & Social Media Preview -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="${addaName}" />
+  <meta property="og:title" content="${ogTitle}" />
+  <meta property="og:description" content="${ogDesc}" />
+  <meta property="og:image" content="${ogImage}" />
+  <meta property="og:image:secure_url" content="${ogImage}" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="600" />
+  <meta property="og:image:height" content="600" />
+  <meta property="og:url" content="${siteUrl}/slip/${slipId}" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="${ogTitle}" />
+  <meta name="twitter:description" content="${ogDesc}" />
+  <meta name="twitter:image" content="${ogImage}" />
+  <title>${ogTitle}</title>
+  `;
 
-    html = html.replace('</head>', `${ogTags}\n</head>`);
-  }
-
+  html = html.replace('</head>', `${ogTags}\n</head>`);
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.send(html);
 });
 
-// -------------------------------------------------------------
 // Vite Middlewares (Dev) or Static files (Prod)
-// -------------------------------------------------------------
 async function startServer() {
   if (!isProd) {
     const { createServer: createViteServer } = await import('vite');
@@ -301,13 +304,13 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     app.use(express.static(path.resolve(process.cwd(), 'dist')));
-    app.get('*', (_req: Request, res: Response) => {
+    app.get('*', (_req, res) => {
       res.sendFile(path.resolve(process.cwd(), 'dist/index.html'));
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`PK Cargo Link server running on http://0.0.0.0:${PORT}`);
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
   });
 }
 

@@ -27,7 +27,21 @@ export function generateSlipId(): string {
  * Builds the exact WhatsApp formatted text according to PK Cargo Link specifications
  */
 export function formatWhatsAppMessage(slip: LoadSlip): string {
-  const slipUrl = `${OFFICIAL_WEBSITE_URL}/slip/${slip.id}`;
+  // Pass slip details in query params so WhatsApp preview card generates exact Adda Name & Cargo
+  const params = new URLSearchParams({
+    a: slip.addaName,
+    c: slip.addaCity,
+    from: slip.loadingCity,
+    to: slip.destinationCity,
+    g: slip.goods,
+    w: slip.weight,
+    v: slip.vehicleType,
+    p: slip.primaryPhone,
+  });
+  if (slip.addaLogo && !slip.addaLogo.startsWith('data:')) {
+    params.set('img', slip.addaLogo);
+  }
+  const slipUrl = `${OFFICIAL_WEBSITE_URL}/slip/${slip.id}?${params.toString()}`;
   
   let contactLines = slip.primaryPhone;
   if (slip.whatsappNumber && slip.whatsappNumber !== slip.primaryPhone) {
@@ -40,7 +54,7 @@ export function formatWhatsAppMessage(slip: LoadSlip): string {
   const vehicleNumLine = slip.vehicleNumber ? `\n🔢 گاڑی نمبر:\n${slip.vehicleNumber}` : '';
   const fareLine = slip.fareOffer ? `\n💰 پیشکش کرایہ:\n${slip.fareOffer}` : '';
 
-  return `🚛 دستیاب لوڈ
+  return `🚛 دستیاب لوڈ: ${slip.loadingCity} تا ${slip.destinationCity}
 
 📍 لوڈنگ:
 ${slip.loadingCity} — ${slip.loadingLocation}
@@ -70,10 +84,7 @@ ${contactLines}
 ${slip.addaName} (${slip.addaCity})
 
 🔗 مکمل لوڈ سلپ (تصویر اور تفصیلات):
-${slipUrl}
-
-🚛 ڈرائیور حضرات اپنے شہر میں دستیاب لوڈ دیکھنے کے لیے یہاں کلک کریں:
-${OFFICIAL_WEBSITE_URL}`;
+${slipUrl}`;
 }
 
 /**

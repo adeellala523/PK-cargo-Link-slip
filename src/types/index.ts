@@ -89,6 +89,47 @@ export interface WhatsAppGroup {
   routeHint?: string;
 }
 
+export interface UserAccount {
+  id: string;
+  phone: string;
+  password?: string;
+  addaName: string;
+  managerName: string;
+  city: string;
+  address: string;
+  logoUrl?: string;
+  whatsappNumber: string;
+  contact1?: string;
+  contact2?: string;
+  contact3?: string;
+  contact4?: string;
+  contact5?: string;
+  
+  // Subscription & Payment status
+  status: 'active' | 'pending_payment' | 'locked_expired';
+  subscriptionPlan: 'monthly';
+  subscriptionStartedAt?: string;
+  subscriptionExpiresAt?: string;
+  paymentScreenshot?: string;
+  paymentTransactionId?: string;
+  paymentSubmittedAt?: string;
+  isApprovedByAdmin: boolean;
+  createdAt: string;
+}
+
+export interface PaymentSettings {
+  isPaymentRequired: boolean; // default: false (disabled)
+  monthlyFee: number; // default: 1500
+  jazzcashNumber: string;
+  jazzcashTitle: string;
+  easypaisaNumber: string;
+  easypaisaTitle: string;
+  bankName: string;
+  bankAccountNumber: string;
+  bankAccountTitle: string;
+  instructions: string;
+}
+
 export interface AdminStats {
   totalAddas: number;
   totalSlips: number;
