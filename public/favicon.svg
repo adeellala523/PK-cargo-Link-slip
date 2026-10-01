@@ -1,0 +1,23 @@
+<svg width='512' height='512' viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'>
+  <rect width='512' height='512' rx='100' fill='#0B2545'/>
+  <circle cx='256' cy='256' r='210' fill='none' stroke='#16A34A' stroke-width='14'/>
+  <!-- Cargo Truck Body -->
+  <g transform='translate(64, 120)'>
+    <rect x='30' y='60' width='220' height='130' rx='12' fill='#FFFFFF'/>
+    <path d='M250 100 L300 100 L340 140 L340 190 L250 190 Z' fill='#22C55E'/>
+    <rect x='260' y='110' width='45' height='35' rx='4' fill='#0B2545'/>
+    <circle cx='335' cy='165' r='8' fill='#F97316'/>
+    <!-- Wheels -->
+    <circle cx='90' cy='190' r='30' fill='#1E293B'/>
+    <circle cx='90' cy='190' r='14' fill='#94A3B8'/>
+    <circle cx='180' cy='190' r='30' fill='#1E293B'/>
+    <circle cx='180' cy='190' r='14' fill='#94A3B8'/>
+    <circle cx='300' cy='190' r='30' fill='#1E293B'/>
+    <circle cx='300' cy='190' r='14' fill='#94A3B8'/>
+    <!-- Speed stripes -->
+    <rect x='50' y='80' width='180' height='12' rx='6' fill='#16A34A'/>
+    <rect x='50' y='105' width='140' height='10' rx='5' fill='#F97316'/>
+    <!-- Text -->
+    <text x='192' y='275' font-family='Arial, sans-serif' font-weight='900' font-size='38' fill='#FFFFFF' text-anchor='middle'>PK CARGO LINK</text>
+  </g>
+</svg>

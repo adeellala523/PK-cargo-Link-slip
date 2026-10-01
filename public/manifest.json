@@ -1,0 +1,33 @@
+{
+  "name": "PK Cargo Link - پاکستان لوڈ سلپ سسٹم",
+  "short_name": "PK Cargo",
+  "description": "پاکستان میں اڈا منیجرز اور ٹرک ڈرائیورز کے لیے پروفیشنل لوڈ سلپ بنانے اور واٹس ایپ پر محفوظ لنک شیئر کرنے کا جدید نظام۔",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0B2545",
+  "theme_color": "#0B2545",
+  "dir": "rtl",
+  "lang": "ur",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

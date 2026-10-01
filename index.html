@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ur" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <title>PK Cargo Link – لوڈ سلپ بنائیں، WhatsApp پر فوراً شیئر کریں</title>
+    <meta name="description" content="پاکستان میں اڈا منیجرز اور ٹرک ڈرائیورز کے لیے پروفیشنل لوڈ سلپ بنانے اور واٹس ایپ پر محفوظ لنک شیئر کرنے کا جدید نظام۔" />
+    
+    <!-- PWA & Mobile Web App Meta -->
+    <meta name="theme-color" content="#0B2545" />
+    <meta name="application-name" content="PK Cargo Link" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PK Cargo Link" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- OpenGraph & Social Sharing Meta -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PK Cargo Link" />
+    <meta property="og:title" content="PK Cargo Link – لوڈ سلپ بنائیں، WhatsApp پر فوراً شیئر کریں" />
+    <meta property="og:description" content="اب Load Slip کو تصویر کی بجائے ایک محفوظ Web Link کے ذریعے Driver تک پہنچائیں۔ Driver اپنے موبائل browser میں مکمل slip دیکھ سکتا ہے۔" />
+    <meta property="og:url" content="https://pkcargolink.com" />
+    <meta property="og:image" content="https://pkcargolink.com/icon-512.png" />
+    <meta property="og:locale" content="ur_PK" />
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="PK Cargo Link – لوڈ سلپ سسٹم" />
+    <meta name="twitter:description" content="پاکستان کے ٹرانسپورٹ اڈا منیجرز اور ٹرک ڈرائیورز کے لیے تیز ترین ڈیجیٹل لوڈ سلپ پلیٹ فارم۔" />
+    <meta name="twitter:image" content="https://pkcargolink.com/icon-512.png" />
+
+    <!-- Font preload for Nafees Web Naskh -->
+    <link rel="preload" href="/fonts/nafeesweb.ttf" as="font" type="font/ttf" crossorigin />
+
+    <!-- Structured Data JSON-LD -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "LogisticsService",
+      "name": "PK Cargo Link",
+      "url": "https://pkcargolink.com",
+      "logo": "https://pkcargolink.com/icon-512.png",
+      "description": "پاکستان میں اڈا منیجرز اور ٹرک ڈرائیورز کے لیے پروفیشنل لوڈ سلپ بنانے اور واٹس ایپ پر محفوظ لنک شیئر کرنے کا جدید نظام۔",
+      "areaServed": {
+        "@type": "Country",
+        "name": "Pakistan"
+      }
+    }
+    </script>
+  </head>
+  <body class="bg-slate-50 text-slate-900 antialiased font-nafees selection:bg-emerald-600 selection:text-white">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
+    </script>
+  </body>
+</html>

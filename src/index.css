@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: "Nafees Web Naskh";
+  src: url("/fonts/nafeesweb.ttf") format("truetype"),
+       url("/nafeesweb.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Nafees Web Naskh";
+  src: url("/fonts/nafeesweb.ttf") format("truetype"),
+       url("/nafeesweb.ttf") format("truetype");
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  font-family: "Nafees Web Naskh", "Noto Naskh Arabic", "Urdu Typesetting", "Jameel Noori Nastaleeq", serif;
+  direction: rtl;
+  text-align: right;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  font-family: "Nafees Web Naskh", "Noto Naskh Arabic", "Urdu Typesetting", serif;
+  background-color: #f8fafc;
+  color: #0f172a;
+  line-height: 1.8;
+  word-spacing: 0.05em;
+  letter-spacing: 0;
+}
+
+/* Ensure Urdu inputs and buttons look natural with proper line height */
+input, textarea, select, button {
+  font-family: inherit;
+}
+
+/* Specific styling for English technical inputs/numbers */
+.ltr-content, .font-en {
+  direction: ltr;
+  text-align: left;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.num-badge {
+  direction: ltr;
+  display: inline-block;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "tnum";
+}
+
+/* Print Styles for Load Slip */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .slip-container {
+    box-shadow: none !important;
+    border: 2px solid #000 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 16px !important;
+    page-break-inside: avoid;
+  }
+}

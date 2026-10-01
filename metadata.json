@@ -1,0 +1,6 @@
+{
+  "name": "PK Cargo Link",
+  "description": "پاکستان میں اڈا منیجرز اور ٹرک ڈرائیورز کے لیے پروفیشنل لوڈ سلپ بنانے اور واٹس ایپ پر محفوظ لنک شیئر کرنے کا جدید نظام۔",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
