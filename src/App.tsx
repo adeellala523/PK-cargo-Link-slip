@@ -82,7 +82,11 @@ export default function App() {
           // If not in local state yet, immediately sync with Hostinger server
           StorageService.syncWithServer().then((latestSlips) => {
             setSlips(latestSlips);
-            const serverFound = latestSlips.find((s) => s.id.trim().toLowerCase() === targetId!.trim().toLowerCase());
+            const targetClean = targetId!.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+            const serverFound = latestSlips.find((s) => {
+              const sClean = s.id.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+              return s.id.trim().toLowerCase() === targetId!.trim().toLowerCase() || sClean === targetClean;
+            });
             if (serverFound) {
               setActiveSlip(serverFound);
               setCurrentTab('slip-detail');

@@ -45,7 +45,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({
     updateOpenGraphMetaTags(slip);
   }, [slip]);
 
-  const publicUrl = `${OFFICIAL_WEBSITE_URL}/slip/${slip.id}`;
+  const cleanId = slip.id.replace(/[^a-zA-Z0-9]/g, '');
+  const publicUrl = `${OFFICIAL_WEBSITE_URL}/slip/${cleanId}`;
   const whatsappText = formatWhatsAppMessage(slip);
   const addaPhoto = slip.addaLogo && !slip.addaLogo.includes('icon-512.png') ? slip.addaLogo : null;
 

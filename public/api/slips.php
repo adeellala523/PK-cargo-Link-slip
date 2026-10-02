@@ -183,7 +183,12 @@ if ($method === 'POST') {
         foreach ($singleDirs as $sDir) {
             if (!file_exists($sDir)) @mkdir($sDir, 0777, true);
             if (is_dir($sDir) && is_writable($sDir)) {
-                @file_put_contents($sDir . '/' . $cleanId . '.json', json_encode($body, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+                $payloadJson = json_encode($body, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+                @file_put_contents($sDir . '/' . $cleanId . '.json', $payloadJson);
+                $noHyphen = preg_replace('/[^a-zA-Z0-9]/', '', $body['id']);
+                if (!empty($noHyphen)) {
+                    @file_put_contents($sDir . '/' . $noHyphen . '.json', $payloadJson);
+                }
             }
         }
     }

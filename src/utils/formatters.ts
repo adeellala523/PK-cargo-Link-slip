@@ -77,10 +77,7 @@ ${slip.bodyType}${vehicleNumLine}${fareLine}
 📞 رابطہ:
 ${contactLines}
 
-🚚 مزید تمام دستیاب لوڈز تلاش کرنے کے لیے (ڈرائیور پورٹل):
-${driverPortalUrl}
-
-🔗 مکمل لوڈ سلپ (تصویر اور تفصیلات):
+🔗 آن لائن لوڈ سلپ اور تصویری تفصیلات:
 ${slipUrl}`;
 }
 
