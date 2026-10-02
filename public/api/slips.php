@@ -81,6 +81,28 @@ if ($method === 'POST') {
         exit;
     }
 
+    // Convert base64 addaLogo to real image file for WhatsApp crawler compatibility
+    if (isset($body['addaLogo']) && strpos($body['addaLogo'], 'data:image/') === 0) {
+        $uploadDir = __DIR__ . '/../uploads';
+        if (!file_exists($uploadDir)) {
+            @mkdir($uploadDir, 0777, true);
+        }
+        if (is_dir($uploadDir) && is_writable($uploadDir)) {
+            preg_match('/^data:image\/(\w+);base64,/', $body['addaLogo'], $type);
+            $ext = isset($type[1]) ? strtolower($type[1]) : 'png';
+            if ($ext === 'jpeg') $ext = 'jpg';
+            $data = substr($body['addaLogo'], strpos($body['addaLogo'], ',') + 1);
+            $decoded = base64_decode($data);
+            if ($decoded !== false) {
+                $safeName = 'adda_' . md5($body['id'] . (isset($body['addaName']) ? $body['addaName'] : '')) . '.' . $ext;
+                @file_put_contents($uploadDir . '/' . $safeName, $decoded);
+                $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'https://';
+                $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'pkcargolink.com';
+                $body['addaLogo'] = $protocol . $host . '/uploads/' . $safeName;
+            }
+        }
+    }
+
     $slips = readAllSlips();
     $found = false;
 

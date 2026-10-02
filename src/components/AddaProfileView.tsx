@@ -49,13 +49,32 @@ export const AddaProfileView: React.FC<AddaProfileViewProps> = ({
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        alert('تصویر کا سائز 2MB سے کم ہونا چاہیے۔');
+      if (file.size > 5 * 1024 * 1024) {
+        alert('تصویر کا سائز 5MB سے کم ہونا چاہیے۔');
         return;
       }
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setLogoUrl(reader.result as string);
+      reader.onloadend = async () => {
+        const base64 = reader.result as string;
+        setLogoUrl(base64);
+
+        // Upload to server so WhatsApp gets a real public image URL
+        try {
+          const formData = new FormData();
+          formData.append('image', file);
+          const res = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData,
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.url) {
+              setLogoUrl(data.url);
+            }
+          }
+        } catch {
+          // Fallback to base64 which will be converted by backend
+        }
       };
       reader.readAsDataURL(file);
     }

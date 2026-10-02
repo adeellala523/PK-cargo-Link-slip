@@ -487,6 +487,15 @@ export const StorageService = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(slip),
       }).catch(() => {});
+
+      // If logo is base64, also upload directly to ensure permanent file for crawlers
+      if (slip.addaLogo && slip.addaLogo.startsWith('data:image/')) {
+        fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ data: slip.addaLogo, prefix: 'slip_' + slip.id }),
+        }).catch(() => {});
+      }
     }
     return slip;
   },

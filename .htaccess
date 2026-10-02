@@ -9,19 +9,42 @@
     Header set Expires 0
   </FilesMatch>
 
-  # Route WhatsApp / Social crawlers to slip.php
-  RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|WhatsApp|Twitterbot|LinkedInBot|TelegramBot) [NC]
+  # Always route /slip/... to slip.php (in dist or root) so Adda Name, Logo and Load are always dynamic for WhatsApp
   RewriteCond %{REQUEST_URI} ^/slip/([^/]+)/?$
   RewriteCond %{DOCUMENT_ROOT}/dist/slip.php -f
   RewriteRule ^slip/([^/]+)/?$ /dist/slip.php?id=$1 [L,QSA]
+
+  RewriteCond %{REQUEST_URI} ^/slip/([^/]+)/?$
+  RewriteCond %{DOCUMENT_ROOT}/slip.php -f
+  RewriteRule ^slip/([^/]+)/?$ /slip.php?id=$1 [L,QSA]
 
   # Route /api/slips
   RewriteCond %{DOCUMENT_ROOT}/dist/api/slips.php -f
   RewriteRule ^api/slips/?$ /dist/api/slips.php [L,QSA]
 
+  RewriteCond %{DOCUMENT_ROOT}/api/slips.php -f
+  RewriteRule ^api/slips/?$ /api/slips.php [L,QSA]
+
   # Route /api/users-sync
   RewriteCond %{DOCUMENT_ROOT}/dist/api/users.php -f
   RewriteRule ^api/users-sync/?$ /dist/api/users.php [L,QSA]
+
+  RewriteCond %{DOCUMENT_ROOT}/api/users.php -f
+  RewriteRule ^api/users-sync/?$ /api/users.php [L,QSA]
+
+  # Route /api/upload
+  RewriteCond %{DOCUMENT_ROOT}/dist/api/upload.php -f
+  RewriteRule ^api/upload/?$ /dist/api/upload.php [L,QSA]
+
+  RewriteCond %{DOCUMENT_ROOT}/api/upload.php -f
+  RewriteRule ^api/upload/?$ /api/upload.php [L,QSA]
+
+  # Route /api/slip-image
+  RewriteCond %{DOCUMENT_ROOT}/dist/api/slip-image.php -f
+  RewriteRule ^api/slip-image/?$ /dist/api/slip-image.php [L,QSA]
+
+  RewriteCond %{DOCUMENT_ROOT}/api/slip-image.php -f
+  RewriteRule ^api/slip-image/?$ /api/slip-image.php [L,QSA]
 
   # Serve dist files if they exist
   RewriteCond %{REQUEST_FILENAME} !-f

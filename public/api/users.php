@@ -29,6 +29,29 @@ function getWritableFile($filename) {
     return __DIR__ . '/' . $filename;
 }
 
+function saveBase64Image($dataUrl, $prefix = 'user') {
+    if (strpos($dataUrl, 'data:image/') !== 0) return $dataUrl;
+    $uploadDir = __DIR__ . '/../uploads';
+    if (!file_exists($uploadDir)) {
+        @mkdir($uploadDir, 0777, true);
+    }
+    if (is_dir($uploadDir) && is_writable($uploadDir)) {
+        preg_match('/^data:image\/(\w+);base64,/', $dataUrl, $type);
+        $ext = isset($type[1]) ? strtolower($type[1]) : 'png';
+        if ($ext === 'jpeg') $ext = 'jpg';
+        $base64 = substr($dataUrl, strpos($dataUrl, ',') + 1);
+        $decoded = base64_decode($base64);
+        if ($decoded !== false) {
+            $filename = $prefix . '_' . md5($dataUrl) . '.' . $ext;
+            @file_put_contents($uploadDir . '/' . $filename, $decoded);
+            $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'https://';
+            $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'pkcargolink.com';
+            return $protocol . $host . '/uploads/' . $filename;
+        }
+    }
+    return $dataUrl;
+}
+
 function readAllUsers() {
     $filename = 'users.json';
     $candidatePaths = [
@@ -96,12 +119,19 @@ if ($method === 'POST') {
             foreach ($body as $u) {
                 if (isset($u['phone'])) {
                     $key = preg_replace('/[^0-9]/', '', $u['phone']);
+                    // Convert base64 logoUrl to real image
+                    if (isset($u['logoUrl']) && strpos($u['logoUrl'], 'data:image/') === 0) {
+                        $u['logoUrl'] = saveBase64Image($u['logoUrl'], 'user_' . $key);
+                    }
                     $userMap[$key] = $u;
                 }
             }
         } else if (isset($body['phone'])) {
             // Single user object posted
             $key = preg_replace('/[^0-9]/', '', $body['phone']);
+            if (isset($body['logoUrl']) && strpos($body['logoUrl'], 'data:image/') === 0) {
+                $body['logoUrl'] = saveBase64Image($body['logoUrl'], 'user_' . $key);
+            }
             $userMap[$key] = $body;
         }
 

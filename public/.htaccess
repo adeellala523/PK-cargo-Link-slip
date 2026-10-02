@@ -2,19 +2,25 @@
   RewriteEngine On
   RewriteBase /
 
-  # Handle WhatsApp / Facebook OpenGraph previews if slip.php is present
-  RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|WhatsApp|Twitterbot|LinkedInBot|TelegramBot) [NC]
-  RewriteCond %{REQUEST_URI} ^/slip/([^/]+)/?$
-  RewriteCond %{DOCUMENT_ROOT}/slip.php -f
-  RewriteRule ^slip/([^/]+)/?$ /slip.php?id=$1 [L,QSA]
-
-  # Map /api/slips to /api/slips.php if PHP is present
+  # Map /api/slips to /api/slips.php
   RewriteCond %{DOCUMENT_ROOT}/api/slips.php -f
   RewriteRule ^api/slips/?$ /api/slips.php [L,QSA]
 
-  # Map /api/users-sync to /api/users.php if PHP is present
+  # Map /api/users-sync to /api/users.php
   RewriteCond %{DOCUMENT_ROOT}/api/users.php -f
   RewriteRule ^api/users-sync/?$ /api/users.php [L,QSA]
+
+  # Map /api/upload to /api/upload.php
+  RewriteCond %{DOCUMENT_ROOT}/api/upload.php -f
+  RewriteRule ^api/upload/?$ /api/upload.php [L,QSA]
+
+  # Map /api/slip-image to /api/slip-image.php
+  RewriteCond %{DOCUMENT_ROOT}/api/slip-image.php -f
+  RewriteRule ^api/slip-image/?$ /api/slip-image.php [L,QSA]
+
+  # Always route /slip/... to slip.php so Adda Name, Logo & Load Details are dynamically injected for WhatsApp and Browsers
+  RewriteCond %{DOCUMENT_ROOT}/slip.php -f
+  RewriteRule ^slip/([^/]+)/?$ /slip.php?id=$1 [L,QSA]
 
   # Rewrite admin route /adil, driver portal /driver, and content pages
   RewriteRule ^(adil|driver|about|contact|privacy)/?$ /index.html [L,QSA]
@@ -24,7 +30,7 @@
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
 
-  # Rewrite all /slip/... routes to index.html
+  # Fallback all /slip/... routes to index.html if slip.php not present
   RewriteRule ^slip/.*$ /index.html [L,QSA]
 
   # All other routes to index.html for Single Page Application routing
