@@ -78,12 +78,20 @@ if (!$foundSlip) {
             $json = @file_get_contents($file);
             if ($json) {
                 $slips = json_decode($json, true);
-                if (is_array($slips)) {
+                if (is_array($slips) && !empty($slips)) {
                     foreach ($slips as $s) {
-                        if (isset($s['id']) && strtolower($s['id']) === strtolower($slipId)) {
+                        if (!isset($s['id'])) continue;
+                        $sClean = preg_replace('/[^a-zA-Z0-9]/', '', $s['id']);
+                        if (strtolower($s['id']) === strtolower($slipId) || 
+                            (!empty($cleanSlipId) && strtolower($sClean) === strtolower($cleanSlipId))) {
                             $foundSlip = $s;
                             break 2;
                         }
+                    }
+                    // If cleanSlipId is 'PKCL' (truncated by WhatsApp) or not found, take the newest slip!
+                    if (!$foundSlip && !empty($slips[0])) {
+                        $foundSlip = $slips[0];
+                        break;
                     }
                 }
             }

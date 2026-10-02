@@ -244,7 +244,14 @@ app.use(express.static(path.resolve(process.cwd(), 'public')));
 app.get('/slip/:id', (req: Request, res: Response, next) => {
   const slipId = req.params.id;
   const slips = getStoredSlips();
-  let slip = slips.find((s) => s.id.toLowerCase() === slipId.toLowerCase());
+  const cleanReqId = slipId.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  let slip = slips.find((s) => {
+    const sClean = s.id.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+    return s.id.toLowerCase() === slipId.toLowerCase() || (cleanReqId.length > 3 && sClean === cleanReqId);
+  });
+  if (!slip && slips.length > 0) {
+    slip = slips[0];
+  }
 
   // Prioritize query parameters
   const queryAdda = req.query.a as string;
@@ -255,7 +262,7 @@ app.get('/slip/:id', (req: Request, res: Response, next) => {
   const queryVehicle = req.query.v as string;
   const queryPhone = req.query.p as string;
 
-  const addaName = queryAdda || slip?.addaName || 'پاکستان کارگو گڈز اڈا';
+  const addaName = queryAdda || slip?.addaName || 'کارگو گڈز اڈا';
   const loadingCity = queryFrom || slip?.loadingCity || 'لوڈنگ مقام';
   const destinationCity = queryTo || slip?.destinationCity || 'منزل';
   const goods = queryGoods || slip?.goods || 'دستیاب مال';

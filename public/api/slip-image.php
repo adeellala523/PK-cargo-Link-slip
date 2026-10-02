@@ -42,8 +42,24 @@ $vehicle = isset($slip['vehicleType']) ? $slip['vehicleType'] : (isset($_GET['v'
 $phone = isset($slip['primaryPhone']) ? $slip['primaryPhone'] : (isset($_GET['p']) ? $_GET['p'] : '0300-XXXXXXX');
 $logoUrl = isset($slip['addaLogo']) ? $slip['addaLogo'] : '';
 
-// If the Adda has a direct uploaded image file that exists, check if we can serve it directly:
-if ($logoUrl && strpos($logoUrl, 'data:') !== 0 && !isset($_GET['force_canvas'])) {
+// 2. If the Adda has an image (base64 or file or url), serve THAT Adda's exact picture!
+if (!empty($logoUrl) && !isset($_GET['force_canvas'])) {
+    // Handle data:image/ URI
+    if (strpos($logoUrl, 'data:image/') === 0) {
+        preg_match('/^data:image\/(\w+);base64,/', $logoUrl, $type);
+        $ext = isset($type[1]) ? strtolower($type[1]) : 'png';
+        if ($ext === 'jpeg') $ext = 'jpg';
+        $data = substr($logoUrl, strpos($logoUrl, ',') + 1);
+        $decoded = base64_decode($data);
+        if ($decoded !== false) {
+            header('Content-Type: image/' . ($ext === 'jpg' ? 'jpeg' : $ext));
+            header('Cache-Control: public, max-age=86400');
+            echo $decoded;
+            exit;
+        }
+    }
+
+    // Handle local uploaded files
     $localImagePath = null;
     if (strpos($logoUrl, '/uploads/') !== false) {
         $part = substr($logoUrl, strpos($logoUrl, '/uploads/'));
@@ -54,85 +70,86 @@ if ($logoUrl && strpos($logoUrl, 'data:') !== 0 && !isset($_GET['force_canvas'])
         }
     }
     
-    // If local adda image exists and user wants adda image directly:
     if ($localImagePath && file_exists($localImagePath)) {
         $mime = mime_content_type($localImagePath);
         header('Content-Type: ' . $mime);
+        header('Cache-Control: public, max-age=86400');
         readfile($localImagePath);
         exit;
     }
 }
 
-// 2. Generate a custom 1200x630 OpenGraph Banner Image using GD
+// 3. Generate a clean, premium transport medallion badge (not a webpage screenshot)
 $width = 1200;
 $height = 630;
 $im = imagecreatetruecolor($width, $height);
 
-// Colors
-$bgDark = imagecolorallocate($im, 11, 37, 69);     // #0B2545 Dark Blue
-$bgNavy = imagecolorallocate($im, 6, 24, 45);     // Darker Navy
-$green = imagecolorallocate($im, 22, 163, 74);     // #16A34A Emerald Green
-$lightGreen = imagecolorallocate($im, 34, 197, 94); // Light Green
+// Premium Transport Palette
+$bgNavy = imagecolorallocate($im, 7, 26, 50);       // Rich Deep Navy
+$accentGreen = imagecolorallocate($im, 16, 185, 129); // Vibrant Emerald
+$gold = imagecolorallocate($im, 245, 158, 11);       // Warm Amber Gold
 $white = imagecolorallocate($im, 255, 255, 255);
-$amber = imagecolorallocate($im, 245, 158, 11);    // Amber
-$slateLight = imagecolorallocate($im, 226, 232, 240);
-$cardBg = imagecolorallocate($im, 15, 48, 88);
+$lightSlate = imagecolorallocate($im, 203, 213, 225);
+$darkTeal = imagecolorallocate($im, 4, 47, 46);
 
-// Fill Background with deep navy
-imagefilledrectangle($im, 0, 0, $width, $height, $bgDark);
+// Background
+imagefilledrectangle($im, 0, 0, $width, $height, $bgNavy);
 
-// Draw Top Emerald Accent Bar
-imagefilledrectangle($im, 0, 0, $width, 16, $green);
+// Outer Border
+imagesetthickness($im, 8);
+imagerectangle($im, 24, 24, $width - 24, $height - 24, $accentGreen);
+imagesetthickness($im, 2);
+imagerectangle($im, 34, 34, $width - 34, $height - 34, $gold);
 
-// Inner Card Container
-imagefilledrectangle($im, 40, 45, $width - 40, $height - 45, $cardBg);
+// Top Ribbon
+imagefilledrectangle($im, 200, 50, $width - 200, 110, $darkTeal);
+imagerectangle($im, 200, 50, $width - 200, 110, $gold);
 
-// Card Border
-imagesetthickness($im, 4);
-imagerectangle($im, 40, 45, $width - 40, $height - 45, $green);
+// Center Medallion Circle
+$centerX = $width / 2;
+$centerY = 260;
+imagefilledellipse($im, $centerX, $centerY, 200, 200, $darkTeal);
+imagesetthickness($im, 5);
+imageellipse($im, $centerX, $centerY, 200, 200, $gold);
+imagesetthickness($im, 2);
+imageellipse($im, $centerX, $centerY, 180, 180, $accentGreen);
 
-// Top Badge Banner
-imagefilledrectangle($im, 70, 75, $width - 70, 140, $bgNavy);
-imagerectangle($im, 70, 75, $width - 70, 140, $lightGreen);
+// Draw Truck Icon inside medallion using basic geometry
+$truckX = $centerX - 50;
+$truckY = $centerY - 25;
+// Truck Cargo Body
+imagefilledrectangle($im, $truckX, $truckY, $truckX + 65, $truckY + 45, $accentGreen);
+imagerectangle($im, $truckX, $truckY, $truckX + 65, $truckY + 45, $white);
+// Truck Cabin
+imagefilledrectangle($im, $truckX + 68, $truckY + 12, $truckX + 100, $truckY + 45, $gold);
+// Cabin Window
+imagefilledrectangle($im, $truckX + 78, $truckY + 16, $truckX + 96, $truckY + 28, $bgNavy);
+// Wheels
+imagefilledellipse($im, $truckX + 20, $truckY + 50, 18, 18, $white);
+imagefilledellipse($im, $truckX + 20, $truckY + 50, 8, 8, $bgNavy);
+imagefilledellipse($im, $truckX + 50, $truckY + 50, 18, 18, $white);
+imagefilledellipse($im, $truckX + 50, $truckY + 50, 8, 8, $bgNavy);
+imagefilledellipse($im, $truckX + 85, $truckY + 50, 18, 18, $white);
+imagefilledellipse($im, $truckX + 85, $truckY + 50, 8, 8, $bgNavy);
 
-// Font for text
-$fontPath = __DIR__ . '/../fonts/nafeesweb.ttf';
-if (!file_exists($fontPath)) {
-    $fontPath = __DIR__ . '/../../public/fonts/nafeesweb.ttf';
-}
+// Ribbon Text (English standard to guarantee clean, zero-distortion rendering on all systems)
+imagestring($im, 5, $centerX - 130, 72, "GOODS TRANSPORT LOAD SLIP", $gold);
 
-if (file_exists($fontPath) && function_exists('imagettftext')) {
-    // Top Verified Badge
-    imagettftext($im, 20, 0, 100, 118, $amber, $fontPath, "★  " . $addaName . "  |  لوڈ سلپ");
-    imagettftext($im, 18, 0, 850, 118, $slateLight, $fontPath, "سلپ: " . $slipId);
+// Route Banner
+imagefilledrectangle($im, 100, 400, $width - 100, 480, $darkTeal);
+imagesetthickness($im, 3);
+imagerectangle($im, 100, 400, $width - 100, 480, $accentGreen);
 
-    // Large Bold Adda Name
-    imagettftext($im, 38, 0, 100, 230, $white, $fontPath, $addaName);
-    imagettftext($im, 22, 0, 100, 280, $lightGreen, $fontPath, "📍 مقام اڈا: " . $addaCity);
+$routeText = "ROUTE: " . strtoupper($from) . "  TO  " . strtoupper($to);
+imagestring($im, 5, $centerX - (strlen($routeText) * 4.5), 430, $routeText, $white);
 
-    // Route Box
-    imagefilledrectangle($im, 70, 315, $width - 70, 420, $bgNavy);
-    imagerectangle($im, 70, 315, $width - 70, 420, $green);
-    imagettftext($im, 28, 0, 100, 380, $white, $fontPath, "🚛 روٹ: " . $from . "  تا  " . $to);
+// Contact Footer
+$contactText = "CONTACT / BOOKING: " . $phone;
+imagestring($im, 5, $centerX - (strlen($contactText) * 4.5), 520, $contactText, $gold);
 
-    // Load Details Box
-    imagettftext($im, 24, 0, 100, 475, $slateLight, $fontPath, "📦 مال: " . $goods . ($weight ? " (" . $weight . ")" : ""));
-    imagettftext($im, 24, 0, 680, 475, $amber, $fontPath, "🚚 گاڑی: " . $vehicle);
-
-    // Bottom Contact Bar
-    imagefilledrectangle($im, 70, 520, $width - 70, 575, $green);
-    imagettftext($im, 24, 0, 100, 560, $white, $fontPath, "📞 رابطہ: " . $phone);
-    imagettftext($im, 20, 0, 750, 560, $white, $fontPath, "pkcargolink.com/slip/" . $slipId);
-} else {
-    // Fallback using built-in system fonts
-    imagestring($im, 5, 100, 100, $addaName . " - LOAD SLIP", $amber);
-    imagestring($im, 5, 100, 180, "ADDA: " . $addaName . " (" . $addaCity . ")", $white);
-    imagestring($im, 5, 100, 240, "ROUTE: " . $from . " -> " . $to, $lightGreen);
-    imagestring($im, 5, 100, 300, "CARGO: " . $goods . " | VEHICLE: " . $vehicle, $slateLight);
-    imagestring($im, 5, 100, 360, "CONTACT PHONE: " . $phone, $white);
-    imagestring($im, 4, 100, 540, "pkcargolink.com/slip/" . $slipId, $amber);
-}
+$siteText = "pkcargolink.com";
+imagestring($im, 4, $centerX - (strlen($siteText) * 4), 565, $siteText, $lightSlate);
 
 imagepng($im);
 imagedestroy($im);
-?>
+exit;

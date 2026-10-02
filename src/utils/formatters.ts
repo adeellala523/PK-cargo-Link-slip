@@ -8,8 +8,9 @@ export function getAppBaseUrl(): string {
 }
 
 /**
- * Generates a unique, non-duplicating slip ID in format:
- * PKCL-YYYYMMDD-XXXXXX (e.g. PKCL-20261001-000125)
+ * Generates a unique, non-duplicating slip ID in clean alphanumeric format (no hyphens)
+ * so WhatsApp and mobile messengers never break the URL across lines:
+ * PKCLYYYYMMDDXXXXXX (e.g. PKCL20261002896904)
  */
 export function generateSlipId(): string {
   const now = new Date();
@@ -18,16 +19,18 @@ export function generateSlipId(): string {
   const day = String(now.getDate()).padStart(2, '0');
   const dateStr = `${year}${month}${day}`;
   
-  // High-precision sequence + random component to guarantee uniqueness
+  // High-precision sequence + random component to guarantee uniqueness without hyphens
   const randomNum = Math.floor(100000 + Math.random() * 900000);
-  return `PKCL-${dateStr}-${randomNum}`;
+  return `PKCL${dateStr}${randomNum}`;
 }
 
 /**
  * Builds the exact WhatsApp formatted text according to PK Cargo Link specifications
  */
 export function formatWhatsAppMessage(slip: LoadSlip): string {
-  const slipUrl = `${OFFICIAL_WEBSITE_URL}/slip/${slip.id}`;
+  // Strip any hyphens from ID in URL to ensure WhatsApp never breaks the link
+  const cleanId = slip.id.replace(/[^a-zA-Z0-9]/g, '');
+  const slipUrl = `${OFFICIAL_WEBSITE_URL}/slip/${cleanId}`;
   const driverPortalUrl = `${OFFICIAL_WEBSITE_URL}/driver`;
   
   let contactLines = slip.primaryPhone;
