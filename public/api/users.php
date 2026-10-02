@@ -61,32 +61,57 @@ function readAllUsers() {
         __DIR__ . '/' . $filename,
     ];
 
+    $merged = [];
+    $newestTime = 0;
+
     foreach ($candidatePaths as $file) {
         if (file_exists($file)) {
+            $mtime = @filemtime($file) ?: 0;
             $content = @file_get_contents($file);
             if ($content) {
                 $parsed = json_decode($content, true);
                 if (is_array($parsed)) {
-                    return $parsed;
+                    foreach ($parsed as $u) {
+                        if (isset($u['phone'])) {
+                            $k = preg_replace('/[^0-9]/', '', $u['phone']);
+                            if (!isset($merged[$k]) || $mtime >= $newestTime) {
+                                $merged[$k] = $u;
+                            }
+                        }
+                    }
+                    if ($mtime > $newestTime) {
+                        $newestTime = $mtime;
+                    }
                 }
             }
         }
     }
-    return [];
+    return array_values($merged);
 }
 
 function writeAllUsers($users) {
-    $targetFile = getWritableFile('users.json');
+    $filename = 'users.json';
+    $candidateDirs = [
+        __DIR__ . '/../data',
+        __DIR__ . '/../../data',
+        __DIR__ . '/data',
+        __DIR__,
+    ];
+    
     $json = json_encode($users, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-    $result = @file_put_contents($targetFile, $json, LOCK_EX);
-    
-    // Also backup to secondary location if possible
-    $backupFile = __DIR__ . '/users.json';
-    if ($targetFile !== $backupFile) {
-        @file_put_contents($backupFile, $json, LOCK_EX);
+    $written = false;
+
+    foreach ($candidateDirs as $dir) {
+        if (!file_exists($dir)) {
+            @mkdir($dir, 0777, true);
+        }
+        $target = $dir . '/' . $filename;
+        $res = @file_put_contents($target, $json, LOCK_EX);
+        if ($res !== false) {
+            $written = true;
+        }
     }
-    
-    return $result !== false;
+    return $written;
 }
 
 $method = $_SERVER['REQUEST_METHOD'];

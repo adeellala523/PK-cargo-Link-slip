@@ -173,16 +173,46 @@ app.get('/api/slips/:id', (req: Request, res: Response) => {
   res.json(slip);
 });
 
-// Users Sync API
-app.get('/api/users-sync', (_req: Request, res: Response) => {
-  res.json(getStoredUsers());
+// Users Sync API (Two-way sync with live production pkcargolink.com)
+app.get('/api/users-sync', async (_req: Request, res: Response) => {
+  const localUsers = getStoredUsers();
+  const map = new Map<string, any>();
+  localUsers.forEach((u: any) => {
+    if (u && u.phone) map.set(u.phone.replace(/[^0-9]/g, ''), u);
+  });
+
+  // Fetch live production users from pkcargolink.com
+  try {
+    const liveRes = await fetch('https://pkcargolink.com/api/users.php', {
+      signal: AbortSignal.timeout(3500)
+    });
+    if (liveRes.ok) {
+      const liveUsers = await liveRes.json();
+      if (Array.isArray(liveUsers)) {
+        liveUsers.forEach((u: any) => {
+          if (u && u.phone) {
+            const k = u.phone.replace(/[^0-9]/g, '');
+            map.set(k, { ...(map.get(k) || {}), ...u });
+          }
+        });
+        const merged = Array.from(map.values());
+        saveStoredUsers(merged);
+        res.json(merged);
+        return;
+      }
+    }
+  } catch (err) {
+    console.warn('[Server] Live users sync from pkcargolink.com failed or timed out:', err);
+  }
+
+  res.json(Array.from(map.values()));
 });
 
-app.post('/api/users-sync', (req: Request, res: Response) => {
+app.post('/api/users-sync', async (req: Request, res: Response) => {
   const current = getStoredUsers();
   const map = new Map<string, any>();
   current.forEach((u: any) => {
-    if (u.phone) map.set(u.phone.replace(/[^0-9]/g, ''), u);
+    if (u && u.phone) map.set(u.phone.replace(/[^0-9]/g, ''), u);
   });
 
   if (Array.isArray(req.body)) {
@@ -197,6 +227,17 @@ app.post('/api/users-sync', (req: Request, res: Response) => {
 
   const updated = Array.from(map.values());
   saveStoredUsers(updated);
+
+  // Also push to live production server if reachable
+  try {
+    await fetch('https://pkcargolink.com/api/users.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updated),
+      signal: AbortSignal.timeout(3500)
+    });
+  } catch {}
+
   res.json({ success: true, count: updated.length, users: updated });
 });
 

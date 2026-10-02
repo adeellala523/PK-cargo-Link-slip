@@ -101,35 +101,56 @@ export const StorageService = {
   async syncUsersWithServer(): Promise<UserAccount[]> {
     try {
       if (typeof fetch !== 'undefined') {
-        const res = await fetch('/api/users-sync');
-        if (res.ok) {
-          const serverUsers: UserAccount[] = await res.json();
-          if (Array.isArray(serverUsers)) {
-            const localUsers = this.getUsers();
-            const map = new Map<string, UserAccount>();
-            // Add local users
-            localUsers.forEach((u) => {
-              if (u.phone) {
-                map.set(u.phone.replace(/[^0-9]/g, ''), u);
-              }
-            });
-            // Merge server users (server is the single source of truth across browser resets)
-            serverUsers.forEach((u) => {
-              if (u.phone) {
-                const k = u.phone.replace(/[^0-9]/g, '');
-                if (map.has(k)) {
-                  // Merge fields, prioritize server status/approval
-                  map.set(k, { ...map.get(k)!, ...u });
-                } else {
-                  map.set(k, u);
-                }
-              }
-            });
-            const merged = Array.from(map.values());
-            localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(merged));
-            return merged.map((u) => this.checkUserSubscriptionStatus(u));
+        const localUsers = this.getUsers();
+        const map = new Map<string, UserAccount>();
+        // Add existing local users
+        localUsers.forEach((u) => {
+          if (u && u.phone) {
+            map.set(u.phone.replace(/[^0-9]/g, ''), u);
           }
+        });
+
+        // 1. Try local server endpoint
+        try {
+          const res = await fetch('/api/users-sync');
+          if (res.ok) {
+            const serverUsers = await res.json();
+            if (Array.isArray(serverUsers)) {
+              serverUsers.forEach((u) => {
+                if (u && u.phone) {
+                  const k = u.phone.replace(/[^0-9]/g, '');
+                  map.set(k, { ...(map.get(k) || {}), ...u });
+                }
+              });
+            }
+          }
+        } catch (e) {
+          console.warn('Local users-sync failed', e);
         }
+
+        // 2. Also directly sync with live pkcargolink.com hosting
+        try {
+          const liveRes = await fetch('https://pkcargolink.com/api/users.php', {
+            signal: AbortSignal.timeout(4000)
+          });
+          if (liveRes.ok) {
+            const liveUsers = await liveRes.json();
+            if (Array.isArray(liveUsers)) {
+              liveUsers.forEach((u) => {
+                if (u && u.phone) {
+                  const k = u.phone.replace(/[^0-9]/g, '');
+                  map.set(k, { ...(map.get(k) || {}), ...u });
+                }
+              });
+            }
+          }
+        } catch (e) {
+          // Cross-origin or offline
+        }
+
+        const merged = Array.from(map.values()).map((u) => this.checkUserSubscriptionStatus(u));
+        localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(merged));
+        return merged;
       }
     } catch (e) {
       console.error('Error syncing users with server', e);
@@ -141,11 +162,24 @@ export const StorageService = {
     try {
       localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
       if (typeof fetch !== 'undefined') {
-        await fetch('/api/users-sync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(users),
-        });
+        // Local post
+        try {
+          await fetch('/api/users-sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(users),
+          });
+        } catch {}
+
+        // Live hosting post
+        try {
+          await fetch('https://pkcargolink.com/api/users.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(users),
+            signal: AbortSignal.timeout(4000),
+          });
+        } catch {}
       }
     } catch (e) {
       console.error('Error saving users', e);
