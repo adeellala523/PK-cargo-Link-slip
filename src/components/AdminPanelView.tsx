@@ -10,6 +10,7 @@ import {
   AlertCircle,
   Truck,
   Eye,
+  EyeOff,
   Search,
   Download,
   Upload,
@@ -49,6 +50,8 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState(false);
+  const [showPin, setShowPin] = useState(false);
+  const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
   const [activeTab, setActiveTab] = useState<'users' | 'quick_slip' | 'slips' | 'payment_settings' | 'ads' | 'backup'>('quick_slip');
   const [searchFilter, setSearchFilter] = useState('');
 
@@ -153,14 +156,24 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
           </p>
 
           <form onSubmit={handleLogin} className="space-y-3 pt-2">
-            <input
-              type="password"
-              value={pinInput}
-              onChange={(e) => setPinInput(e.target.value)}
-              placeholder="ایڈمن PIN کوڈ درج کریں"
-              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-center text-lg font-mono focus:bg-white focus:border-emerald-600 outline-none"
-              autoFocus
-            />
+            <div className="relative">
+              <input
+                type={showPin ? "text" : "password"}
+                value={pinInput}
+                onChange={(e) => setPinInput(e.target.value)}
+                placeholder="ایڈمن پاس ورڈ / PIN درج کریں"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-10 py-3 text-center text-lg font-mono focus:bg-white focus:border-emerald-600 outline-none"
+                autoFocus
+              />
+              <button
+                type="button"
+                onClick={() => setShowPin(!showPin)}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1.5 transition cursor-pointer"
+                title={showPin ? "پاس ورڈ چھپائیں" : "پاس ورڈ دیکھیں"}
+              >
+                {showPin ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
             {pinError && (
               <p className="text-xs text-red-600 font-bold">
                 درج کردہ پن کوڈ غلط ہے!
@@ -173,9 +186,6 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
               ایڈمن پینل کھولیں
             </button>
           </form>
-          <div className="text-[11px] text-slate-400">
-            ایڈمن PIN کوڈ: <code className="bg-slate-100 px-1.5 py-0.5 rounded font-mono">pkadmin786</code> یا <code className="bg-slate-100 px-1.5 py-0.5 rounded font-mono">adil786</code>
-          </div>
         </div>
       </div>
     );
@@ -369,9 +379,19 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
                         <div className="font-mono text-emerald-700 ltr-content">{u.phone}</div>
                       </td>
                       <td className="p-3">
-                        <code className="bg-slate-100 px-2 py-1 rounded text-slate-800 font-mono">
-                          {u.password || '---'}
-                        </code>
+                        <div className="inline-flex items-center gap-1.5 font-mono">
+                          <code className="bg-slate-100 px-2 py-1 rounded text-slate-800 tracking-wider">
+                            {visiblePasswords[u.id] ? (u.password || '---') : '••••••••'}
+                          </code>
+                          <button
+                            type="button"
+                            onClick={() => setVisiblePasswords((prev) => ({ ...prev, [u.id]: !prev[u.id] }))}
+                            className="text-slate-400 hover:text-slate-600 p-1 transition cursor-pointer"
+                            title={visiblePasswords[u.id] ? "پاس ورڈ چھپائیں" : "پاس ورڈ دیکھیں"}
+                          >
+                            {visiblePasswords[u.id] ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                          </button>
+                        </div>
                       </td>
                       <td className="p-3 space-y-1">
                         {u.status === 'active' && (
