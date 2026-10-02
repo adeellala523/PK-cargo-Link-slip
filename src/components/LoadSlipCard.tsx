@@ -202,27 +202,33 @@ export const LoadSlipCard: React.FC<LoadSlipCardProps> = ({
             </div>
           </div>
 
-          {/* DEDICATED LARGE TYPOGRAPHY CONTAINER FOR ADDA NAME (NO IMAGE PLACEHOLDER) */}
+          {/* DEDICATED DISTINCT BRANDING CONTAINER FOR ADDA NAME */}
           <div className="space-y-4 max-w-4xl mx-auto">
-            <div className="inline-block text-emerald-300 font-bold text-xs sm:text-sm tracking-widest bg-emerald-950/60 border border-emerald-500/40 px-4 py-1 rounded-full shadow-inner">
-              پاکستان کارگو و گڈز ٹرانسپورٹ اڈا
-            </div>
+            
+            {/* Business Identity Highlight Box with Distinct Border & Background Highlight */}
+            <div className="bg-gradient-to-r from-emerald-950/90 via-[#072448]/95 to-emerald-950/90 border-2 sm:border-3 border-emerald-400/80 rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-2xl relative overflow-hidden backdrop-blur-sm ring-1 ring-emerald-300/30">
+              
+              {/* Subtle top badge */}
+              <div className="inline-block text-emerald-300 font-bold text-xs sm:text-sm tracking-wider bg-emerald-900/60 border border-emerald-400/50 px-4 py-1 rounded-full shadow-inner mb-3">
+                🏢 مصدقہ کارگو و گڈز ٹرانسپورٹ اڈا
+              </div>
 
-            {/* VERY PROMINENT, BOLD, LARGE ADDA NAME TYPOGRAPHY */}
-            <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-white leading-tight tracking-tight drop-shadow-lg break-words">
-              {slip.addaName}
-            </h1>
+              {/* VERY PROMINENT, BOLD, LARGE ADDA NAME TYPOGRAPHY */}
+              <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-white leading-tight tracking-tight drop-shadow-md break-words">
+                {slip.addaName}
+              </h1>
 
-            {/* City & Address Badges */}
-            <div className="flex flex-wrap items-center justify-center gap-2.5 pt-1">
-              <span className="bg-emerald-600 text-white font-bold text-sm sm:text-base px-4 py-1.5 rounded-xl shadow-sm border border-emerald-400/50">
-                📍 اڈا مقام: {slip.addaCity}
-              </span>
-              {slip.addaAddress && (
-                <span className="bg-slate-800/90 text-slate-200 text-xs sm:text-sm px-4 py-1.5 rounded-xl border border-slate-600">
-                  مقام و پتہ: {slip.addaAddress}
+              {/* City & Address Badges */}
+              <div className="flex flex-wrap items-center justify-center gap-2.5 pt-3">
+                <span className="bg-emerald-600 text-white font-bold text-sm sm:text-base px-4 py-1.5 rounded-xl shadow-md border border-emerald-400/60">
+                  📍 اڈا مقام: {slip.addaCity}
                 </span>
-              )}
+                {slip.addaAddress && (
+                  <span className="bg-slate-900/90 text-slate-200 text-xs sm:text-sm px-4 py-1.5 rounded-xl border border-slate-700 shadow-sm">
+                    مقام و پتہ: {slip.addaAddress}
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Manager and Contact Info Bar inside Header */}
