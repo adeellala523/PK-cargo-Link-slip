@@ -3,6 +3,14 @@
 header('Content-Type: text/html; charset=utf-8');
 
 $slipId = isset($_GET['id']) ? trim($_GET['id']) : '';
+if (empty($slipId) && isset($_SERVER['REQUEST_URI'])) {
+    $uriPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+    if (preg_match('#/slip/([^/?]+)#', $uriPath, $matches)) {
+        $slipId = trim($matches[1]);
+        $_GET['id'] = $slipId;
+    }
+}
+
 $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'https://';
 $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'pkcargolink.com';
 $siteUrl = $protocol . $host;
@@ -19,36 +27,63 @@ $city = isset($_GET['c']) ? trim($_GET['c']) : '';
 $logoFromParam = isset($_GET['img']) ? trim($_GET['img']) : '';
 $image = '';
 
-// 1. Search candidate paths for slips.json
 $docRoot = isset($_SERVER['DOCUMENT_ROOT']) ? $_SERVER['DOCUMENT_ROOT'] : __DIR__;
-$candidatePaths = [
-    __DIR__ . '/data/slips.json',
-    __DIR__ . '/../data/slips.json',
-    __DIR__ . '/../../data/slips.json',
-    __DIR__ . '/api/slips.json',
-    __DIR__ . '/api/data/slips.json',
-    __DIR__ . '/../api/slips.json',
-    __DIR__ . '/slips.json',
-    __DIR__ . '/../slips.json',
-    $docRoot . '/data/slips.json',
-    $docRoot . '/dist/data/slips.json',
-    $docRoot . '/api/slips.json',
-    $docRoot . '/dist/api/slips.json',
-    $docRoot . '/slips.json',
-    $docRoot . '/dist/slips.json',
+$cleanSlipId = preg_replace('/[^a-zA-Z0-9_\-]/', '', $slipId);
+
+// 1. First check individual dedicated slip files (instant lookup)
+$singleSlipCandidates = [
+    __DIR__ . '/data/slips/' . $cleanSlipId . '.json',
+    __DIR__ . '/../data/slips/' . $cleanSlipId . '.json',
+    __DIR__ . '/slips/' . $cleanSlipId . '.json',
+    __DIR__ . '/api/slips/' . $cleanSlipId . '.json',
+    $docRoot . '/data/slips/' . $cleanSlipId . '.json',
+    $docRoot . '/slips/' . $cleanSlipId . '.json',
 ];
 
 $foundSlip = null;
-foreach ($candidatePaths as $file) {
-    if (file_exists($file)) {
-        $json = @file_get_contents($file);
-        if ($json) {
-            $slips = json_decode($json, true);
-            if (is_array($slips)) {
-                foreach ($slips as $s) {
-                    if (isset($s['id']) && strtolower($s['id']) === strtolower($slipId)) {
-                        $foundSlip = $s;
-                        break 2;
+foreach ($singleSlipCandidates as $sFile) {
+    if (!empty($cleanSlipId) && file_exists($sFile)) {
+        $sContent = @file_get_contents($sFile);
+        if ($sContent) {
+            $parsed = json_decode($sContent, true);
+            if (is_array($parsed) && isset($parsed['id'])) {
+                $foundSlip = $parsed;
+                break;
+            }
+        }
+    }
+}
+
+// 2. Search candidate paths for slips.json
+if (!$foundSlip) {
+    $candidatePaths = [
+        __DIR__ . '/data/slips.json',
+        __DIR__ . '/../data/slips.json',
+        __DIR__ . '/../../data/slips.json',
+        __DIR__ . '/api/slips.json',
+        __DIR__ . '/api/data/slips.json',
+        __DIR__ . '/../api/slips.json',
+        __DIR__ . '/slips.json',
+        __DIR__ . '/../slips.json',
+        $docRoot . '/data/slips.json',
+        $docRoot . '/dist/data/slips.json',
+        $docRoot . '/api/slips.json',
+        $docRoot . '/dist/api/slips.json',
+        $docRoot . '/slips.json',
+        $docRoot . '/dist/slips.json',
+    ];
+
+    foreach ($candidatePaths as $file) {
+        if (file_exists($file)) {
+            $json = @file_get_contents($file);
+            if ($json) {
+                $slips = json_decode($json, true);
+                if (is_array($slips)) {
+                    foreach ($slips as $s) {
+                        if (isset($s['id']) && strtolower($s['id']) === strtolower($slipId)) {
+                            $foundSlip = $s;
+                            break 2;
+                        }
                     }
                 }
             }
@@ -155,7 +190,7 @@ if (!empty($image)) {
 
 // 4. If no specific custom logo exists, point to the dynamic OpenGraph banner generator for this exact slip!
 if (empty($image) || strpos($image, 'icon-512.png') !== false || strpos($image, 'adda-logo.png') !== false) {
-    $image = $siteUrl . '/api/slip-image.php?id=' . urlencode($slipId);
+    $image = $siteUrl . '/api/slip-image.php?id=' . urlencode($slipId) . '&a=' . urlencode($addaName) . '&c=' . urlencode($city) . '&from=' . urlencode($loadingCity) . '&to=' . urlencode($destinationCity) . '&g=' . urlencode($goods) . '&w=' . urlencode($weight) . '&v=' . urlencode($vehicle) . '&p=' . urlencode($phone);
 }
 
 // 5. Fallback titles

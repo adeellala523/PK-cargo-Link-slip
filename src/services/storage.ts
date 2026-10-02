@@ -569,6 +569,17 @@ export const StorageService = {
               }
             });
 
+            // Automatically push any local slips that are missing on the server
+            currentSlips.forEach((loc) => {
+              if (!serverSlips.some((s) => s.id === loc.id)) {
+                fetch('/api/slips', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(loc),
+                }).catch(() => {});
+              }
+            });
+
             localStorage.setItem(STORAGE_KEYS.SLIPS, JSON.stringify(merged));
             return merged;
           }

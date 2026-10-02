@@ -119,6 +119,24 @@ if ($method === 'POST') {
     }
 
     writeAllSlips($slips);
+
+    // Also write dedicated individual file for guaranteed instant lookup
+    $cleanId = preg_replace('/[^a-zA-Z0-9_\-]/', '', $body['id']);
+    if (!empty($cleanId)) {
+        $singleDirs = [
+            __DIR__ . '/../data/slips',
+            __DIR__ . '/data/slips',
+            __DIR__ . '/slips',
+            __DIR__ . '/../slips',
+        ];
+        foreach ($singleDirs as $sDir) {
+            if (!file_exists($sDir)) @mkdir($sDir, 0777, true);
+            if (is_dir($sDir) && is_writable($sDir)) {
+                @file_put_contents($sDir . '/' . $cleanId . '.json', json_encode($body, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+            }
+        }
+    }
+
     echo json_encode(['success' => true, 'slip' => $body]);
     exit;
 }
