@@ -215,7 +215,7 @@ export const StorageService = {
       managerName: payload.managerName.trim() || 'اڈا انچارج',
       city: payload.city.trim() || 'پاکستان',
       address: payload.address.trim() || '',
-      logoUrl: payload.logoUrl || '/adda-logo.png',
+      logoUrl: payload.logoUrl && !payload.logoUrl.includes('adda-logo.png') ? payload.logoUrl : '',
       whatsappNumber: payload.whatsappNumber?.trim() || cleanPhone,
       contact1: payload.contact1?.trim() || '',
       contact2: payload.contact2?.trim() || '',
@@ -312,7 +312,7 @@ export const StorageService = {
       addaName: checkedUser.addaName,
       city: checkedUser.city,
       address: checkedUser.address,
-      logoUrl: checkedUser.logoUrl || '/adda-logo.png',
+      logoUrl: checkedUser.logoUrl && !checkedUser.logoUrl.includes('adda-logo.png') ? checkedUser.logoUrl : '',
       primaryPhone: checkedUser.phone,
       whatsappNumber: checkedUser.whatsappNumber,
       contact1: checkedUser.contact1,
@@ -439,7 +439,7 @@ export const StorageService = {
         });
         return combined.map((s) => ({
           ...s,
-          addaLogo: s.addaLogo || '/adda-logo.png',
+          addaLogo: (s.addaLogo && !s.addaLogo.includes('adda-logo.png')) ? s.addaLogo : '',
         }));
       }
     } catch (e) {
@@ -448,7 +448,7 @@ export const StorageService = {
 
     return permanentSlips.map((s) => ({
       ...s,
-      addaLogo: s.addaLogo || '/adda-logo.png',
+      addaLogo: (s.addaLogo && !s.addaLogo.includes('adda-logo.png')) ? s.addaLogo : '',
     }));
   },
 

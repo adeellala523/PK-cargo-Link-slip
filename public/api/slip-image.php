@@ -103,7 +103,7 @@ if (!file_exists($fontPath)) {
 
 if (file_exists($fontPath) && function_exists('imagettftext')) {
     // Top Verified Badge
-    imagettftext($im, 20, 0, 100, 118, $amber, $fontPath, "★  مصدقہ گڈز ٹرانسپورٹ اڈا  |  PK CARGO LINK");
+    imagettftext($im, 20, 0, 100, 118, $amber, $fontPath, "★  " . $addaName . "  |  لوڈ سلپ");
     imagettftext($im, 18, 0, 850, 118, $slateLight, $fontPath, "سلپ: " . $slipId);
 
     // Large Bold Adda Name
@@ -121,11 +121,11 @@ if (file_exists($fontPath) && function_exists('imagettftext')) {
 
     // Bottom Contact Bar
     imagefilledrectangle($im, 70, 520, $width - 70, 575, $green);
-    imagettftext($im, 24, 0, 100, 560, $white, $fontPath, "📞 اڈا رابطہ نمبر: " . $phone);
+    imagettftext($im, 24, 0, 100, 560, $white, $fontPath, "📞 رابطہ: " . $phone);
     imagettftext($im, 20, 0, 750, 560, $white, $fontPath, "pkcargolink.com/slip/" . $slipId);
 } else {
     // Fallback using built-in system fonts
-    imagestring($im, 5, 100, 100, "PK CARGO LINK - VERIFIED GOODS TRANSPORT", $amber);
+    imagestring($im, 5, 100, 100, $addaName . " - LOAD SLIP", $amber);
     imagestring($im, 5, 100, 180, "ADDA: " . $addaName . " (" . $addaCity . ")", $white);
     imagestring($im, 5, 100, 240, "ROUTE: " . $from . " -> " . $to, $lightGreen);
     imagestring($im, 5, 100, 300, "CARGO: " . $goods . " | VEHICLE: " . $vehicle, $slateLight);

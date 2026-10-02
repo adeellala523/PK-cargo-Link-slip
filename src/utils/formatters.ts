@@ -41,7 +41,12 @@ export function formatWhatsAppMessage(slip: LoadSlip): string {
   const vehicleNumLine = slip.vehicleNumber ? `\n🔢 گاڑی نمبر:\n${slip.vehicleNumber}` : '';
   const fareLine = slip.fareOffer ? `\n💰 پیشکش کرایہ:\n${slip.fareOffer}` : '';
 
-  return `🚛 دستیاب لوڈ: ${slip.loadingCity} تا ${slip.destinationCity}
+  // Adda Name prominently above "دستیاب لوڈ"
+  const addaHeader = `🏢 ${slip.addaName}${slip.addaCity ? ` (${slip.addaCity})` : ''}`;
+
+  return `${addaHeader}
+
+🚛 دستیاب لوڈ: ${slip.loadingCity} تا ${slip.destinationCity}
 
 📍 لوڈنگ:
 ${slip.loadingCity} — ${slip.loadingLocation}
@@ -66,9 +71,6 @@ ${slip.bodyType}${vehicleNumLine}${fareLine}
 
 📞 رابطہ:
 ${contactLines}
-
-🏢 اڈا:
-${slip.addaName} (${slip.addaCity})
 
 🚚 مزید تمام دستیاب لوڈز تلاش کرنے کے لیے (ڈرائیور پورٹل):
 ${driverPortalUrl}
@@ -122,3 +124,68 @@ export function formatUrduDateTime(isoString: string): string {
     return isoString;
   }
 }
+
+/**
+ * Updates document.title and OpenGraph meta tags dynamically for WhatsApp link previews
+ */
+export function updateOpenGraphMetaTags(slip: LoadSlip | null): void {
+  if (typeof document === 'undefined') return;
+
+  const setMeta = (nameOrProperty: string, content: string, isProperty = true) => {
+    const selector = isProperty ? `meta[property="${nameOrProperty}"]` : `meta[name="${nameOrProperty}"]`;
+    let el = document.querySelector(selector);
+    if (!el) {
+      el = document.createElement('meta');
+      el.setAttribute(isProperty ? 'property' : 'name', nameOrProperty);
+      document.head.appendChild(el);
+    }
+    el.setAttribute('content', content);
+  };
+
+  if (!slip) {
+    document.title = 'PK Cargo Link – پاکستان ڈیجیٹل لوڈ سلپ نیٹ ورک';
+    setMeta('og:site_name', 'PK Cargo Link');
+    setMeta('og:title', 'PK Cargo Link – پاکستان ڈیجیٹل لوڈ سلپ نیٹ ورک');
+    setMeta('og:description', 'پاکستان کے تمام ٹرانسپورٹ اڈا منیجرز اور ٹرک ڈرائیورز کے لیے تصدیق شدہ ڈیجیٹل لوڈ سلپ نیٹ ورک۔');
+    setMeta('og:image', `${OFFICIAL_WEBSITE_URL}/api/slip-image.php`);
+    setMeta('og:image:secure_url', `${OFFICIAL_WEBSITE_URL}/api/slip-image.php`);
+    return;
+  }
+
+  const addaName = slip.addaName || 'گڈز ٹرانسپورٹ اڈا';
+  const addaCity = slip.addaCity ? ` (${slip.addaCity})` : '';
+  const fromTo = `${slip.loadingCity} تا ${slip.destinationCity}`;
+  const cargoInfo = `مال: ${slip.goods} (${slip.weight}) | مطلوبہ گاڑی: ${slip.vehicleType} | اڈا: ${addaName}${addaCity} | رابطہ: ${slip.primaryPhone}`;
+
+  document.title = `${addaName} – دستیاب لوڈ: ${fromTo}`;
+
+  // Compute exact image URL: NEVER use adda-logo.png
+  let logoImg = '';
+  if (slip.addaLogo && slip.addaLogo.startsWith('http') && !slip.addaLogo.includes('adda-logo.png') && !slip.addaLogo.includes('icon-512.png')) {
+    logoImg = slip.addaLogo;
+  } else if (slip.addaLogo && slip.addaLogo.startsWith('/uploads/')) {
+    logoImg = `${OFFICIAL_WEBSITE_URL}${slip.addaLogo}`;
+  } else {
+    // Dynamic image generator tailored specifically to this Adda and slip
+    logoImg = `${OFFICIAL_WEBSITE_URL}/api/slip-image.php?id=${encodeURIComponent(slip.id)}`;
+  }
+
+  // Set all OpenGraph tags so WhatsApp preview shows Adda details
+  setMeta('og:site_name', addaName);
+  setMeta('og:title', `${addaName} – دستیاب لوڈ: ${fromTo}`);
+  setMeta('og:description', cargoInfo);
+  setMeta('og:image', logoImg);
+  setMeta('og:image:secure_url', logoImg);
+  setMeta('og:image:type', 'image/png');
+  setMeta('og:image:width', '1200');
+  setMeta('og:image:height', '630');
+  setMeta('og:url', `${OFFICIAL_WEBSITE_URL}/slip/${slip.id}`);
+
+  // Twitter cards
+  setMeta('twitter:card', 'summary_large_image', false);
+  setMeta('twitter:site', addaName, false);
+  setMeta('twitter:title', `${addaName} – دستیاب لوڈ: ${fromTo}`, false);
+  setMeta('twitter:description', cargoInfo, false);
+  setMeta('twitter:image', logoImg, false);
+}
+

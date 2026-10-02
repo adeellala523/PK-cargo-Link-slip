@@ -190,9 +190,9 @@ export const LoadSlipCard: React.FC<LoadSlipCardProps> = ({
           
           {/* Top Decorative Pakistani Transport Tag & Slip ID */}
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-emerald-500/30 pb-3 mb-6 text-xs">
-            <span className="inline-flex items-center gap-1.5 text-amber-400 font-bold bg-amber-400/10 px-3.5 py-1.5 rounded-full border border-amber-400/30">
-              <span className="text-amber-300">★</span>
-              <span>مصدقہ گڈز ٹرانسپورٹ اڈا</span>
+            <span className="inline-flex items-center gap-1.5 text-emerald-400 font-bold bg-emerald-400/10 px-3.5 py-1.5 rounded-full border border-emerald-400/30">
+              <Truck className="w-3.5 h-3.5 text-emerald-300" />
+              <span>گڈز ٹرانسپورٹ اڈا</span>
             </span>
             <div className="inline-flex items-center gap-2 bg-slate-900/90 px-3 py-1.5 rounded-xl border border-emerald-500/40">
               <span className="text-slate-300 text-xs">سلپ نمبر:</span>
@@ -207,11 +207,6 @@ export const LoadSlipCard: React.FC<LoadSlipCardProps> = ({
             
             {/* Business Identity Highlight Box with Distinct Border & Background Highlight */}
             <div className="bg-gradient-to-r from-emerald-950/90 via-[#072448]/95 to-emerald-950/90 border-2 sm:border-3 border-emerald-400/80 rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-2xl relative overflow-hidden backdrop-blur-sm ring-1 ring-emerald-300/30">
-              
-              {/* Subtle top badge */}
-              <div className="inline-block text-emerald-300 font-bold text-xs sm:text-sm tracking-wider bg-emerald-900/60 border border-emerald-400/50 px-4 py-1 rounded-full shadow-inner mb-3">
-                🏢 مصدقہ کارگو و گڈز ٹرانسپورٹ اڈا
-              </div>
 
               {/* VERY PROMINENT, BOLD, LARGE ADDA NAME TYPOGRAPHY */}
               <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-white leading-tight tracking-tight drop-shadow-md break-words">

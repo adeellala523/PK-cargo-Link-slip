@@ -174,7 +174,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
         password: regPassword,
         address: regAddress,
         whatsappNumber: regWhatsapp || regPhone,
-        logoUrl: regLogoUrl || '/adda-logo.png',
+        logoUrl: regLogoUrl || '',
         paymentScreenshot: paymentScreenshot,
         paymentTransactionId: paymentTxId,
       });

@@ -20,6 +20,7 @@ import { LoadSlip, WhatsAppGroup } from '../types';
 import { 
   formatWhatsAppMessage, 
   getWhatsAppShareUrl,
+  updateOpenGraphMetaTags,
   OFFICIAL_WEBSITE_URL
 } from '../utils/formatters';
 
@@ -39,9 +40,14 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedText, setCopiedText] = useState(false);
 
-  const publicUrl = `https://pkcargolink.com/slip/${slip.id}`;
+  // Ensure DOM OpenGraph meta tags are immediately updated for this specific slip and Adda
+  React.useEffect(() => {
+    updateOpenGraphMetaTags(slip);
+  }, [slip]);
+
+  const publicUrl = `${OFFICIAL_WEBSITE_URL}/slip/${slip.id}`;
   const whatsappText = formatWhatsAppMessage(slip);
-  const addaPhoto = slip.addaLogo || '/adda-logo.png';
+  const addaPhoto = slip.addaLogo && !slip.addaLogo.includes('icon-512.png') ? slip.addaLogo : null;
 
   const handleCopyLink = async () => {
     try {
@@ -124,37 +130,38 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                     className="w-full h-full object-cover" 
                   />
                 ) : (
-                  <Building2 className="w-10 h-10 text-emerald-300" />
+                  <div className="w-full h-full p-2 flex flex-col items-center justify-center text-center bg-[#0B2545]">
+                    <Building2 className="w-6 h-6 text-emerald-400 mb-1" />
+                    <span className="text-[10px] font-black text-white leading-tight line-clamp-2">
+                      {slip.addaName}
+                    </span>
+                    <span className="text-[9px] text-emerald-300 block mt-0.5">
+                      {slip.addaCity}
+                    </span>
+                  </div>
                 )}
               </div>
 
               {/* Link metadata snippet */}
               <div className="flex-1 space-y-0.5 text-right overflow-hidden">
-                <span className="text-[10px] uppercase tracking-wider text-slate-400 font-sans block">
-                  pkcargolink.com
+                <span className="text-[11px] font-bold text-emerald-700 block truncate">
+                  {slip.addaName} ({slip.addaCity})
                 </span>
-                <h4 className="font-bold text-slate-900 text-sm sm:text-base leading-snug truncate">
-                  {slip.addaName}
+                <h4 className="font-extrabold text-slate-900 text-sm sm:text-base leading-snug truncate">
+                  {slip.addaName} – دستیاب لوڈ: {slip.loadingCity} تا {slip.destinationCity}
                 </h4>
-                <p className="text-xs text-emerald-800 font-semibold truncate">
-                  دستیاب لوڈ: {slip.loadingCity} ➔ {slip.destinationCity}
-                </p>
-                <p className="text-[11px] text-slate-500 truncate">
+                <p className="text-xs text-slate-600 truncate">
                   مال: {slip.goods} ({slip.weight}) • {slip.vehicleType}
                 </p>
+                <span className="text-[10px] text-slate-400 font-mono block">
+                  pkcargolink.com
+                </span>
               </div>
             </div>
 
             {/* 2. Text Summary */}
-            <div className="text-xs text-slate-800 leading-relaxed whitespace-pre-line border-t border-[#d1efbc] pt-2">
-              <span className="font-bold">🚛 دستیاب لوڈ</span>{'\n'}
-              📍 <span className="font-bold">لوڈنگ:</span> {slip.loadingCity} — {slip.loadingLocation}{'\n'}
-              📍 <span className="font-bold">منزل:</span> {slip.destinationCity} — {slip.destinationLocation}{'\n'}
-              📦 <span className="font-bold">مال:</span> {slip.goods} | ⚖️ {slip.weight}{'\n'}
-              📞 <span className="font-bold">رابطہ:</span> {slip.primaryPhone} ({slip.addaName}){'\n'}
-              🔗 <span className="text-emerald-700 underline font-mono ltr-content break-all">{publicUrl}</span>{'\n\n'}
-              🚛 <span className="font-bold">ڈرائیور حضرات اپنے شہر میں دستیاب لوڈ دیکھنے کے لیے یہاں کلک کریں:</span>{'\n'}
-              <span className="text-emerald-700 underline font-mono ltr-content">https://pkcargolink.com</span>
+            <div className="text-xs text-slate-800 leading-relaxed whitespace-pre-line border-t border-[#d1efbc] pt-2 font-nafees">
+              {whatsappText}
             </div>
 
             {/* Gallery notice tag */}

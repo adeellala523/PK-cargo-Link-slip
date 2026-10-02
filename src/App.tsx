@@ -21,6 +21,7 @@ import { AdPlaceholder } from './components/AdPlaceholder';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { StorageService } from './services/storage';
 import { LoadSlip, AddaProfile, WhatsAppGroup } from './types';
+import { updateOpenGraphMetaTags } from './utils/formatters';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
 
 export default function App() {
@@ -107,33 +108,9 @@ export default function App() {
 
   // Dynamically update document title & OpenGraph meta tags (for WhatsApp Link Preview)
   useEffect(() => {
-    if (activeSlip) {
-      document.title = `${activeSlip.addaName} – دستیاب لوڈ: ${activeSlip.loadingCity} تا ${activeSlip.destinationCity}`;
-
-      const setMeta = (nameOrProperty: string, content: string, isProperty = true) => {
-        const selector = isProperty ? `meta[property="${nameOrProperty}"]` : `meta[name="${nameOrProperty}"]`;
-        let el = document.querySelector(selector);
-        if (!el) {
-          el = document.createElement('meta');
-          el.setAttribute(isProperty ? 'property' : 'name', nameOrProperty);
-          document.head.appendChild(el);
-        }
-        el.setAttribute('content', content);
-      };
-
-      const logoImg = activeSlip.addaLogo?.startsWith('http')
-        ? activeSlip.addaLogo
-        : `https://pkcargolink.com${activeSlip.addaLogo || '/adda-logo.png'}`;
-
-      setMeta('og:image', logoImg);
-      setMeta('twitter:image', logoImg, false);
-      setMeta('og:title', `${activeSlip.addaName} – لوڈ سلپ (${activeSlip.loadingCity} تا ${activeSlip.destinationCity})`);
-      setMeta('og:description', `مال: ${activeSlip.goods} (${activeSlip.weight}) | مطلوبہ گاڑی: ${activeSlip.vehicleType} | اڈا رابطہ: ${activeSlip.primaryPhone}`);
-      setMeta('og:url', `https://pkcargolink.com/slip/${activeSlip.id}`);
-    } else {
-      document.title = 'PK Cargo Link – لوڈ سلپ بنائیں، WhatsApp پر فوراً شیئر کریں';
-    }
-  }, [activeSlip]);
+    const targetSlip = activeSlip || shareModalSlip;
+    updateOpenGraphMetaTags(targetSlip);
+  }, [activeSlip, shareModalSlip]);
 
   // Update browser URL without full reload when active slip changes
   const viewSlipDetail = (slip: LoadSlip) => {

@@ -266,7 +266,10 @@ app.get('/slip/:id', (req: Request, res: Response, next) => {
   const siteUrl = 'https://pkcargolink.com';
   const ogTitle = `${addaName} – دستیاب لوڈ: ${loadingCity} تا ${destinationCity}`;
   const ogDesc = `مال: ${goods} ${weight ? `(${weight})` : ''} | مطلوبہ گاڑی: ${vehicle} | اڈا: ${addaName} | رابطہ: ${phone}`;
-  const ogImage = `${siteUrl}/api/slip-og-image/${slipId}?a=${encodeURIComponent(addaName)}&from=${encodeURIComponent(loadingCity)}&to=${encodeURIComponent(destinationCity)}&g=${encodeURIComponent(goods)}&w=${encodeURIComponent(weight)}&v=${encodeURIComponent(vehicle)}`;
+  let ogImage = `${siteUrl}/api/slip-og-image/${slipId}?a=${encodeURIComponent(addaName)}&from=${encodeURIComponent(loadingCity)}&to=${encodeURIComponent(destinationCity)}&g=${encodeURIComponent(goods)}&w=${encodeURIComponent(weight)}&v=${encodeURIComponent(vehicle)}`;
+  if (slip?.addaLogo && slip.addaLogo.startsWith('http') && !slip.addaLogo.includes('adda-logo.png') && !slip.addaLogo.includes('icon-512.png')) {
+    ogImage = slip.addaLogo;
+  }
 
   const indexPath = isProd 
     ? path.resolve(process.cwd(), 'dist/index.html')
