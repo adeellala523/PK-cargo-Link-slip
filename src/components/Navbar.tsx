@@ -86,12 +86,13 @@ export const Navbar: React.FC<NavbarProps> = ({
               ہوم
             </button>
             <button
-              onClick={() => setCurrentTab('search')}
-              className={`px-3 py-1.5 rounded-lg text-base font-medium transition-colors ${
-                currentTab === 'search' ? 'bg-emerald-700 text-white' : 'text-slate-200 hover:bg-slate-800'
+              onClick={() => setCurrentTab('driver')}
+              className={`px-3 py-1.5 rounded-lg text-base font-medium transition-colors flex items-center gap-1.5 ${
+                currentTab === 'driver' ? 'bg-emerald-600 text-white shadow-sm' : 'text-emerald-300 hover:bg-slate-800'
               }`}
             >
-              لوڈ تلاش کریں
+              <Truck className="w-4 h-4 text-emerald-400" />
+              <span>ڈرائیور پورٹل</span>
             </button>
             <button
               onClick={() => setCurrentTab('verify')}
@@ -184,12 +185,15 @@ export const Navbar: React.FC<NavbarProps> = ({
               ہوم (صفحہ اول)
             </button>
             <button
-              onClick={() => { setCurrentTab('search'); setMenuOpen(false); }}
-              className={`w-full text-right px-3 py-2.5 rounded-lg text-base font-medium ${
-                currentTab === 'search' ? 'bg-emerald-600 text-white' : 'text-slate-200 hover:bg-slate-800'
+              onClick={() => { setCurrentTab('driver'); setMenuOpen(false); }}
+              className={`w-full text-right px-3 py-2.5 rounded-lg text-base font-medium flex items-center justify-between ${
+                currentTab === 'driver' ? 'bg-emerald-600 text-white' : 'text-emerald-300 hover:bg-slate-800'
               }`}
             >
-              🔍 دستیاب لوڈ تلاش کریں (ڈرائیورز کے لیے)
+              <span>🚚 ڈرائیور پورٹل (شہر کے مطابق لوڈز)</span>
+              <span className="bg-emerald-500/30 text-emerald-200 text-[10px] px-2 py-0.5 rounded-full font-sans">
+                Driver
+              </span>
             </button>
             <button
               onClick={() => { setCurrentTab('verify'); setMenuOpen(false); }}

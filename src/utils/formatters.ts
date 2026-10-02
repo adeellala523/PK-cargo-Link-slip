@@ -54,6 +54,8 @@ export function formatWhatsAppMessage(slip: LoadSlip): string {
   const vehicleNumLine = slip.vehicleNumber ? `\n🔢 گاڑی نمبر:\n${slip.vehicleNumber}` : '';
   const fareLine = slip.fareOffer ? `\n💰 پیشکش کرایہ:\n${slip.fareOffer}` : '';
 
+  const driverPortalUrl = `${OFFICIAL_WEBSITE_URL}/driver`;
+
   return `🚛 دستیاب لوڈ: ${slip.loadingCity} تا ${slip.destinationCity}
 
 📍 لوڈنگ:
@@ -84,7 +86,10 @@ ${contactLines}
 ${slip.addaName} (${slip.addaCity})
 
 🔗 مکمل لوڈ سلپ (تصویر اور تفصیلات):
-${slipUrl}`;
+${slipUrl}
+
+🚚 مزید تمام دستیاب لوڈز تلاش کرنے کے لیے (ڈرائیور پورٹل):
+${driverPortalUrl}`;
 }
 
 /**

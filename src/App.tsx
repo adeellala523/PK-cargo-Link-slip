@@ -13,6 +13,7 @@ import { VerifySlipView } from './components/VerifySlipView';
 import { WhatsAppGroupsView } from './components/WhatsAppGroupsView';
 import { AdminPanelView } from './components/AdminPanelView';
 import { AddaLoginView } from './components/AddaLoginView';
+import { DriverPortalView } from './components/DriverPortalView';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { StorageService } from './services/storage';
 import { LoadSlip, AddaProfile, WhatsAppGroup } from './types';
@@ -29,6 +30,8 @@ export default function App() {
   const [activeSlip, setActiveSlip] = useState<LoadSlip | null>(null);
   const [shareModalSlip, setShareModalSlip] = useState<LoadSlip | null>(null);
   const [prefillSlip, setPrefillSlip] = useState<LoadSlip | null>(null);
+  const [loginInitialMode, setLoginInitialMode] = useState<'login' | 'register'>('login');
+  const [loginNoticeMessage, setLoginNoticeMessage] = useState<string>('');
 
   // Check URL path or query params for direct public slip link:
   // e.g., /slip/PKCL-20261001-000125 or ?slip=PKCL-20261001-000125
@@ -42,6 +45,8 @@ export default function App() {
       // Admin portal is ONLY accessible via /adil or /?tab=admin or #adil
       if (path === '/adil' || path === '/adil/' || window.location.hash === '#adil' || queryTab === 'admin') {
         setCurrentTab('admin');
+      } else if (path === '/driver' || path === '/driver/' || window.location.hash === '#driver' || queryTab === 'driver') {
+        setCurrentTab('driver');
       } else if (queryTab) {
         setCurrentTab(queryTab);
       }
@@ -130,6 +135,14 @@ export default function App() {
   };
 
   const handleOpenCreateModal = (prefill?: LoadSlip) => {
+    if (!isLoggedIn) {
+      setLoginInitialMode('register');
+      setLoginNoticeMessage('نئی لوڈ سلپ بنانے کے لیے پہلے اپنا اڈا اکاؤنٹ رجسٹر یا لاگ ان کریں۔');
+      setCurrentTab('login');
+      window.history.pushState({}, '', '/?tab=login');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     if (prefill) {
       setPrefillSlip(prefill);
     } else {
@@ -274,13 +287,26 @@ export default function App() {
 
         {/* 3. Create Slip View */}
         {currentTab === 'create-slip' && (
-          <CreateSlipView
-            addaProfile={profile}
-            onSlipCreated={handleSlipCreated}
-            recentSlips={slips}
-            prefillSlip={prefillSlip}
-            onCancel={() => setCurrentTab(isLoggedIn ? 'dashboard' : 'home')}
-          />
+          isLoggedIn ? (
+            <CreateSlipView
+              addaProfile={profile}
+              onSlipCreated={handleSlipCreated}
+              recentSlips={slips}
+              prefillSlip={prefillSlip}
+              onCancel={() => setCurrentTab(isLoggedIn ? 'dashboard' : 'home')}
+            />
+          ) : (
+            <AddaLoginView
+              onLoginSuccess={(phone) => {
+                handleLoginSuccess(phone);
+                setCurrentTab('create-slip');
+              }}
+              onNavigateToHome={() => setCurrentTab('home')}
+              currentProfile={profile}
+              initialMode="register"
+              noticeMessage="نئی لوڈ سلپ بنانے کے لیے پہلے اپنا اڈا اکاؤنٹ رجسٹر یا لاگ ان کریں۔"
+            />
+          )
         )}
 
         {/* 4. Adda Manager Dashboard */}
@@ -356,12 +382,22 @@ export default function App() {
           />
         )}
 
+        {/* Dedicated Driver Portal */}
+        {currentTab === 'driver' && (
+          <DriverPortalView
+            slips={slips}
+            onViewSlip={viewSlipDetail}
+          />
+        )}
+
         {/* 11. Login / Register Tab */}
         {currentTab === 'login' && (
           <AddaLoginView
             onLoginSuccess={handleLoginSuccess}
             onNavigateToHome={() => setCurrentTab('home')}
             currentProfile={profile}
+            initialMode={loginInitialMode}
+            noticeMessage={loginNoticeMessage}
           />
         )}
 

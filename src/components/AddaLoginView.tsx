@@ -21,13 +21,24 @@ interface AddaLoginViewProps {
   onLoginSuccess: (phone: string) => void;
   onNavigateToHome: () => void;
   currentProfile: AddaProfile;
+  initialMode?: 'login' | 'register';
+  noticeMessage?: string;
 }
 
 export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
   onLoginSuccess,
   onNavigateToHome,
+  initialMode = 'login',
+  noticeMessage,
 }) => {
-  const [activeMode, setActiveMode] = useState<'login' | 'register'>('login');
+  const [activeMode, setActiveMode] = useState<'login' | 'register'>(initialMode);
+
+  // Sync mode if initialMode prop changes
+  React.useEffect(() => {
+    if (initialMode) {
+      setActiveMode(initialMode);
+    }
+  }, [initialMode]);
 
   // Login Form States
   const [loginPhone, setLoginPhone] = useState('');
@@ -195,6 +206,14 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
             <div className="text-xs pt-1 border-t border-amber-200">
               ایڈمن سے رابطہ کریں یا اکاؤنٹ تجدید کے لیے فیس جمع کروا کر رسید بھیجیں۔
             </div>
+          </div>
+        )}
+
+        {/* Notice Message Banner (e.g. redirected from create slip) */}
+        {noticeMessage && (
+          <div className="p-4 bg-emerald-50 border-2 border-emerald-300 rounded-2xl text-emerald-950 flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-emerald-700 shrink-0" />
+            <p className="text-xs sm:text-sm font-bold leading-relaxed">{noticeMessage}</p>
           </div>
         )}
 
