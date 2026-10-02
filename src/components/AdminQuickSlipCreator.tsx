@@ -1030,6 +1030,13 @@ export const AdminQuickSlipCreator: React.FC<AdminQuickSlipCreatorProps> = ({
         )}
       </div>
 
+      {/* Pakistan Cities Datalist for Auto-complete Suggestion */}
+      <datalist id="pakistan-cities-list">
+        {PAKISTANI_CITIES.map((c) => (
+          <option key={c} value={c} />
+        ))}
+      </datalist>
+
     </div>
   );
 };
