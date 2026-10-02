@@ -378,11 +378,61 @@ export const StorageService = {
   // -------------------------------------------------------------
   // Adda Profile
   // -------------------------------------------------------------
+  // Adda Profile Management (Bound to specific logged-in user)
+  // -------------------------------------------------------------
   getAddaProfile(): AddaProfile {
+    // 1. If currently logged in user exists, always return that specific user's Adda profile!
+    const currentUser = this.getCurrentUser();
+    if (currentUser) {
+      return {
+        id: currentUser.id,
+        managerName: currentUser.managerName || 'اڈا منیجر',
+        addaName: currentUser.addaName || 'ٹرانسپورٹ اڈا',
+        city: currentUser.city || 'پاکستان',
+        address: currentUser.address || '',
+        logoUrl: (currentUser.logoUrl && !currentUser.logoUrl.includes('adda-logo.png')) ? currentUser.logoUrl : '',
+        primaryPhone: currentUser.phone,
+        whatsappNumber: currentUser.whatsappNumber || currentUser.phone,
+        contact1: currentUser.contact1 || '',
+        contact2: currentUser.contact2 || '',
+        isVerified: true,
+        createdAt: currentUser.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+    }
+
+    // 2. Check current user phone in session
+    const currentPhone = this.getCurrentUserPhone();
+    if (currentPhone) {
+      const user = this.getUserByPhone(currentPhone);
+      if (user) {
+        this.setCurrentUser(user);
+        return {
+          id: user.id,
+          managerName: user.managerName || 'اڈا منیجر',
+          addaName: user.addaName || 'ٹرانسپورٹ اڈا',
+          city: user.city || 'پاکستان',
+          address: user.address || '',
+          logoUrl: (user.logoUrl && !user.logoUrl.includes('adda-logo.png')) ? user.logoUrl : '',
+          primaryPhone: user.phone,
+          whatsappNumber: user.whatsappNumber || user.phone,
+          contact1: user.contact1 || '',
+          contact2: user.contact2 || '',
+          isVerified: true,
+          createdAt: user.createdAt || new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+      }
+    }
+
+    // 3. Fallback to local profile key if available
     try {
       const data = localStorage.getItem(STORAGE_KEYS.ADDA_PROFILE);
       if (data) {
-        return JSON.parse(data);
+        const parsed = JSON.parse(data);
+        if (parsed && (parsed.addaName || parsed.primaryPhone)) {
+          return parsed;
+        }
       }
     } catch (e) {
       console.error('Failed reading adda profile', e);
@@ -393,6 +443,30 @@ export const StorageService = {
   saveAddaProfile(profile: AddaProfile): void {
     try {
       localStorage.setItem(STORAGE_KEYS.ADDA_PROFILE, JSON.stringify(profile));
+      const currentUser = this.getCurrentUser();
+      const userPhone = profile.primaryPhone || (currentUser ? currentUser.phone : '');
+      if (userPhone) {
+        const users = this.getUsers();
+        const cleanP = userPhone.replace(/[^0-9]/g, '');
+        const idx = users.findIndex((u) => u.phone.replace(/[^0-9]/g, '') === cleanP || (currentUser && u.id === currentUser.id));
+        if (idx !== -1) {
+          const updatedUser: UserAccount = {
+            ...users[idx],
+            addaName: profile.addaName,
+            managerName: profile.managerName,
+            city: profile.city,
+            address: profile.address,
+            logoUrl: profile.logoUrl,
+            phone: profile.primaryPhone,
+            whatsappNumber: profile.whatsappNumber || profile.primaryPhone,
+            contact1: profile.contact1,
+            contact2: profile.contact2,
+          };
+          users[idx] = updatedUser;
+          this.setCurrentUser(updatedUser);
+          this.saveUsers(users);
+        }
+      }
     } catch (e) {
       console.error('Failed saving adda profile', e);
     }
@@ -407,9 +481,30 @@ export const StorageService = {
     localStorage.setItem(STORAGE_KEYS.IS_LOGGED_IN, status ? 'true' : 'false');
     if (phone) {
       localStorage.setItem(STORAGE_KEYS.CURRENT_USER_PHONE, phone);
+      const user = this.getUserByPhone(phone);
+      if (user) {
+        this.setCurrentUser(user);
+        localStorage.setItem(STORAGE_KEYS.ADDA_PROFILE, JSON.stringify({
+          id: user.id,
+          managerName: user.managerName,
+          addaName: user.addaName,
+          city: user.city,
+          address: user.address,
+          logoUrl: user.logoUrl,
+          primaryPhone: user.phone,
+          whatsappNumber: user.whatsappNumber || user.phone,
+          contact1: user.contact1,
+          contact2: user.contact2,
+          isVerified: true,
+          createdAt: user.createdAt,
+          updatedAt: new Date().toISOString(),
+        }));
+      }
     }
     if (!status) {
       this.setCurrentUser(null);
+      localStorage.removeItem(STORAGE_KEYS.CURRENT_USER_PHONE);
+      localStorage.removeItem(STORAGE_KEYS.ADDA_PROFILE);
     }
   },
 

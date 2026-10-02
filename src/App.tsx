@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { HeroSection } from './components/HeroSection';
@@ -108,6 +108,13 @@ export default function App() {
     return () => window.removeEventListener('popstate', handleUrlRoute);
   }, []);
 
+  // Whenever login state changes, ensure profile is strictly in sync with logged-in user
+  useEffect(() => {
+    if (isLoggedIn) {
+      setProfile(StorageService.getAddaProfile());
+    }
+  }, [isLoggedIn]);
+
   // Dynamically update document title & OpenGraph meta tags (for WhatsApp Link Preview)
   useEffect(() => {
     const targetSlip = activeSlip || shareModalSlip;
@@ -182,14 +189,38 @@ export default function App() {
   const handleLoginSuccess = (phone: string) => {
     setIsLoggedIn(true);
     StorageService.setLoggedIn(true, phone);
+    const freshProfile = StorageService.getAddaProfile();
+    setProfile(freshProfile);
     setCurrentTab('dashboard');
   };
 
   const handleLogout = () => {
     setIsLoggedIn(false);
     StorageService.setLoggedIn(false);
+    setProfile(StorageService.getAddaProfile());
     setCurrentTab('home');
   };
+
+  // Slips strictly belonging to the currently logged in Adda manager
+  const myAddaSlips = useMemo(() => {
+    if (!isLoggedIn || !profile) return [];
+    const cleanProfilePhone = (profile.primaryPhone || '').replace(/[^0-9]/g, '');
+    const profileAddaName = (profile.addaName || '').trim().toLowerCase();
+
+    return slips.filter((s) => {
+      // 1. Match by Adda ID
+      if (s.addaId && profile.id && s.addaId === profile.id) return true;
+      
+      // 2. Match by Primary Phone
+      const cleanSlipPhone = (s.primaryPhone || '').replace(/[^0-9]/g, '');
+      if (cleanSlipPhone && cleanProfilePhone && cleanSlipPhone === cleanProfilePhone) return true;
+
+      // 3. Match by Adda Name
+      if (profileAddaName && s.addaName && s.addaName.trim().toLowerCase() === profileAddaName) return true;
+
+      return false;
+    });
+  }, [slips, profile, isLoggedIn]);
 
   const handleAddGroup = (grp: WhatsAppGroup) => {
     StorageService.saveWhatsAppGroup(grp);
@@ -282,7 +313,7 @@ export default function App() {
             <CreateSlipView
               addaProfile={profile}
               onSlipCreated={handleSlipCreated}
-              recentSlips={slips}
+              recentSlips={myAddaSlips}
               prefillSlip={prefillSlip}
               onCancel={() => setCurrentTab(isLoggedIn ? 'dashboard' : 'home')}
             />
@@ -304,7 +335,7 @@ export default function App() {
         {currentTab === 'dashboard' && (
           <AddaDashboardView
             profile={profile}
-            slips={slips}
+            slips={myAddaSlips}
             onOpenCreateSlip={() => handleOpenCreateModal()}
             onNavigateToMySlips={() => setCurrentTab('my-slips')}
             onNavigateToProfile={() => setCurrentTab('profile')}
@@ -316,7 +347,7 @@ export default function App() {
         {/* 5. My Slips / History */}
         {currentTab === 'my-slips' && (
           <SlipHistoryView
-            slips={slips}
+            slips={myAddaSlips}
             onViewSlip={viewSlipDetail}
             onReuseSlip={(slip) => handleOpenCreateModal(slip)}
             onShareModal={(slip) => setShareModalSlip(slip)}
