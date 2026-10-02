@@ -29,9 +29,9 @@
   RewriteCond %{DOCUMENT_ROOT}/dist%{REQUEST_URI} -f
   RewriteRule ^(.*)$ /dist/$1 [L]
 
-  # Route /adil and /driver
+  # Route /adil, /driver, /about, /contact, /privacy
   RewriteCond %{DOCUMENT_ROOT}/dist/index.html -f
-  RewriteRule ^(adil|driver)/?$ /dist/index.html [L,QSA]
+  RewriteRule ^(adil|driver|about|contact|privacy)/?$ /dist/index.html [L,QSA]
 
   # Fallback to dist/index.html or index.php
   RewriteCond %{REQUEST_FILENAME} !-f

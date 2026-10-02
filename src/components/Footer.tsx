@@ -32,40 +32,69 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           {/* Quick links */}
           <div className="space-y-2">
             <h4 className="text-base font-bold text-white mb-3">اہم لنکس</h4>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <button 
-                  onClick={() => onNavigate('home')} 
-                  className="hover:text-emerald-400 transition"
-                >
-                  ہوم پیج
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={() => onNavigate('search')} 
-                  className="hover:text-emerald-400 transition"
-                >
-                  دستیاب لوڈ تلاش کریں
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={() => onNavigate('verify')} 
-                  className="hover:text-emerald-400 transition"
-                >
-                  سلپ Verify کریں
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={() => onNavigate('dashboard')} 
-                  className="hover:text-emerald-400 transition"
-                >
-                  اڈا منیجر پورٹل
-                </button>
-              </li>
-            </ul>
+            <div className="grid grid-cols-2 gap-2 text-xs sm:text-sm">
+              <ul className="space-y-2">
+                <li>
+                  <button 
+                    onClick={() => onNavigate('home')} 
+                    className="hover:text-emerald-400 transition cursor-pointer"
+                  >
+                    ہوم پیج
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => onNavigate('driver')} 
+                    className="hover:text-emerald-400 transition text-emerald-300 font-bold cursor-pointer"
+                  >
+                    🚚 ڈرائیور پورٹل
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => onNavigate('verify')} 
+                    className="hover:text-emerald-400 transition cursor-pointer"
+                  >
+                    سلپ Verify کریں
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => onNavigate('dashboard')} 
+                    className="hover:text-emerald-400 transition cursor-pointer"
+                  >
+                    اڈا منیجر پورٹل
+                  </button>
+                </li>
+              </ul>
+
+              <ul className="space-y-2">
+                <li>
+                  <button 
+                    onClick={() => onNavigate('about')} 
+                    className="hover:text-emerald-400 transition cursor-pointer"
+                  >
+                    ہمارے بارے میں (About)
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => onNavigate('contact')} 
+                    className="hover:text-emerald-400 transition cursor-pointer"
+                  >
+                    رابطہ کریں (Contact)
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => onNavigate('privacy')} 
+                    className="hover:text-emerald-400 transition cursor-pointer"
+                  >
+                    پرائیویسی پالیسی
+                  </button>
+                </li>
+              </ul>
+            </div>
           </div>
 
           {/* Value proposition & Help */}

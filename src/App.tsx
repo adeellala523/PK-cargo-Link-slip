@@ -14,6 +14,10 @@ import { WhatsAppGroupsView } from './components/WhatsAppGroupsView';
 import { AdminPanelView } from './components/AdminPanelView';
 import { AddaLoginView } from './components/AddaLoginView';
 import { DriverPortalView } from './components/DriverPortalView';
+import { AboutUsView } from './components/AboutUsView';
+import { ContactUsView } from './components/ContactUsView';
+import { PrivacyPolicyView } from './components/PrivacyPolicyView';
+import { AdPlaceholder } from './components/AdPlaceholder';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { StorageService } from './services/storage';
 import { LoadSlip, AddaProfile, WhatsAppGroup } from './types';
@@ -47,6 +51,12 @@ export default function App() {
         setCurrentTab('admin');
       } else if (path === '/driver' || path === '/driver/' || window.location.hash === '#driver' || queryTab === 'driver') {
         setCurrentTab('driver');
+      } else if (path === '/about' || path === '/about/' || window.location.hash === '#about' || queryTab === 'about') {
+        setCurrentTab('about');
+      } else if (path === '/contact' || path === '/contact/' || window.location.hash === '#contact' || queryTab === 'contact') {
+        setCurrentTab('contact');
+      } else if (path === '/privacy' || path === '/privacy/' || window.location.hash === '#privacy' || queryTab === 'privacy') {
+        setCurrentTab('privacy');
       } else if (queryTab) {
         setCurrentTab(queryTab);
       }
@@ -409,6 +419,33 @@ export default function App() {
             isInitialRegistration={true}
           />
         )}
+
+        {/* 12. About Us Page */}
+        {currentTab === 'about' && (
+          <AboutUsView
+            onNavigateToContact={() => {
+              setCurrentTab('contact');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onNavigateToDriver={() => {
+              setCurrentTab('driver');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          />
+        )}
+
+        {/* 13. Contact Us Page */}
+        {currentTab === 'contact' && (
+          <ContactUsView />
+        )}
+
+        {/* 14. Privacy Policy Page */}
+        {currentTab === 'privacy' && (
+          <PrivacyPolicyView />
+        )}
+
+        {/* Configurable Ad Slot (Initially Disabled) */}
+        <AdPlaceholder placement="bottom" />
 
       </main>
 

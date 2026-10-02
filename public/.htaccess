@@ -16,8 +16,8 @@
   RewriteCond %{DOCUMENT_ROOT}/api/users.php -f
   RewriteRule ^api/users-sync/?$ /api/users.php [L,QSA]
 
-  # Rewrite admin route /adil and driver portal /driver
-  RewriteRule ^(adil|driver)/?$ /index.html [L,QSA]
+  # Rewrite admin route /adil, driver portal /driver, and content pages
+  RewriteRule ^(adil|driver|about|contact|privacy)/?$ /index.html [L,QSA]
 
   # Allow direct access to real files and folders
   RewriteCond %{REQUEST_FILENAME} -f [OR]

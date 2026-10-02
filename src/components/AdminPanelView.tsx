@@ -20,10 +20,13 @@ import {
   Clock,
   ExternalLink,
   ChevronRight,
-  RefreshCw
+  RefreshCw,
+  Megaphone
 } from 'lucide-react';
 import { LoadSlip, AdminStats, AddaProfile, UserAccount, PaymentSettings } from '../types';
 import { StorageService } from '../services/storage';
+import { AdConfig, AdService } from '../services/adService';
+import { AdPlaceholder } from './AdPlaceholder';
 
 interface AdminPanelViewProps {
   stats: AdminStats;
@@ -42,7 +45,7 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState(false);
-  const [activeTab, setActiveTab] = useState<'users' | 'slips' | 'payment_settings' | 'backup'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'slips' | 'payment_settings' | 'ads' | 'backup'>('users');
   const [searchFilter, setSearchFilter] = useState('');
 
   // Users state
@@ -52,6 +55,10 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
   // Payment Settings state
   const [paymentSettings, setPaymentSettings] = useState<PaymentSettings>(StorageService.getPaymentSettings());
   const [settingsSavedToast, setSettingsSavedToast] = useState(false);
+
+  // Ad Settings state
+  const [adConfig, setAdConfig] = useState<AdConfig>(AdService.getAdConfig());
+  const [adSavedSuccess, setAdSavedSuccess] = useState(false);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -217,6 +224,16 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
         >
           <FileText className="w-4 h-4" />
           <span>تمام لوڈ سلپس ({slips.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('ads')}
+          className={`flex-1 py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 ${
+            activeTab === 'ads' ? 'bg-[#0B2545] text-white shadow' : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <Megaphone className="w-4 h-4" />
+          <span>اشتہارات سیٹنگز (Ads)</span>
         </button>
 
         <button
@@ -626,6 +643,180 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* TAB: ADS MANAGEMENT (Configurable, initially disabled) */}
+      {/* ======================================================== */}
+      {activeTab === 'ads' && (
+        <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+            <div>
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900 flex items-center gap-2">
+                <Megaphone className="w-5 h-5 text-emerald-600" />
+                <span>اشتہارات کا انتظام (Ad Management System)</span>
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                مستقبل میں جب بھی کوئی کمپنی یا کسٹمر ویب سائٹ پر اشتہار چلانا چاہے، آپ یہاں سے بینر یا گوگل ایڈسینس کا اسکرپٹ کوڈ شامل کر سکتے ہیں۔
+              </p>
+            </div>
+
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold bg-slate-100 border border-slate-200 text-slate-700">
+              <span className={`w-2.5 h-2.5 rounded-full ${adConfig.enabled ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`}></span>
+              <span>{adConfig.enabled ? 'اشتہارات فی الوقت آن ہیں' : 'اشتہارات فی الوقت بند (Disabled) ہیں'}</span>
+            </div>
+          </div>
+
+          {/* Master Enable/Disable Toggle */}
+          <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-extrabold text-amber-950">
+                ویب سائٹ پر اشتہارات فعال کریں (Enable Ads)
+              </p>
+              <p className="text-xs text-amber-800 mt-0.5">
+                نوٹ: آپ کی ہدایت کے مطابق فی الحال تمام اشتہارات کو ڈیفالٹ طور پر بند رکھا گیا ہے۔ ضرورت پڑنے پر ایک کلک سے آن کریں۔
+              </p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer shrink-0">
+              <input
+                type="checkbox"
+                checked={adConfig.enabled}
+                onChange={(e) => setAdConfig({ ...adConfig, enabled: e.target.checked })}
+                className="sr-only peer"
+              />
+              <div className="w-12 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+            </label>
+          </div>
+
+          {/* Ad Type Selector: Image Banner vs Script */}
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-2">
+                اشتہار کی قسم منتخب کریں (Ad Type):
+              </label>
+              <div className="grid grid-cols-2 gap-3 max-w-md">
+                <button
+                  type="button"
+                  onClick={() => setAdConfig({ ...adConfig, type: 'image' })}
+                  className={`p-3 rounded-xl border text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2 ${
+                    adConfig.type === 'image'
+                      ? 'border-emerald-600 bg-emerald-50 text-emerald-900 shadow-2xs'
+                      : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  <span>تصویر والا بینر (Image Banner)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAdConfig({ ...adConfig, type: 'script' })}
+                  className={`p-3 rounded-xl border text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2 ${
+                    adConfig.type === 'script'
+                      ? 'border-emerald-600 bg-emerald-50 text-emerald-900 shadow-2xs'
+                      : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  <span>اسکرپٹ کوڈ / ایڈسینس (Script Embed)</span>
+                </button>
+              </div>
+            </div>
+
+            {/* If Type is Image */}
+            {adConfig.type === 'image' && (
+              <div className="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    بینر تصویر کا URL (Image URL):
+                  </label>
+                  <input
+                    type="url"
+                    value={adConfig.imageUrl}
+                    onChange={(e) => setAdConfig({ ...adConfig, imageUrl: e.target.value })}
+                    placeholder="https://example.com/ad-banner.jpg"
+                    className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono focus:border-emerald-600 outline-none ltr-content"
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    کسی بھی آن لائن تصویر کا لنک یا اپنی ہوسٹنگ پر اپلوڈ کی گئی تصویر کا راستہ یہاں درج کریں۔
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    کلک پر جانے والا لنک (Target Destination URL):
+                  </label>
+                  <input
+                    type="url"
+                    value={adConfig.targetUrl}
+                    onChange={(e) => setAdConfig({ ...adConfig, targetUrl: e.target.value })}
+                    placeholder="https://clientwebsite.com یا https://wa.me/92300..."
+                    className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono focus:border-emerald-600 outline-none ltr-content"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    اشتہار کا نام یا متبادل متن (Alt Text):
+                  </label>
+                  <input
+                    type="text"
+                    value={adConfig.altText}
+                    onChange={(e) => setAdConfig({ ...adConfig, altText: e.target.value })}
+                    placeholder="مثلاً: نیو پاکستان آئل و ٹائر سروس"
+                    className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs focus:border-emerald-600 outline-none"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* If Type is Script */}
+            {adConfig.type === 'script' && (
+              <div className="space-y-2 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                <label className="block text-xs font-bold text-slate-700">
+                  فریق ثالث اشتہار کوڈ (Google AdSense یا HTML/JS Script Code):
+                </label>
+                <textarea
+                  rows={5}
+                  value={adConfig.scriptCode}
+                  onChange={(e) => setAdConfig({ ...adConfig, scriptCode: e.target.value })}
+                  placeholder="<script async src='...'></script> یا <ins class='adsbygoogle' ...></ins>"
+                  className="w-full bg-white border border-slate-300 rounded-xl p-3 text-xs font-mono focus:border-emerald-600 outline-none ltr-content"
+                ></textarea>
+                <p className="text-[11px] text-slate-400">
+                  یہاں گوگل ایڈسینس یا کسی بھی کمپنی کا ایڈ اسکرپٹ یا بینر کوڈ درج کیا جا سکتا ہے۔
+                </p>
+              </div>
+            )}
+
+            {/* Save Button */}
+            <div className="pt-2 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  AdService.saveAdConfig(adConfig);
+                  setAdSavedSuccess(true);
+                  setTimeout(() => setAdSavedSuccess(false), 3000);
+                }}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-2.5 rounded-xl text-xs sm:text-sm shadow transition cursor-pointer"
+              >
+                سیٹنگز محفوظ کریں (Save Ad Config)
+              </button>
+
+              {adSavedSuccess && (
+                <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 flex items-center gap-1.5 animate-in fade-in">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  <span>اشتہارات کی ترتیبات کامیابی سے محفوظ ہو گئیں!</span>
+                </span>
+              )}
+            </div>
+
+            {/* Live Preview Box */}
+            <div className="mt-6 pt-4 border-t border-slate-200 space-y-2">
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                اشتہار کا لائیو پری ویو (Live Preview):
+              </h3>
+              <AdPlaceholder showPreview={true} />
+            </div>
+          </div>
         </div>
       )}
 
