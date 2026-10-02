@@ -21,12 +21,14 @@ import {
   ExternalLink,
   ChevronRight,
   RefreshCw,
-  Megaphone
+  Megaphone,
+  Sparkles
 } from 'lucide-react';
 import { LoadSlip, AdminStats, AddaProfile, UserAccount, PaymentSettings } from '../types';
 import { StorageService } from '../services/storage';
 import { AdConfig, AdService } from '../services/adService';
 import { AdPlaceholder } from './AdPlaceholder';
+import { AdminQuickSlipCreator } from './AdminQuickSlipCreator';
 
 interface AdminPanelViewProps {
   stats: AdminStats;
@@ -34,6 +36,7 @@ interface AdminPanelViewProps {
   onDeleteSlip: (id: string) => void;
   onToggleSlipStatus: (slip: LoadSlip) => void;
   currentProfile: AddaProfile;
+  onSlipCreated?: (slip: LoadSlip) => void;
 }
 
 export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
@@ -41,11 +44,12 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
   slips,
   onDeleteSlip,
   onToggleSlipStatus,
+  onSlipCreated,
 }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState(false);
-  const [activeTab, setActiveTab] = useState<'users' | 'slips' | 'payment_settings' | 'ads' | 'backup'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'quick_slip' | 'slips' | 'payment_settings' | 'ads' | 'backup'>('quick_slip');
   const [searchFilter, setSearchFilter] = useState('');
 
   // Users state
@@ -197,6 +201,18 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
       {/* Navigation Tabs */}
       <div className="flex flex-wrap gap-2 p-1.5 bg-slate-100 rounded-2xl border border-slate-200 text-xs sm:text-sm font-bold">
         <button
+          onClick={() => setActiveTab('quick_slip')}
+          className={`flex-1 py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 ${
+            activeTab === 'quick_slip' 
+              ? 'bg-emerald-600 text-white shadow-lg font-bold' 
+              : 'text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300'
+          }`}
+        >
+          <Sparkles className="w-4 h-4 text-emerald-400" />
+          <span>ایڈمن کوئیک سلپ میکر (واٹس ایپ پوسٹر)</span>
+        </button>
+
+        <button
           onClick={() => setActiveTab('users')}
           className={`flex-1 py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 ${
             activeTab === 'users' ? 'bg-[#0B2545] text-white shadow' : 'text-slate-600 hover:text-slate-900'
@@ -246,6 +262,20 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
           <span>ڈیٹا بیک اپ و بحالی</span>
         </button>
       </div>
+
+      {/* ======================================================== */}
+      {/* TAB 0: QUICK SLIP CREATOR (ANY ADDA / WHATSAPP PARSER) */}
+      {/* ======================================================== */}
+      {activeTab === 'quick_slip' && (
+        <AdminQuickSlipCreator
+          onSlipCreated={(s) => {
+            if (onSlipCreated) onSlipCreated(s);
+          }}
+          registeredUsers={users}
+          allSlips={slips}
+          onDeleteSlip={onDeleteSlip}
+        />
+      )}
 
       {/* ======================================================== */}
       {/* TAB 1: USERS & ADDA ACCOUNTS MANAGEMENT */}

@@ -370,6 +370,7 @@ export default function App() {
             onDeleteSlip={handleDeleteSlip}
             onToggleSlipStatus={handleToggleSlipStatus}
             currentProfile={profile}
+            onSlipCreated={handleSlipCreated}
           />
         )}
 
