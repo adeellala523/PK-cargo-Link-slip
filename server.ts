@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
+import { getDbSlips, saveDbSlip, deleteDbSlip } from './src/db/slips.ts';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -59,19 +60,42 @@ function saveStoredUsers(users: any[]) {
 // -------------------------------------------------------------
 // API Routes
 // -------------------------------------------------------------
-app.get('/api/slips', (_req: Request, res: Response) => {
+app.get('/api/slips', async (_req: Request, res: Response) => {
+  if (process.env.SQL_HOST) {
+    try {
+      const dbSlips = await getDbSlips();
+      console.log(`[API:Slips:DB] GET /api/slips -> Returning ${dbSlips.length} slips from PostgreSQL`);
+      // Keep local file in sync as backup
+      saveStoredSlips(dbSlips);
+      res.json(dbSlips);
+      return;
+    } catch (err) {
+      console.warn('[API:Slips:DB] Failed reading from database, using file backup:', err);
+    }
+  }
+
   const slips = getStoredSlips();
   console.log(`[API:Slips] GET /api/slips -> Returning ${slips.length} slips`);
   res.json(slips);
 });
 
-app.post('/api/slips', (req: Request, res: Response) => {
+app.post('/api/slips', async (req: Request, res: Response) => {
   const newSlip = req.body;
   if (!newSlip || !newSlip.id) {
     console.warn('[API:Slips] POST /api/slips ❌ 400 Bad Request: Missing slip or slip.id');
     res.status(400).json({ error: 'Invalid slip data' });
     return;
   }
+
+  if (process.env.SQL_HOST) {
+    try {
+      await saveDbSlip(newSlip);
+      console.log(`[API:Slips:DB] POST /api/slips -> Saved slip ${newSlip.id} to PostgreSQL`);
+    } catch (err) {
+      console.warn('[API:Slips:DB] Failed saving slip to database:', err);
+    }
+  }
+
   const slips = getStoredSlips();
   const cleanNewId = newSlip.id.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
   const existingIdx = slips.findIndex((s) => {
@@ -89,12 +113,22 @@ app.post('/api/slips', (req: Request, res: Response) => {
   res.json({ success: true, slip: newSlip });
 });
 
-app.delete('/api/slips', (req: Request, res: Response) => {
+app.delete('/api/slips', async (req: Request, res: Response) => {
   const reqId = (req.query.id as string) || '';
   if (!reqId) {
     res.status(400).json({ error: 'Missing id query parameter' });
     return;
   }
+
+  if (process.env.SQL_HOST) {
+    try {
+      await deleteDbSlip(reqId);
+      console.log(`[API:Slips:DB] DELETE /api/slips?id=${reqId} -> Deleted from PostgreSQL`);
+    } catch (err) {
+      console.warn('[API:Slips:DB] Failed deleting from database:', err);
+    }
+  }
+
   const cleanId = reqId.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
   const initialCount = getStoredSlips().length;
   const slips = getStoredSlips().filter((s) => {
@@ -106,8 +140,18 @@ app.delete('/api/slips', (req: Request, res: Response) => {
   res.json({ success: true, deleted: reqId, remainingCount: slips.length });
 });
 
-app.delete('/api/slips/:id', (req: Request, res: Response) => {
+app.delete('/api/slips/:id', async (req: Request, res: Response) => {
   const reqId = req.params.id;
+
+  if (process.env.SQL_HOST) {
+    try {
+      await deleteDbSlip(reqId);
+      console.log(`[API:Slips:DB] DELETE /api/slips/${reqId} -> Deleted from PostgreSQL`);
+    } catch (err) {
+      console.warn('[API:Slips:DB] Failed deleting from database:', err);
+    }
+  }
+
   const cleanId = reqId.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
   const initialCount = getStoredSlips().length;
   const slips = getStoredSlips().filter((s) => {
