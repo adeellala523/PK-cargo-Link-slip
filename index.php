@@ -26,6 +26,10 @@ if (strpos($uri, '/slip/') === 0) {
 
 // 2. If request is for APIs
 if (strpos($uri, '/api/slips') === 0) {
+    preg_match('#^/api/slips/([^/?]+)#', $uri, $m);
+    if (!empty($m[1]) && !isset($_GET['id'])) {
+        $_GET['id'] = $m[1];
+    }
     if (file_exists(__DIR__ . '/api/slips.php')) {
         require __DIR__ . '/api/slips.php';
         exit;

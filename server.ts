@@ -60,30 +60,63 @@ function saveStoredUsers(users: any[]) {
 // API Routes
 // -------------------------------------------------------------
 app.get('/api/slips', (_req: Request, res: Response) => {
-  res.json(getStoredSlips());
+  const slips = getStoredSlips();
+  console.log(`[API:Slips] GET /api/slips -> Returning ${slips.length} slips`);
+  res.json(slips);
 });
 
 app.post('/api/slips', (req: Request, res: Response) => {
   const newSlip = req.body;
   if (!newSlip || !newSlip.id) {
+    console.warn('[API:Slips] POST /api/slips ❌ 400 Bad Request: Missing slip or slip.id');
     res.status(400).json({ error: 'Invalid slip data' });
     return;
   }
   const slips = getStoredSlips();
-  const existingIdx = slips.findIndex((s) => s.id === newSlip.id);
+  const cleanNewId = newSlip.id.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  const existingIdx = slips.findIndex((s) => {
+    const sClean = s.id.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+    return s.id === newSlip.id || sClean === cleanNewId;
+  });
   if (existingIdx !== -1) {
     slips[existingIdx] = newSlip;
+    console.log(`[API:Slips] POST /api/slips 🔄 Updated existing slip: ${newSlip.id}`);
   } else {
     slips.unshift(newSlip);
+    console.log(`[API:Slips] POST /api/slips ➕ Inserted new slip: ${newSlip.id}`);
   }
   saveStoredSlips(slips);
   res.json({ success: true, slip: newSlip });
 });
 
-app.delete('/api/slips/:id', (req: Request, res: Response) => {
-  const slips = getStoredSlips().filter((s) => s.id !== req.params.id);
+app.delete('/api/slips', (req: Request, res: Response) => {
+  const reqId = (req.query.id as string) || '';
+  if (!reqId) {
+    res.status(400).json({ error: 'Missing id query parameter' });
+    return;
+  }
+  const cleanId = reqId.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  const initialCount = getStoredSlips().length;
+  const slips = getStoredSlips().filter((s) => {
+    const sClean = s.id.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+    return s.id !== reqId && sClean !== cleanId;
+  });
   saveStoredSlips(slips);
-  res.json({ success: true });
+  console.log(`[API:Slips] DELETE /api/slips?id=${reqId} 🗑️ Removed. Before: ${initialCount}, After: ${slips.length}`);
+  res.json({ success: true, deleted: reqId, remainingCount: slips.length });
+});
+
+app.delete('/api/slips/:id', (req: Request, res: Response) => {
+  const reqId = req.params.id;
+  const cleanId = reqId.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  const initialCount = getStoredSlips().length;
+  const slips = getStoredSlips().filter((s) => {
+    const sClean = s.id.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+    return s.id !== reqId && sClean !== cleanId;
+  });
+  saveStoredSlips(slips);
+  console.log(`[API:Slips] DELETE /api/slips/${reqId} 🗑️ Removed. Before: ${initialCount}, After: ${slips.length}`);
+  res.json({ success: true, deleted: reqId, remainingCount: slips.length });
 });
 
 app.get('/api/slips/:id', (req: Request, res: Response) => {

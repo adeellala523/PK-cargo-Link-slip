@@ -4,6 +4,8 @@ const STORAGE_KEYS = {
   ADDA_PROFILE: 'pkcargolink_adda_profile_v3',
   SLIPS: 'pkcargolink_slips_v3',
   PERMANENT_USER_SLIPS: 'pkcargolink_permanent_user_slips_v3',
+  DELETED_SLIP_IDS: 'pkcargolink_deleted_slip_ids_v3',
+  PENDING_SYNC_SLIPS: 'pkcargolink_pending_sync_slips_v3',
   GROUPS: 'pkcargolink_groups_v3',
   IS_LOGGED_IN: 'pkcargolink_is_logged_in_v3',
   CURRENT_USER_PHONE: 'pkcargolink_user_phone_v3',
@@ -416,77 +418,138 @@ export const StorageService = {
   },
 
   // -------------------------------------------------------------
-  // Slips Management (Persistent & Real - No Demo Slips)
+  // Slips Management (Persistent & Real - With Full Server Verification)
   // -------------------------------------------------------------
-  getAllSlips(): LoadSlip[] {
-    let permanentSlips: LoadSlip[] = [];
+  getDeletedSlipIds(): string[] {
     try {
-      const permData = localStorage.getItem(STORAGE_KEYS.PERMANENT_USER_SLIPS);
-      if (permData) {
-        permanentSlips = JSON.parse(permData);
+      const data = localStorage.getItem(STORAGE_KEYS.DELETED_SLIP_IDS);
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (err) {
+      console.warn('[StorageService] Failed to read deleted slip IDs', err);
+    }
+    return [];
+  },
+
+  isSlipDeleted(id: string): boolean {
+    if (!id) return false;
+    const deleted = this.getDeletedSlipIds();
+    const cleanId = id.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+    const lowerId = id.trim().toLowerCase();
+    return deleted.some((d) => {
+      const dClean = d.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+      const dLower = d.trim().toLowerCase();
+      return dLower === lowerId || dClean === cleanId;
+    });
+  },
+
+  getPendingSyncSlips(): LoadSlip[] {
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.PENDING_SYNC_SLIPS);
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch {}
+    return [];
+  },
 
+  setPendingSyncSlips(slips: LoadSlip[]): void {
+    try {
+      localStorage.setItem(STORAGE_KEYS.PENDING_SYNC_SLIPS, JSON.stringify(slips));
+    } catch {}
+  },
+
+  getAllSlips(): LoadSlip[] {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.SLIPS);
       if (data) {
         const parsed: LoadSlip[] = JSON.parse(data);
-        const combined = [...permanentSlips];
-        parsed.forEach((p) => {
-          if (!combined.some((c) => c.id === p.id)) {
-            combined.push(p);
-          }
-        });
-        return combined.map((s) => ({
-          ...s,
-          addaLogo: (s.addaLogo && !s.addaLogo.includes('adda-logo.png')) ? s.addaLogo : '',
-        }));
+        if (Array.isArray(parsed)) {
+          const nonDeleted = parsed.filter((s) => s && s.id && !this.isSlipDeleted(s.id));
+          return nonDeleted.map((s) => ({
+            ...s,
+            addaLogo: (s.addaLogo && !s.addaLogo.includes('adda-logo.png')) ? s.addaLogo : '',
+          }));
+        }
       }
     } catch (e) {
-      console.error('Failed reading slips', e);
+      console.error('[StorageService] Failed reading local slips', e);
     }
-
-    return permanentSlips.map((s) => ({
-      ...s,
-      addaLogo: (s.addaLogo && !s.addaLogo.includes('adda-logo.png')) ? s.addaLogo : '',
-    }));
+    return [];
   },
 
   getSlipById(id: string): LoadSlip | null {
+    if (!id || this.isSlipDeleted(id)) return null;
     const slips = this.getAllSlips();
-    const found = slips.find((s) => s.id.trim().toLowerCase() === id.trim().toLowerCase());
+    const cleanId = id.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+    const lowerId = id.trim().toLowerCase();
+    const found = slips.find((s) => {
+      if (!s || !s.id) return false;
+      const sClean = s.id.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+      return s.id.trim().toLowerCase() === lowerId || sClean === cleanId;
+    });
     return found || null;
   },
 
-  createSlip(slip: LoadSlip): LoadSlip {
+  async createSlipAsync(slip: LoadSlip): Promise<{ success: boolean; slip: LoadSlip; serverSynced: boolean; error?: string }> {
+    console.log(`[StorageService:Create] 📝 Creating slip: ${slip.id} for Adda: ${slip.addaName}`);
+
+    // 1. Remove ID from deleted IDs if previously marked
+    try {
+      const cleanId = slip.id.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+      const lowerId = slip.id.trim().toLowerCase();
+      const deletedIds = this.getDeletedSlipIds().filter((d) => {
+        const dClean = d.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+        return d.trim().toLowerCase() !== lowerId && dClean !== cleanId;
+      });
+      localStorage.setItem(STORAGE_KEYS.DELETED_SLIP_IDS, JSON.stringify(deletedIds));
+    } catch (err) {
+      console.warn('[StorageService:Create] Warning updating deleted IDs:', err);
+    }
+
+    // 2. Save to local storage immediately
     const slips = this.getAllSlips();
     const updated = [slip, ...slips.filter((s) => s.id !== slip.id)];
-    
     try {
       localStorage.setItem(STORAGE_KEYS.SLIPS, JSON.stringify(updated));
+      console.log(`[StorageService:Create] 💾 Saved locally. Total local slips: ${updated.length}`);
     } catch (e) {
-      console.error('Failed saving slip', e);
+      console.error('[StorageService:Create] ❌ Failed saving slip to localStorage', e);
     }
 
-    try {
-      let permanent: LoadSlip[] = [];
-      const permData = localStorage.getItem(STORAGE_KEYS.PERMANENT_USER_SLIPS);
-      if (permData) {
-        permanent = JSON.parse(permData);
-      }
-      permanent = [slip, ...permanent.filter((s) => s.id !== slip.id)];
-      localStorage.setItem(STORAGE_KEYS.PERMANENT_USER_SLIPS, JSON.stringify(permanent));
-    } catch (e) {
-      console.error('Failed saving permanent slip', e);
-    }
+    // 3. Sync to backend server
+    let serverSynced = false;
+    let serverError: string | undefined;
 
-    // Sync to backend server/Hostinger for permanent persistence across devices
     if (typeof fetch !== 'undefined') {
-      fetch('/api/slips', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(slip),
-      }).catch(() => {});
+      try {
+        console.log(`[StorageService:Create] 🚀 Sending POST /api/slips...`);
+        const res = await fetch('/api/slips', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(slip),
+        });
+
+        if (res.ok) {
+          const resData = await res.json().catch(() => ({}));
+          serverSynced = true;
+          console.log(`[StorageService:Create] ✅ Server accepted slip ${slip.id}:`, resData);
+        } else {
+          serverError = `Server returned status ${res.status}: ${res.statusText}`;
+          console.warn(`[StorageService:Create] ⚠️ Server sync failed (${res.status}). Queuing for retry...`);
+          // Add to pending sync queue
+          const pending = this.getPendingSyncSlips().filter((s) => s.id !== slip.id);
+          this.setPendingSyncSlips([slip, ...pending]);
+        }
+      } catch (err: any) {
+        serverError = err?.message || 'Network error';
+        console.warn(`[StorageService:Create] ⚠️ Network error syncing slip to server:`, err);
+        const pending = this.getPendingSyncSlips().filter((s) => s.id !== slip.id);
+        this.setPendingSyncSlips([slip, ...pending]);
+      }
 
       // If logo is base64, also upload directly to ensure permanent file for crawlers
       if (slip.addaLogo && slip.addaLogo.startsWith('data:image/')) {
@@ -494,9 +557,18 @@ export const StorageService = {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ data: slip.addaLogo, prefix: 'slip_' + slip.id }),
-        }).catch(() => {});
+        }).catch((e) => console.warn('[StorageService:Upload] Logo upload warning:', e));
       }
     }
+
+    return { success: true, slip, serverSynced, error: serverError };
+  },
+
+  createSlip(slip: LoadSlip): LoadSlip {
+    // Fire async server sync in background while returning immediately for responsive UI
+    this.createSlipAsync(slip).catch((err) => {
+      console.error('[StorageService] Unexpected error in createSlipAsync:', err);
+    });
     return slip;
   },
 
@@ -507,86 +579,175 @@ export const StorageService = {
       slips[index] = slip;
       localStorage.setItem(STORAGE_KEYS.SLIPS, JSON.stringify(slips));
 
-      try {
-        let permanent: LoadSlip[] = [];
-        const permData = localStorage.getItem(STORAGE_KEYS.PERMANENT_USER_SLIPS);
-        if (permData) {
-          permanent = JSON.parse(permData);
-          const pIdx = permanent.findIndex((s) => s.id === slip.id);
-          if (pIdx !== -1) {
-            permanent[pIdx] = slip;
-          } else {
-            permanent.unshift(slip);
-          }
-          localStorage.setItem(STORAGE_KEYS.PERMANENT_USER_SLIPS, JSON.stringify(permanent));
-        }
-      } catch {}
-
       if (typeof fetch !== 'undefined') {
         fetch('/api/slips', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(slip),
-        }).catch(() => {});
+        }).catch((err) => console.warn('[StorageService:Update] Error updating on server:', err));
       }
     }
+  },
+
+  async deleteSlipAsync(id: string): Promise<{ success: boolean; id: string; serverDeleted: boolean; error?: string }> {
+    const cleanId = id.trim();
+    console.log(`[StorageService:Delete] 🗑️ Deleting slip ID: ${cleanId}`);
+
+    // 1. Record ID in deleted list so it NEVER resurfaces
+    try {
+      const deletedIds = this.getDeletedSlipIds();
+      if (!deletedIds.includes(cleanId)) {
+        deletedIds.push(cleanId);
+        // Also add non-hyphenated variant
+        const noHyphen = cleanId.replace(/[^a-zA-Z0-9]/g, '');
+        if (!deletedIds.includes(noHyphen)) deletedIds.push(noHyphen);
+        localStorage.setItem(STORAGE_KEYS.DELETED_SLIP_IDS, JSON.stringify(deletedIds));
+      }
+    } catch (err) {
+      console.warn('[StorageService:Delete] Warning updating deleted IDs:', err);
+    }
+
+    // 2. Remove from local active slips
+    const slips = this.getAllSlips().filter((s) => {
+      const sClean = s.id.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+      const targetClean = cleanId.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+      return s.id.toLowerCase() !== cleanId.toLowerCase() && sClean !== targetClean;
+    });
+    localStorage.setItem(STORAGE_KEYS.SLIPS, JSON.stringify(slips));
+
+    // 3. Remove from pending queue if present
+    const pending = this.getPendingSyncSlips().filter((s) => s.id !== cleanId);
+    this.setPendingSyncSlips(pending);
+    console.log(`[StorageService:Delete] 💾 Removed from localStorage. Remaining active slips: ${slips.length}`);
+
+    // 4. Send DELETE request to server
+    let serverDeleted = false;
+    let serverError: string | undefined;
+
+    if (typeof fetch !== 'undefined') {
+      try {
+        console.log(`[StorageService:Delete] 🚀 Sending DELETE /api/slips/${cleanId}...`);
+        const res = await fetch(`/api/slips/${encodeURIComponent(cleanId)}`, { method: 'DELETE' });
+        if (res.ok) {
+          serverDeleted = true;
+          console.log(`[StorageService:Delete] ✅ Server confirmed deletion for slip: ${cleanId}`);
+        } else {
+          // Try fallback query param
+          const fallbackRes = await fetch(`/api/slips?id=${encodeURIComponent(cleanId)}`, { method: 'DELETE' });
+          if (fallbackRes.ok) {
+            serverDeleted = true;
+            console.log(`[StorageService:Delete] ✅ Server confirmed deletion via query param for: ${cleanId}`);
+          } else {
+            serverError = `Server returned status ${res.status}`;
+            console.warn(`[StorageService:Delete] ⚠️ Server could not delete slip (${res.status}): ${serverError}`);
+          }
+        }
+      } catch (err: any) {
+        serverError = err?.message || 'Network error';
+        console.warn(`[StorageService:Delete] ⚠️ Network error calling DELETE on server:`, err);
+      }
+    }
+
+    return { success: true, id: cleanId, serverDeleted, error: serverError };
   },
 
   deleteSlip(id: string): void {
-    const slips = this.getAllSlips().filter((s) => s.id !== id);
-    localStorage.setItem(STORAGE_KEYS.SLIPS, JSON.stringify(slips));
-
-    try {
-      const permData = localStorage.getItem(STORAGE_KEYS.PERMANENT_USER_SLIPS);
-      if (permData) {
-        const permanent: LoadSlip[] = JSON.parse(permData);
-        const filtered = permanent.filter((s) => s.id !== id);
-        localStorage.setItem(STORAGE_KEYS.PERMANENT_USER_SLIPS, JSON.stringify(filtered));
-      }
-    } catch {}
-
-    if (typeof fetch !== 'undefined') {
-      fetch(`/api/slips/${id}`, { method: 'DELETE' }).catch(() => {});
-    }
+    // Fire async server delete in background while executing local removal immediately
+    this.deleteSlipAsync(id).catch((err) => {
+      console.error('[StorageService] Unexpected error in deleteSlipAsync:', err);
+    });
   },
 
   async syncWithServer(): Promise<LoadSlip[]> {
+    console.log('[StorageService:Sync] 🔄 Starting server synchronization...');
     try {
-      if (typeof fetch !== 'undefined') {
-        const res = await fetch('/api/slips');
-        if (res.ok) {
-          const serverSlips: LoadSlip[] = await res.json();
-          if (Array.isArray(serverSlips)) {
-            const currentSlips = this.getAllSlips();
-            const merged = [...currentSlips];
-            
-            serverSlips.forEach((s) => {
-              const exists = merged.findIndex((m) => m.id === s.id);
-              if (exists !== -1) {
-                merged[exists] = s;
-              } else {
-                merged.unshift(s);
-              }
-            });
+      if (typeof fetch === 'undefined') {
+        return this.getAllSlips();
+      }
 
-            // Automatically push any local slips that are missing on the server
-            currentSlips.forEach((loc) => {
-              if (!serverSlips.some((s) => s.id === loc.id)) {
-                fetch('/api/slips', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(loc),
-                }).catch(() => {});
-              }
+      // Step 1: Retry any pending slips that failed in prior attempts
+      const pendingSlips = this.getPendingSyncSlips();
+      if (pendingSlips.length > 0) {
+        console.log(`[StorageService:Sync] 📤 Retrying ${pendingSlips.length} pending un-synced slips...`);
+        const remainingPending: LoadSlip[] = [];
+        for (const p of pendingSlips) {
+          if (this.isSlipDeleted(p.id)) continue;
+          try {
+            const pushRes = await fetch('/api/slips', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(p),
             });
-
-            localStorage.setItem(STORAGE_KEYS.SLIPS, JSON.stringify(merged));
-            return merged;
+            if (!pushRes.ok) remainingPending.push(p);
+          } catch {
+            remainingPending.push(p);
           }
         }
+        this.setPendingSyncSlips(remainingPending);
       }
-    } catch {}
-    return this.getAllSlips();
+
+      // Step 2: Fetch current server slips
+      const res = await fetch('/api/slips');
+      if (!res.ok) {
+        console.warn(`[StorageService:Sync] ⚠️ Server returned HTTP ${res.status}. Falling back to local data.`);
+        return this.getAllSlips();
+      }
+
+      const serverSlips: LoadSlip[] = await res.json();
+      if (!Array.isArray(serverSlips)) {
+        console.warn('[StorageService:Sync] ⚠️ Server response is not an array:', serverSlips);
+        return this.getAllSlips();
+      }
+
+      console.log(`[StorageService:Sync] 📥 Retrieved ${serverSlips.length} slips from server`);
+
+      // Step 3: Purge any deleted slips that the server still has
+      const currentSlips = this.getAllSlips();
+      const validServerSlips: LoadSlip[] = [];
+
+      for (const s of serverSlips) {
+        if (!s || !s.id) continue;
+        if (this.isSlipDeleted(s.id)) {
+          console.log(`[StorageService:Sync] 🧹 Server has deleted slip ${s.id}. Sending DELETE command...`);
+          fetch(`/api/slips/${encodeURIComponent(s.id)}`, { method: 'DELETE' }).catch(() => {});
+          continue;
+        }
+        validServerSlips.push(s);
+      }
+
+      // Step 4: Merge active local slips and server slips
+      const mergedMap = new Map<string, LoadSlip>();
+      // Add server slips first
+      validServerSlips.forEach((s) => {
+        mergedMap.set(s.id, s);
+      });
+      // Merge local slips
+      currentSlips.forEach((loc) => {
+        if (!this.isSlipDeleted(loc.id)) {
+          if (!mergedMap.has(loc.id)) {
+            // Local slip is missing on server -> push it to server
+            console.log(`[StorageService:Sync] 📤 Pushing local slip ${loc.id} to server...`);
+            fetch('/api/slips', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(loc),
+            }).catch(() => {});
+          }
+          mergedMap.set(loc.id, loc);
+        }
+      });
+
+      const finalSlips = Array.from(mergedMap.values());
+      // Sort by newest first
+      finalSlips.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+
+      localStorage.setItem(STORAGE_KEYS.SLIPS, JSON.stringify(finalSlips));
+      console.log(`[StorageService:Sync] ✨ Synchronization complete. Total active slips: ${finalSlips.length}`);
+      return finalSlips;
+    } catch (err) {
+      console.error('[StorageService:Sync] ❌ Synchronization failed with error:', err);
+      return this.getAllSlips();
+    }
   },
 
   exportSlipsBackup(): string {

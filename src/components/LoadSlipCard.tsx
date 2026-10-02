@@ -208,6 +208,11 @@ export const LoadSlipCard: React.FC<LoadSlipCardProps> = ({
             {/* Business Identity Highlight Box with Distinct Border & Background Highlight */}
             <div className="bg-gradient-to-r from-emerald-950/90 via-[#072448]/95 to-emerald-950/90 border-2 sm:border-3 border-emerald-400/80 rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-2xl relative overflow-hidden backdrop-blur-sm ring-1 ring-emerald-300/30">
 
+              {/* Full Arabic Bismillah Calligraphy */}
+              <div className="text-center font-arabic text-xl sm:text-2xl md:text-3xl text-amber-300 font-extrabold tracking-wide drop-shadow-lg mb-4 select-none">
+                بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ
+              </div>
+
               {/* VERY PROMINENT, BOLD, LARGE ADDA NAME TYPOGRAPHY */}
               <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-white leading-tight tracking-tight drop-shadow-md break-words">
                 {slip.addaName}

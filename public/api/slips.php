@@ -2,7 +2,7 @@
 // PK Cargo Link - Slips Persistent Storage API for Hostinger
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -10,41 +10,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-function getWritableSlipsFile() {
-    $candidateDirs = [
-        __DIR__ . '/../data',
-        __DIR__ . '/../../data',
-        __DIR__ . '/data',
-        __DIR__,
-    ];
-
-    foreach ($candidateDirs as $dir) {
-        if (!file_exists($dir)) {
-            @mkdir($dir, 0777, true);
-        }
-        if (is_dir($dir) && is_writable($dir)) {
-            return $dir . '/slips.json';
-        }
-    }
-    return __DIR__ . '/slips.json';
-}
-
-function readAllSlips() {
-    $candidatePaths = [
+function getAllPossibleSlipsPaths() {
+    return [
+        __DIR__ . '/slips.json',
         __DIR__ . '/../data/slips.json',
         __DIR__ . '/../../data/slips.json',
         __DIR__ . '/data/slips.json',
-        __DIR__ . '/slips.json',
     ];
+}
 
-    foreach ($candidatePaths as $file) {
+function readAllSlips() {
+    $paths = getAllPossibleSlipsPaths();
+    $bestFile = null;
+    $bestMtime = 0;
+
+    foreach ($paths as $file) {
         if (file_exists($file)) {
-            $content = @file_get_contents($file);
-            if ($content) {
-                $parsed = json_decode($content, true);
-                if (is_array($parsed)) {
-                    return $parsed;
-                }
+            $mtime = filemtime($file);
+            if ($mtime >= $bestMtime) {
+                $bestMtime = $mtime;
+                $bestFile = $file;
+            }
+        }
+    }
+
+    if ($bestFile && file_exists($bestFile)) {
+        $content = @file_get_contents($bestFile);
+        if ($content) {
+            $parsed = json_decode($content, true);
+            if (is_array($parsed)) {
+                return $parsed;
             }
         }
     }
@@ -52,22 +47,78 @@ function readAllSlips() {
 }
 
 function writeAllSlips($slips) {
-    $targetFile = getWritableSlipsFile();
     $json = json_encode($slips, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-    $result = @file_put_contents($targetFile, $json, LOCK_EX);
-    
-    $backupFile = __DIR__ . '/slips.json';
-    if ($targetFile !== $backupFile) {
-        @file_put_contents($backupFile, $json, LOCK_EX);
+    $paths = getAllPossibleSlipsPaths();
+    $written = false;
+
+    foreach ($paths as $file) {
+        $dir = dirname($file);
+        if (!file_exists($dir)) {
+            @mkdir($dir, 0777, true);
+        }
+        $res = @file_put_contents($file, $json, LOCK_EX);
+        if ($res !== false) {
+            $written = true;
+        }
     }
-    
-    return $result !== false;
+    return $written;
 }
 
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
     echo json_encode(readAllSlips(), JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+if ($method === 'DELETE') {
+    $id = isset($_GET['id']) ? trim($_GET['id']) : '';
+    if (empty($id) && isset($_SERVER['REQUEST_URI'])) {
+        $parts = explode('/', trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/'));
+        $lastPart = end($parts);
+        if ($lastPart !== 'slips' && $lastPart !== 'slips.php') {
+            $id = $lastPart;
+        }
+    }
+
+    if (empty($id)) {
+        $input = file_get_contents('php://input');
+        if ($input) {
+            $body = json_decode($input, true);
+            if (isset($body['id'])) $id = trim($body['id']);
+        }
+    }
+
+    if (!empty($id)) {
+        $slips = readAllSlips();
+        $cleanTargetId = preg_replace('/[^a-zA-Z0-9]/', '', strtolower($id));
+        $filtered = array_values(array_filter($slips, function($s) use ($id, $cleanTargetId) {
+            if (!isset($s['id'])) return true;
+            $sClean = preg_replace('/[^a-zA-Z0-9]/', '', strtolower($s['id']));
+            return strtolower($s['id']) !== strtolower($id) && $sClean !== $cleanTargetId;
+        }));
+
+        writeAllSlips($filtered);
+
+        // Also remove individual dedicated slip file
+        $cleanId = preg_replace('/[^a-zA-Z0-9_\-]/', '', $id);
+        $singleDirs = [
+            __DIR__ . '/../data/slips',
+            __DIR__ . '/data/slips',
+            __DIR__ . '/slips',
+            __DIR__ . '/../slips',
+        ];
+        foreach ($singleDirs as $sDir) {
+            $f = $sDir . '/' . $cleanId . '.json';
+            if (file_exists($f)) @unlink($f);
+        }
+
+        echo json_encode(['success' => true, 'deleted' => $id]);
+        exit;
+    }
+
+    http_response_code(400);
+    echo json_encode(['error' => 'Missing slip id to delete']);
     exit;
 }
 

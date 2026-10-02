@@ -97,9 +97,7 @@ export default function App() {
 
     handleUrlRoute();
     StorageService.syncWithServer().then((synced) => {
-      if (synced && synced.length > 0) {
-        setSlips(synced);
-      }
+      setSlips(synced);
     });
     StorageService.syncUsersWithServer();
     window.addEventListener('popstate', handleUrlRoute);
@@ -139,13 +137,14 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleSlipCreated = (newSlip: LoadSlip) => {
-    const saved = StorageService.createSlip(newSlip);
-    setSlips(StorageService.getAllSlips());
-    setActiveSlip(saved);
-    setShareModalSlip(saved); // Open share modal right away!
+  const handleSlipCreated = async (newSlip: LoadSlip) => {
+    const result = await StorageService.createSlipAsync(newSlip);
+    const updatedSlips = StorageService.getAllSlips();
+    setSlips(updatedSlips);
+    setActiveSlip(result.slip);
+    setShareModalSlip(result.slip); // Open share modal right away!
     setCurrentTab('slip-detail');
-    window.history.pushState({}, '', `/slip/${saved.id}`);
+    window.history.pushState({}, '', `/slip/${result.slip.id}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -159,9 +158,10 @@ export default function App() {
     }
   };
 
-  const handleDeleteSlip = (id: string) => {
-    StorageService.deleteSlip(id);
-    setSlips(StorageService.getAllSlips());
+  const handleDeleteSlip = async (id: string) => {
+    await StorageService.deleteSlipAsync(id);
+    const updatedSlips = StorageService.getAllSlips();
+    setSlips(updatedSlips);
     if (activeSlip && activeSlip.id === id) {
       setActiveSlip(null);
       setCurrentTab('my-slips');

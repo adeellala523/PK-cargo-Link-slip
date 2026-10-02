@@ -2,8 +2,8 @@
   RewriteEngine On
   RewriteBase /
 
-  # Map /api/slips to /api/slips.php
-  RewriteRule ^api/slips/?$ api/slips.php [L,QSA]
+  # Map /api/slips and /api/slips/:id to api/slips.php
+  RewriteRule ^api/slips(?:/([^/]+))?/?$ api/slips.php?id=$1 [L,QSA]
 
   # Map /api/users-sync to /api/users.php
   RewriteRule ^api/users-sync/?$ api/users.php [L,QSA]

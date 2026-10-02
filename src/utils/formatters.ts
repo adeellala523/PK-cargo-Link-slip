@@ -47,7 +47,9 @@ export function formatWhatsAppMessage(slip: LoadSlip): string {
   // Adda Name prominently above "دستیاب لوڈ"
   const addaHeader = `🏢 ${slip.addaName}${slip.addaCity ? ` (${slip.addaCity})` : ''}`;
 
-  return `${addaHeader}
+  return `بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ
+
+${addaHeader}
 
 🚛 دستیاب لوڈ: ${slip.loadingCity} تا ${slip.destinationCity}
 
