@@ -59,13 +59,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
           {/* Mandatory Hero Heading */}
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold leading-tight tracking-tight text-white font-nafees">
-            لوڈ سلپ بنائیں، WhatsApp پر فوراً شیئر کریں
+            لوڈ سلپ بنائیں، واٹس ایپ پر فوراً شیئر کریں
           </h1>
-
-          {/* Mandatory Supporting Text */}
-          <p className="text-base sm:text-lg md:text-xl text-slate-200 leading-relaxed max-w-2xl mx-auto font-nafees font-normal">
-            PK Cargo Link Adda Managers کے لیے چند سیکنڈ میں پروفیشنل Load Slip تیار کرنے اور Drivers تک پہنچانے کا آسان نظام ہے۔
-          </p>
 
           {/* Mandatory CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
@@ -89,11 +84,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           {/* Quick stats banner */}
           <div className="pt-6 grid grid-cols-3 gap-2 border-t border-slate-700/60 max-w-lg mx-auto text-center">
             <div>
-              <div className="text-xl sm:text-2xl font-bold text-emerald-400 font-sans">10 Sec</div>
+              <div className="text-xl sm:text-2xl font-bold text-emerald-400 font-nafees">10 سیکنڈ</div>
               <div className="text-xs text-slate-300">سلپ کی تیاری</div>
             </div>
             <div className="border-x border-slate-700/60">
-              <div className="text-xl sm:text-2xl font-bold text-white font-sans">0 MB</div>
+              <div className="text-xl sm:text-2xl font-bold text-white font-nafees">0 ایم بی</div>
               <div className="text-xs text-slate-300">گیلری میں جگہ صفر</div>
             </div>
             <div>
@@ -109,7 +104,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
           <div>
             <h2 className="text-2xl font-bold text-[#0B2545] font-nafees">
-              تازہ ترین دستیاب لوڈز (Live Loads)
+              تازہ ترین دستیاب لوڈز
             </h2>
             <p className="text-xs text-slate-500">
               ڈرائیور حضرات بغیر رجسٹریشن کے براہ راست لوڈ چیک کریں اور اڈا منیجر سے رابطہ کریں
@@ -236,7 +231,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             onClick={onOpenCreate}
             className="flex-shrink-0 bg-white text-[#0B2545] hover:bg-emerald-50 px-6 py-3.5 rounded-xl font-bold text-base shadow-md active:scale-95 transition"
           >
-            ابھی فری رجسٹریشن کریں
+            ابھی مفت رجسٹریشن کریں
           </button>
         </div>
       </section>

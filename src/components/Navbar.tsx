@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Truck, PlusCircle, Search, ShieldCheck, UserCheck, Menu, X, Download, Share2, Bell, MessageSquare, QrCode } from 'lucide-react';
+import { Truck, Search, ShieldCheck, UserCheck, Menu, X, Download, Share2, Bell, MessageSquare, QrCode } from 'lucide-react';
 import { NotificationService } from '../services/notificationService';
 
 interface NavbarProps {
@@ -76,16 +76,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Truck className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
             </div>
             <div className="flex flex-col">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xl sm:text-2xl font-bold tracking-tight text-white font-nafees">
-                  PK Cargo Link
-                </span>
-                <span className="bg-emerald-600 text-white text-[11px] font-sans px-1.5 py-0.5 rounded font-bold uppercase">
-                  PK
-                </span>
-              </div>
+              <span className="text-xl sm:text-2xl font-bold tracking-tight text-white font-nafees">
+                پی کے کارگو لنک
+              </span>
               <span className="text-xs sm:text-sm text-emerald-300 font-medium font-nafees">
-                پاکستان لوڈ سلپ سسٹم
+                ڈیجیٹل لوڈ سلپ سسٹم
               </span>
             </div>
           </div>
@@ -186,14 +181,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
-            <button
-              onClick={onOpenCreateModal}
-              className="inline-flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-sm sm:text-base shadow-md hover:shadow-lg transition-all active:scale-95"
-            >
-              <PlusCircle className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-              <span>+ نئی لوڈ سلپ</span>
-            </button>
-
             {/* Mobile Hamburger Button */}
             <button
               onClick={() => setMenuOpen(!menuOpen)}
@@ -223,8 +210,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               <span>🚚 ڈرائیور پورٹل (شہر کے مطابق لوڈز)</span>
-              <span className="bg-emerald-500/30 text-emerald-200 text-[10px] px-2 py-0.5 rounded-full font-sans">
-                Driver
+              <span className="bg-emerald-500/30 text-emerald-200 text-[10px] px-2 py-0.5 rounded-full font-nafees">
+                ڈرائیور
               </span>
             </button>
             <button
@@ -312,7 +299,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className="w-full flex items-center justify-center gap-2 bg-emerald-700 text-white px-3 py-2.5 rounded-lg text-base font-bold mt-2"
               >
                 <Download className="w-4 h-4" />
-                <span>Home Screen پر شامل کریں (ایپ بنائیں)</span>
+                <span>ہوم اسکرین پر شامل کریں (ایپ انسٹال کریں)</span>
               </button>
             )}
           </div>

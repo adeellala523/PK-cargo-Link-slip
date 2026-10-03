@@ -49,16 +49,16 @@ const TOP_CITIES = [
 
 const VEHICLE_OPTIONS: string[] = [
   'تمام گاڑیاں',
-  '22 Wheeler (ٹرالر)',
-  '10 Wheeler',
-  '6 Wheeler',
-  'Mazda (مزدا)',
-  'Shahzore (شہزور)',
-  'Container (کنٹینر)',
-  'Flatbed (فلیٹ بیڈ)',
-  'Lowbed (لو بیڈ)',
-  'Bowser / Tanker (ٹینکر)',
-  'Other (دیگر)'
+  '22 وہیلر (ٹرالر)',
+  '10 وہیلر',
+  '6 وہیلر',
+  'مزدا (Mazda)',
+  'شہزور (Shahzor)',
+  'کنٹینر',
+  'فلیٹ بیڈ',
+  'لو بیڈ',
+  'ٹینکر / باؤزر',
+  'دیگر گاڑیاں'
 ];
 
 export const DriverPortalView: React.FC<DriverPortalViewProps> = ({

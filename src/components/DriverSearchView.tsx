@@ -85,7 +85,7 @@ export const DriverSearchView: React.FC<DriverSearchViewProps> = ({
             ڈرائیور پورٹل (بغیر رجسٹریشن)
           </span>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0B2545] mt-1">
-            دستیاب لوڈ تلاش کریں (Load Search)
+            دستیاب لوڈ تلاش کریں
           </h1>
           <p className="text-xs sm:text-sm text-slate-500">
             شہر، مطلوبہ گاڑی اور مال کے مطابق پاکستان بھر کے مصدقہ اڈا لوڈز تلاش کریں اور فورا رابطہ کریں۔
@@ -97,7 +97,7 @@ export const DriverSearchView: React.FC<DriverSearchViewProps> = ({
           <div className="flex items-center justify-between text-xs font-bold text-slate-700 border-b border-slate-200 pb-2">
             <span className="flex items-center gap-1.5">
               <Filter className="w-4 h-4 text-emerald-600" />
-              <span>تلاش کی ترتیبات (Filters)</span>
+              <span>تلاش کی ترتیبات</span>
             </span>
             <button
               onClick={handleResetFilters}
@@ -144,15 +144,15 @@ export const DriverSearchView: React.FC<DriverSearchViewProps> = ({
               <select
                 value={vehicleType}
                 onChange={(e) => setVehicleType(e.target.value)}
-                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:border-emerald-600 outline-none font-sans"
+                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:border-emerald-600 outline-none font-nafees"
               >
                 <option value="تمام گاڑیاں">تمام گاڑیاں</option>
-                <option value="22 Wheeler">22 Wheeler</option>
-                <option value="10 Wheeler">10 Wheeler</option>
-                <option value="Mazda">Mazda</option>
-                <option value="Shahzor">Shahzor</option>
-                <option value="40 Foot Container">40 Foot Container</option>
-                <option value="JAC">JAC / Porter</option>
+                <option value="22 Wheeler">22 وہیلر (ٹرالر)</option>
+                <option value="10 Wheeler">10 وہیلر</option>
+                <option value="Mazda">مزدا</option>
+                <option value="Shahzor">شہزور</option>
+                <option value="40 Foot Container">40 فٹ کنٹینر</option>
+                <option value="JAC">جے اے سی / پورٹر</option>
               </select>
             </div>
 

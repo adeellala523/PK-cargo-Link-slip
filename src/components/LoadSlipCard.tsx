@@ -127,7 +127,7 @@ export const LoadSlipCard: React.FC<LoadSlipCardProps> = ({
               className="inline-flex items-center gap-1.5 bg-[#16A34A] hover:bg-[#15803D] text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-sm transition active:scale-95"
             >
               <MessageSquare className="w-4 h-4" />
-              <span>WhatsApp پر شیئر</span>
+              <span>واٹس ایپ پر شیئر کریں</span>
             </button>
           )}
 
@@ -137,7 +137,7 @@ export const LoadSlipCard: React.FC<LoadSlipCardProps> = ({
             title="لنک کاپی کریں"
           >
             {copiedLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-slate-600" />}
-            <span>{copiedLink ? 'کاپی ہوگیا!' : 'لنک Copy'}</span>
+            <span>{copiedLink ? 'کاپی ہوگیا!' : 'سلپ لنک کاپی کریں'}</span>
           </button>
 
           <button
@@ -146,7 +146,7 @@ export const LoadSlipCard: React.FC<LoadSlipCardProps> = ({
             title="پرنٹ کریں"
           >
             <Printer className="w-4 h-4 text-slate-600" />
-            <span className="hidden sm:inline">پرنٹ / PDF</span>
+            <span className="hidden sm:inline">پرنٹ کریں</span>
           </button>
         </div>
       </div>

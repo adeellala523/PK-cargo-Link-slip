@@ -92,8 +92,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               <h3 className="text-xl font-bold text-slate-900 font-nafees">
                 سلپ کامیابی سے تیار ہوگئی!
               </h3>
-              <p className="text-xs text-slate-500 font-mono ltr-content">
-                Slip ID: {slip.id}
+              <p className="text-xs text-slate-500">
+                سلپ نمبر: <span className="font-mono ltr-content font-bold">{slip.id}</span>
               </p>
             </div>
           </div>
@@ -110,7 +110,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
           <div className="flex items-center justify-between text-xs text-slate-600">
             <span className="font-bold text-slate-800 flex items-center gap-1.5">
               <MessageSquare className="w-4 h-4 text-[#25D366]" />
-              <span>واٹس ایپ لنک پریویو (WhatsApp Preview Card):</span>
+              <span>واٹس ایپ پر لنک کا پریویو کارڈ:</span>
             </span>
             <span className="text-[11px] text-emerald-800 font-bold bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-200">
               ہر اڈا کی اپنی تصویر

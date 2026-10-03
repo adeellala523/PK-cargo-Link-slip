@@ -56,10 +56,10 @@ export const VerifySlipView: React.FC<VerifySlipViewProps> = ({
           </div>
           <div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0B2545]">
-              سلپ Verify کریں (لوڈ تصدیق)
+              سلپ کی تصدیق کریں
             </h1>
             <p className="text-xs sm:text-sm text-slate-500">
-              جعلی یا پرانی سلپس سے بچنے کے لیے سلپ کا آفیشل آئی ڈی درج کر کے تصدیق کریں۔
+              جعلی یا پرانی سلپس سے بچنے کے لیے سلپ کا آفیشل نمبر درج کر کے تصدیق کریں۔
             </p>
           </div>
         </div>
@@ -67,7 +67,7 @@ export const VerifySlipView: React.FC<VerifySlipViewProps> = ({
         {/* Input Form */}
         <form onSubmit={handleSearch} className="pt-2 space-y-3">
           <label className="text-sm font-bold text-slate-800 block">
-            سلپ آئی ڈی (Slip ID) درج کریں:
+            سلپ نمبر درج کریں:
           </label>
           <div className="flex flex-col sm:flex-row gap-2">
             <input
@@ -83,7 +83,7 @@ export const VerifySlipView: React.FC<VerifySlipViewProps> = ({
               className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-xl shadow transition active:scale-95 flex items-center justify-center gap-2"
             >
               <Search className="w-5 h-5" />
-              <span>Verify کریں</span>
+              <span>تصدیق کریں</span>
             </button>
           </div>
 

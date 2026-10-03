@@ -18,7 +18,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 <Truck className="w-5 h-5" />
               </div>
               <span className="text-xl font-bold text-white tracking-wide">
-                PK Cargo Link
+                پی کے کارگو لنک
               </span>
             </div>
             <p className="text-sm text-slate-400 leading-relaxed">
@@ -55,7 +55,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                     onClick={() => onNavigate('verify')} 
                     className="hover:text-emerald-400 transition cursor-pointer"
                   >
-                    سلپ Verify کریں
+                    سلپ کی تصدیق کریں
                   </button>
                 </li>
                 <li>
@@ -74,7 +74,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                     onClick={() => onNavigate('about')} 
                     className="hover:text-emerald-400 transition cursor-pointer"
                   >
-                    ہمارے بارے میں (About)
+                    ہمارے بارے میں
                   </button>
                 </li>
                 <li>
@@ -82,7 +82,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                     onClick={() => onNavigate('contact')} 
                     className="hover:text-emerald-400 transition cursor-pointer"
                   >
-                    رابطہ کریں (Contact)
+                    ہم سے رابطہ کریں
                   </button>
                 </li>
                 <li>

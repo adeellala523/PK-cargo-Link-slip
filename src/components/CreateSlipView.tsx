@@ -52,6 +52,20 @@ const VEHICLE_OPTIONS: VehicleType[] = [
   'Other',
 ];
 
+const VEHICLE_LABELS: Record<string, string> = {
+  '22 Wheeler': '22 وہیلر (ٹرالر)',
+  '10 Wheeler': '10 وہیلر (دس چکّا)',
+  'Shahzor': 'شہزور',
+  'JAC': 'جے اے سی (JAC)',
+  'Porter': 'پورٹر',
+  'Mazda': 'مزدا (Mazda)',
+  '16 Foot': '16 فٹ',
+  '18 Foot': '18 فٹ',
+  '20 Foot': '20 فٹ',
+  '40 Foot Container': '40 فٹ کنٹینر',
+  'Other': 'دیگر گاڑی',
+};
+
 const BODY_OPTIONS: BodyType[] = ['فل باڈی', 'ہاف باڈی', 'پھٹا', 'کنٹینر'];
 
 export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
@@ -283,7 +297,7 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
         <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200 space-y-4">
           <h2 className="text-lg font-bold text-[#0B2545] flex items-center gap-2 border-b border-slate-100 pb-2">
             <MapPin className="w-5 h-5 text-orange-600" />
-            <span>2. منزل کی معلومات (Destination)</span>
+            <span>2. منزل کی معلومات</span>
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -337,7 +351,7 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
         <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200 space-y-4">
           <h2 className="text-lg font-bold text-[#0B2545] flex items-center gap-2 border-b border-slate-100 pb-2">
             <Package className="w-5 h-5 text-emerald-600" />
-            <span>3. مال اور وزن کی تفصیلات (Cargo)</span>
+            <span>3. مال اور وزن کی تفصیلات</span>
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -345,7 +359,7 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
             {/* Goods */}
             <div className="space-y-1.5 sm:col-span-1">
               <label className="text-sm font-bold text-slate-800 block">
-                مال (Goods) <span className="text-red-500">*</span>
+                مال کی تفصیل <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -372,7 +386,7 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
             {/* Weight */}
             <div className="space-y-1.5 sm:col-span-1">
               <label className="text-sm font-bold text-slate-800 block">
-                وزن (Weight) <span className="text-red-500">*</span>
+                کل وزن <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -399,7 +413,7 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
             {/* Quantity */}
             <div className="space-y-1.5 sm:col-span-1">
               <label className="text-sm font-bold text-slate-800 block">
-                مقدار (Quantity)
+                مقدار / بوریاں (اختیاری)
               </label>
               <input
                 type="text"
@@ -429,7 +443,7 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
         <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200 space-y-4">
           <h2 className="text-lg font-bold text-[#0B2545] flex items-center gap-2 border-b border-slate-100 pb-2">
             <Truck className="w-5 h-5 text-emerald-600" />
-            <span>4. گاڑی اور باڈی کی معلومات (Vehicle)</span>
+            <span>4. مطلوبہ گاڑی اور باڈی کی معلومات</span>
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -437,15 +451,15 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
             {/* Vehicle Type Dropdown */}
             <div className="space-y-1.5">
               <label className="text-sm font-bold text-slate-800 block">
-                مطلوبہ گاڑی (Vehicle Type) <span className="text-red-500">*</span>
+                مطلوبہ گاڑی کی قسم <span className="text-red-500">*</span>
               </label>
               <select
                 value={vehicleType}
                 onChange={(e) => setVehicleType(e.target.value as VehicleType)}
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-base text-slate-900 focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none transition font-sans ltr-content"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-base text-slate-900 focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none transition font-nafees"
               >
                 {VEHICLE_OPTIONS.map((vt) => (
-                  <option key={vt} value={vt}>{vt}</option>
+                  <option key={vt} value={vt}>{VEHICLE_LABELS[vt] || vt}</option>
                 ))}
               </select>
             </div>
@@ -470,7 +484,7 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
           {/* Body Type Radio Buttons */}
           <div className="space-y-2 pt-2">
             <label className="text-sm font-bold text-slate-800 block">
-              باڈی کی قسم (Body Type) <span className="text-red-500">*</span>
+              باڈی کی قسم <span className="text-red-500">*</span>
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               {BODY_OPTIONS.map((bt) => (
