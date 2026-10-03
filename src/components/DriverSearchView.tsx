@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Search, 
   MapPin, 
@@ -19,6 +19,7 @@ import {
   sanitizePhoneForCall, 
   getWhatsAppShareUrl 
 } from '../utils/formatters';
+import { NotificationService } from '../services/notificationService';
 
 interface DriverSearchViewProps {
   slips: LoadSlip[];
@@ -53,6 +54,19 @@ export const DriverSearchView: React.FC<DriverSearchViewProps> = ({
 
     return matchesLoading && matchesDest && matchesVehicle && matchesGoods;
   });
+
+  // Whenever driver searches, notify matching active Addas
+  useEffect(() => {
+    NotificationService.notifyIfSearchMatches(
+      {
+        fromCity: loadingCity,
+        toCity: destinationCity,
+        vehicleType,
+        keyword: goodsKeyword,
+      },
+      activeSlips
+    );
+  }, [loadingCity, destinationCity, vehicleType, goodsKeyword, activeSlips]);
 
   const handleResetFilters = () => {
     setLoadingCity('تمام شہر');

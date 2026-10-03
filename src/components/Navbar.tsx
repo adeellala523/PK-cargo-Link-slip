@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Truck, PlusCircle, Search, ShieldCheck, UserCheck, Menu, X, Download, Share2 } from 'lucide-react';
+import { Truck, PlusCircle, Search, ShieldCheck, UserCheck, Menu, X, Download, Share2, Bell, MessageSquare, QrCode } from 'lucide-react';
+import { NotificationService } from '../services/notificationService';
 
 interface NavbarProps {
   currentTab: string;
@@ -7,6 +8,7 @@ interface NavbarProps {
   onOpenCreateModal: () => void;
   isLoggedIn: boolean;
   onLogout: () => void;
+  onOpenNotifications?: () => void;
   unreadCount?: number;
 }
 
@@ -16,10 +18,23 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenCreateModal,
   isLoggedIn,
   onLogout,
+  onOpenNotifications,
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [canInstall, setCanInstall] = useState(false);
+  const [unreadCount, setUnreadCount] = useState<number>(NotificationService.getUnreadCount());
+
+  useEffect(() => {
+    const handleNotifUpdate = () => {
+      setUnreadCount(NotificationService.getUnreadCount());
+    };
+
+    window.addEventListener('pkcl:notification', handleNotifUpdate);
+    return () => {
+      window.removeEventListener('pkcl:notification', handleNotifUpdate);
+    };
+  }, []);
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: any) => {
@@ -142,8 +157,25 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
           </nav>
 
-          {/* Action Buttons: New Slip & Mobile Menu Trigger */}
-          <div className="flex items-center gap-2">
+          {/* Action Buttons: Notifications, WhatsApp Bot, New Slip & Mobile Menu Trigger */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            
+            {/* Notification Bell Button */}
+            <button
+              onClick={() => {
+                if (onOpenNotifications) onOpenNotifications();
+              }}
+              className="relative p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 hover:text-white transition cursor-pointer border border-slate-700"
+              title="ڈرائیور سرچ و روٹ الرٹس"
+            >
+              <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-sans font-bold w-4 h-4 rounded-full flex items-center justify-center border border-white animate-pulse">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
+
             {canInstall && (
               <button
                 onClick={handleInstallClick}
@@ -206,6 +238,24 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {isLoggedIn ? (
               <>
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    if (onOpenNotifications) onOpenNotifications();
+                  }}
+                  className="w-full text-right px-3 py-2.5 rounded-lg text-base font-medium flex items-center justify-between bg-slate-800/80 text-amber-300 hover:bg-slate-800"
+                >
+                  <span className="flex items-center gap-2">
+                    <Bell className="w-4 h-4 text-amber-400" />
+                    <span>ڈرائیور سرچ و روٹ الرٹس</span>
+                  </span>
+                  {unreadCount > 0 && (
+                    <span className="bg-red-600 text-white text-xs px-2 py-0.5 rounded-full font-bold">
+                      {unreadCount} نئے
+                    </span>
+                  )}
+                </button>
+
                 <button
                   onClick={() => { setCurrentTab('dashboard'); setMenuOpen(false); }}
                   className={`w-full text-right px-3 py-2.5 rounded-lg text-base font-medium ${

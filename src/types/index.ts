@@ -87,6 +87,8 @@ export interface WhatsAppGroup {
   description?: string;
   inviteLink?: string;
   routeHint?: string;
+  phoneNumber?: string; // Direct WhatsApp contact/admin number (e.g. 03001234567)
+  chatId?: string; // WhatsApp Chat ID / JID (e.g. 923001234567@c.us or group JID)
 }
 
 export interface UserAccount {
@@ -137,4 +139,29 @@ export interface AdminStats {
   expiredLoads: number;
   todaySlips: number;
   topRoutes: { route: string; count: number }[];
+}
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'driver_match' | 'query_received' | 'slip_booked' | 'system';
+  slipId?: string;
+  route?: string;
+  driverPhone?: string;
+  driverName?: string;
+  vehicleType?: string;
+  createdAt: string;
+  read: boolean;
+}
+
+export interface DriverLoadQuery {
+  id: string;
+  driverName: string;
+  driverPhone: string;
+  fromCity: string;
+  toCity: string;
+  vehicleType: string;
+  notes?: string;
+  createdAt: string;
 }

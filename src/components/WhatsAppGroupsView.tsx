@@ -6,17 +6,19 @@ import {
   Share2, 
   Users, 
   ShieldAlert, 
-  CheckCircle2,
-  ExternalLink
+  ExternalLink,
+  Sparkles,
 } from 'lucide-react';
 import { WhatsAppGroup, LoadSlip } from '../types';
 import { getWhatsAppShareUrl, formatWhatsAppMessage } from '../utils/formatters';
+import { StorageService } from '../services/storage';
 
 interface WhatsAppGroupsViewProps {
   groups: WhatsAppGroup[];
   onAddGroup: (group: WhatsAppGroup) => void;
   onDeleteGroup: (id: string) => void;
   recentSlip?: LoadSlip | null;
+  onReloadGroups?: () => void;
 }
 
 export const WhatsAppGroupsView: React.FC<WhatsAppGroupsViewProps> = ({
@@ -24,10 +26,12 @@ export const WhatsAppGroupsView: React.FC<WhatsAppGroupsViewProps> = ({
   onAddGroup,
   onDeleteGroup,
   recentSlip,
+  onReloadGroups,
 }) => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [routeHint, setRouteHint] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [description, setDescription] = useState('');
 
   const handleAddSubmit = (e: React.FormEvent) => {
@@ -38,12 +42,14 @@ export const WhatsAppGroupsView: React.FC<WhatsAppGroupsViewProps> = ({
       id: 'grp_' + Date.now(),
       name: groupName.trim(),
       routeHint: routeHint.trim() || undefined,
+      phoneNumber: phoneNumber.trim() || undefined,
       description: description.trim() || undefined,
     };
 
     onAddGroup(newGroup);
     setGroupName('');
     setRouteHint('');
+    setPhoneNumber('');
     setDescription('');
     setShowAddForm(false);
   };
@@ -76,13 +82,15 @@ export const WhatsAppGroupsView: React.FC<WhatsAppGroupsViewProps> = ({
             </p>
           </div>
 
-          <button
-            onClick={() => setShowAddForm(!showAddForm)}
-            className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-xs transition"
-          >
-            <Plus className="w-4 h-4" />
-            <span>نیا گروپ شامل کریں</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="inline-flex items-center gap-1.5 bg-[#25D366] hover:bg-[#20ba59] text-white px-4 py-2 rounded-xl text-xs font-bold shadow-xs transition cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>نیا گروپ شامل کریں</span>
+            </button>
+          </div>
         </div>
 
         {/* Policy Compliance Notice (Section 27: No bulk spamming, official mechanism only) */}
@@ -122,6 +130,17 @@ export const WhatsAppGroupsView: React.FC<WhatsAppGroupsViewProps> = ({
               onChange={(e) => setRouteHint(e.target.value)}
               placeholder="مثال: ملتان تا لاہور، ساہیوال"
               className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:bg-white focus:border-emerald-600 outline-none"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-700 block">رابطہ واٹس ایپ نمبر (اختیاری)</label>
+            <input
+              type="text"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              placeholder="مثال: 03001234567"
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 font-mono focus:bg-white focus:border-emerald-600 outline-none"
             />
           </div>
 

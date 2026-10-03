@@ -182,7 +182,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
         <div className="space-y-3 pt-1">
           {/* Main Large Primary Button */}
           <button
-            onClick={handleWhatsAppShare}
+            onClick={() => handleWhatsAppShare()}
             className="w-full flex items-center justify-center gap-2.5 bg-[#25D366] hover:bg-[#20BA59] text-white py-3.5 px-4 rounded-2xl font-bold text-base sm:text-lg shadow-md hover:shadow-lg transition active:scale-95"
           >
             <MessageSquare className="w-5 h-5" />

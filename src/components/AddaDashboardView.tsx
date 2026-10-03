@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   PlusCircle, 
   FileText, 
@@ -11,9 +11,13 @@ import {
   Share2, 
   CheckCircle,
   Eye,
-  ArrowLeft
+  ArrowLeft,
+  Bell,
+  Sparkles,
+  ShieldCheck,
 } from 'lucide-react';
 import { AddaProfile, LoadSlip } from '../types';
+import { NotificationService } from '../services/notificationService';
 
 interface AddaDashboardViewProps {
   profile: AddaProfile;
@@ -23,6 +27,7 @@ interface AddaDashboardViewProps {
   onNavigateToProfile: () => void;
   onNavigateToGroups: () => void;
   onViewSlip: (slip: LoadSlip) => void;
+  onOpenNotifications?: () => void;
 }
 
 export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
@@ -33,9 +38,37 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
   onNavigateToProfile,
   onNavigateToGroups,
   onViewSlip,
+  onOpenNotifications,
 }) => {
   const activeSlips = slips.filter((s) => s.status === 'active');
   const recentSlips = slips.slice(0, 3);
+
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission>(
+    NotificationService.getPermissionStatus()
+  );
+  const [unreadCount, setUnreadCount] = useState<number>(
+    NotificationService.getUnreadCount()
+  );
+
+  useEffect(() => {
+    const handleNotifChange = () => {
+      setUnreadCount(NotificationService.getUnreadCount());
+      setNotifPermission(NotificationService.getPermissionStatus());
+    };
+
+    window.addEventListener('pkcl:notification', handleNotifChange);
+    window.addEventListener('pkcl:notification_permission', handleNotifChange);
+
+    return () => {
+      window.removeEventListener('pkcl:notification', handleNotifChange);
+      window.removeEventListener('pkcl:notification_permission', handleNotifChange);
+    };
+  }, []);
+
+  const handleRequestPush = async () => {
+    const res = await NotificationService.requestPermission();
+    setNotifPermission(res);
+  };
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 font-nafees">
@@ -91,6 +124,55 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
           <PlusCircle className="w-8 h-8 sm:w-9 sm:h-9 text-emerald-100" />
           <span>+ نئی لوڈ سلپ</span>
         </button>
+      </div>
+
+      {/* Browser Push Notifications Card */}
+      <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 relative overflow-hidden group hover:border-amber-400 transition">
+        <div className="space-y-1.5 text-center sm:text-right">
+          <div className="flex items-center justify-center sm:justify-start gap-2">
+            <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
+              <Bell className="w-3.5 h-3.5 text-amber-500" />
+              <span>ڈرائیور سرچ و روٹ الرٹس</span>
+            </span>
+            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1 ${
+              notifPermission === 'granted'
+                ? 'bg-emerald-100 text-emerald-800'
+                : 'bg-amber-100 text-amber-800'
+            }`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${notifPermission === 'granted' ? 'bg-emerald-600' : 'bg-amber-600'}`}></span>
+              {notifPermission === 'granted' ? 'فعال (Push On)' : 'اجازت درکار'}
+            </span>
+          </div>
+
+          <h3 className="text-base sm:text-lg font-bold text-[#0B2545]">
+            ڈرائیور سرچ میچ نوٹیفکیشن الرٹس
+          </h3>
+          <p className="text-xs text-slate-500 leading-relaxed max-w-xl">
+            جیسے ہی کوئی ڈرائیور آپ کا روٹ یا گاڑی سرچ کرے، براؤزر پر فوری پش میسج اور ساؤنڈ الرٹ بجے گا۔
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 flex-shrink-0 w-full sm:w-auto">
+          {notifPermission !== 'granted' ? (
+            <button
+              onClick={handleRequestPush}
+              className="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white py-2.5 px-5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+            >
+              <Bell className="w-3.5 h-3.5" />
+              <span>نوٹیفکیشن آن کریں</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                if (onOpenNotifications) onOpenNotifications();
+              }}
+              className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-white py-2.5 px-5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+            >
+              <Bell className="w-3.5 h-3.5 text-amber-400" />
+              <span>الرٹس سینٹر کھولیں ({unreadCount})</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* 3. Large Touch Buttons Grid (Section 7) */}

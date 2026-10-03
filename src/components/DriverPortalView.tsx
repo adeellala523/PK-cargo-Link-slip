@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Truck, 
   MapPin, 
@@ -22,6 +22,7 @@ import {
   sanitizePhoneForCall, 
   getWhatsAppShareUrl 
 } from '../utils/formatters';
+import { NotificationService } from '../services/notificationService';
 
 interface DriverPortalViewProps {
   slips: LoadSlip[];
@@ -100,6 +101,19 @@ export const DriverPortalView: React.FC<DriverPortalViewProps> = ({
       return matchCity && matchVehicle && matchDest && matchKeyword;
     });
   }, [activeSlips, selectedCity, selectedVehicle, destCityInput, searchKeyword]);
+
+  // Alert matching active Adda loads when driver searches
+  useEffect(() => {
+    NotificationService.notifyIfSearchMatches(
+      {
+        fromCity: selectedCity,
+        toCity: destCityInput,
+        vehicleType: selectedVehicle,
+        keyword: searchKeyword,
+      },
+      activeSlips
+    );
+  }, [selectedCity, destCityInput, selectedVehicle, searchKeyword, activeSlips]);
 
   // Fallback: If driver chose a specific city but no loads exist for it, show other cities' loads
   const otherSlips = useMemo(() => {

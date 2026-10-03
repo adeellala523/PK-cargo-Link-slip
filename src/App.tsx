@@ -19,6 +19,7 @@ import { ContactUsView } from './components/ContactUsView';
 import { PrivacyPolicyView } from './components/PrivacyPolicyView';
 import { AdPlaceholder } from './components/AdPlaceholder';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
+import { NotificationCenterModal } from './components/NotificationCenterModal';
 import { StorageService } from './services/storage';
 import { LoadSlip, AddaProfile, WhatsAppGroup } from './types';
 import { updateOpenGraphMetaTags } from './utils/formatters';
@@ -38,42 +39,94 @@ export default function App() {
   const [loginInitialMode, setLoginInitialMode] = useState<'login' | 'register'>('login');
   const [loginNoticeMessage, setLoginNoticeMessage] = useState<string>('');
 
-  // Check URL path or query params for direct public slip link:
-  // e.g., /slip/PKCL-20261001-000125 or ?slip=PKCL-20261001-000125
+  // Notification Center state
+  const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState<boolean>(false);
+
+  // Map each tab to its clean URL path
+  const tabToPath = (tab: string, slipId?: string): string => {
+    switch (tab) {
+      case 'home':
+        return '/';
+      case 'login':
+        return '/login';
+      case 'register':
+        return '/register';
+      case 'dashboard':
+        return '/dashboard';
+      case 'create-slip':
+        return '/create-slip';
+      case 'my-slips':
+        return '/my-slips';
+      case 'profile':
+        return '/profile';
+      case 'search':
+        return '/search';
+      case 'verify':
+        return '/verify';
+      case 'whatsapp-groups':
+        return '/whatsapp-groups';
+      case 'driver':
+        return '/driver';
+      case 'admin':
+        return '/admin';
+      case 'about':
+        return '/about';
+      case 'contact':
+        return '/contact';
+      case 'privacy':
+        return '/privacy';
+      case 'slip-detail':
+        return slipId ? `/slip/${slipId}` : '/';
+      default:
+        return '/';
+    }
+  };
+
+  // Centralized navigation that updates both state and browser URL bar
+  const navigateTo = (tab: string, options?: { slip?: LoadSlip | null; replace?: boolean; scroll?: boolean }) => {
+    if (options?.slip) {
+      setActiveSlip(options.slip);
+    }
+    setCurrentTab(tab);
+
+    const targetSlipId = options?.slip?.id || (tab === 'slip-detail' && activeSlip ? activeSlip.id : undefined);
+    const targetPath = tabToPath(tab, targetSlipId);
+
+    if (window.location.pathname !== targetPath) {
+      if (options?.replace) {
+        window.history.replaceState({}, '', targetPath);
+      } else {
+        window.history.pushState({}, '', targetPath);
+      }
+    }
+
+    if (options?.scroll !== false) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  // Check URL path or query params for direct public slip link and clean paths:
+  // e.g., /login, /register, /dashboard, /create-slip, /my-slips, /slip/:id
   useEffect(() => {
     const handleUrlRoute = () => {
-      const path = window.location.pathname;
+      const rawPath = window.location.pathname;
+      const path = rawPath.replace(/\/+$/, '') || '/';
       const searchParams = new URLSearchParams(window.location.search);
       const querySlipId = searchParams.get('slip');
       const queryTab = searchParams.get('tab');
 
-      // Admin portal is ONLY accessible via /adil or /?tab=admin or #adil
-      if (path === '/adil' || path === '/adil/' || window.location.hash === '#adil' || queryTab === 'admin') {
-        setCurrentTab('admin');
-      } else if (path === '/driver' || path === '/driver/' || window.location.hash === '#driver' || queryTab === 'driver') {
-        setCurrentTab('driver');
-      } else if (path === '/about' || path === '/about/' || window.location.hash === '#about' || queryTab === 'about') {
-        setCurrentTab('about');
-      } else if (path === '/contact' || path === '/contact/' || window.location.hash === '#contact' || queryTab === 'contact') {
-        setCurrentTab('contact');
-      } else if (path === '/privacy' || path === '/privacy/' || window.location.hash === '#privacy' || queryTab === 'privacy') {
-        setCurrentTab('privacy');
-      } else if (queryTab) {
-        setCurrentTab(queryTab);
-      }
-
-      let targetId: string | null = null;
-
+      // Check slip route first: /slip/:id or ?slip=:id or #slip/:id
+      let targetSlipId: string | null = null;
       if (querySlipId) {
-        targetId = querySlipId;
+        targetSlipId = querySlipId;
       } else if (path.startsWith('/slip/')) {
-        targetId = path.replace('/slip/', '').trim();
+        targetSlipId = path.replace('/slip/', '').trim();
       } else if (window.location.hash.startsWith('#slip/')) {
-        targetId = window.location.hash.replace('#slip/', '').trim();
+        targetSlipId = window.location.hash.replace('#slip/', '').trim();
       }
 
-      if (targetId) {
-        const found = StorageService.getSlipById(targetId);
+      if (targetSlipId) {
+        const found = StorageService.getSlipById(targetSlipId);
         if (found) {
           setActiveSlip(found);
           setCurrentTab('slip-detail');
@@ -82,10 +135,10 @@ export default function App() {
           // If not in local state yet, immediately sync with Hostinger server
           StorageService.syncWithServer().then((latestSlips) => {
             setSlips(latestSlips);
-            const targetClean = targetId!.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+            const targetClean = targetSlipId!.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
             const serverFound = latestSlips.find((s) => {
               const sClean = s.id.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-              return s.id.trim().toLowerCase() === targetId!.trim().toLowerCase() || sClean === targetClean;
+              return s.id.trim().toLowerCase() === targetSlipId!.trim().toLowerCase() || sClean === targetClean;
             });
             if (serverFound) {
               setActiveSlip(serverFound);
@@ -96,6 +149,40 @@ export default function App() {
             }
           });
         }
+        return;
+      }
+
+      // Check clean URL paths for each page:
+      if (path === '/login' || queryTab === 'login') {
+        setCurrentTab('login');
+      } else if (path === '/register' || queryTab === 'register') {
+        setCurrentTab('register');
+      } else if (path === '/dashboard' || queryTab === 'dashboard') {
+        setCurrentTab('dashboard');
+      } else if (path === '/create-slip' || path === '/create' || path === '/new-slip' || queryTab === 'create-slip') {
+        setCurrentTab('create-slip');
+      } else if (path === '/my-slips' || path === '/history' || queryTab === 'my-slips') {
+        setCurrentTab('my-slips');
+      } else if (path === '/profile' || path === '/adda-profile' || queryTab === 'profile') {
+        setCurrentTab('profile');
+      } else if (path === '/search' || path === '/loads' || queryTab === 'search') {
+        setCurrentTab('search');
+      } else if (path === '/verify' || path === '/check' || queryTab === 'verify') {
+        setCurrentTab('verify');
+      } else if (path === '/whatsapp-groups' || path === '/groups' || queryTab === 'whatsapp-groups') {
+        setCurrentTab('whatsapp-groups');
+      } else if (path === '/driver' || queryTab === 'driver' || window.location.hash === '#driver') {
+        setCurrentTab('driver');
+      } else if (path === '/admin' || path === '/adil' || queryTab === 'admin' || window.location.hash === '#adil') {
+        setCurrentTab('admin');
+      } else if (path === '/about' || queryTab === 'about') {
+        setCurrentTab('about');
+      } else if (path === '/contact' || queryTab === 'contact') {
+        setCurrentTab('contact');
+      } else if (path === '/privacy' || queryTab === 'privacy') {
+        setCurrentTab('privacy');
+      } else {
+        setCurrentTab('home');
       }
     };
 
@@ -123,20 +210,15 @@ export default function App() {
 
   // Update browser URL without full reload when active slip changes
   const viewSlipDetail = (slip: LoadSlip) => {
-    setActiveSlip(slip);
-    setCurrentTab('slip-detail');
     StorageService.incrementSlipViews(slip.id);
-    window.history.pushState({}, '', `/slip/${slip.id}`);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    navigateTo('slip-detail', { slip });
   };
 
   const handleOpenCreateModal = (prefill?: LoadSlip) => {
     if (!isLoggedIn) {
       setLoginInitialMode('register');
       setLoginNoticeMessage('نئی لوڈ سلپ بنانے کے لیے پہلے اپنا اڈا اکاؤنٹ رجسٹر یا لاگ ان کریں۔');
-      setCurrentTab('login');
-      window.history.pushState({}, '', '/?tab=login');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      navigateTo('login');
       return;
     }
     if (prefill) {
@@ -144,19 +226,15 @@ export default function App() {
     } else {
       setPrefillSlip(null);
     }
-    setCurrentTab('create-slip');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    navigateTo('create-slip');
   };
 
   const handleSlipCreated = async (newSlip: LoadSlip) => {
     const result = await StorageService.createSlipAsync(newSlip);
     const updatedSlips = StorageService.getAllSlips();
     setSlips(updatedSlips);
-    setActiveSlip(result.slip);
     setShareModalSlip(result.slip); // Open share modal right away!
-    setCurrentTab('slip-detail');
-    window.history.pushState({}, '', `/slip/${result.slip.id}`);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    navigateTo('slip-detail', { slip: result.slip });
   };
 
   const handleToggleSlipStatus = (slip: LoadSlip) => {
@@ -175,7 +253,7 @@ export default function App() {
     setSlips(updatedSlips);
     if (activeSlip && activeSlip.id === id) {
       setActiveSlip(null);
-      setCurrentTab('my-slips');
+      navigateTo('my-slips');
     }
   };
 
@@ -184,6 +262,7 @@ export default function App() {
     setProfile(updated);
     setIsLoggedIn(true);
     StorageService.setLoggedIn(true, updated.primaryPhone);
+    navigateTo('dashboard');
   };
 
   const handleLoginSuccess = (phone: string) => {
@@ -191,14 +270,14 @@ export default function App() {
     StorageService.setLoggedIn(true, phone);
     const freshProfile = StorageService.getAddaProfile();
     setProfile(freshProfile);
-    setCurrentTab('dashboard');
+    navigateTo('dashboard');
   };
 
   const handleLogout = () => {
     setIsLoggedIn(false);
     StorageService.setLoggedIn(false);
     setProfile(StorageService.getAddaProfile());
-    setCurrentTab('home');
+    navigateTo('home');
   };
 
   // Slips strictly belonging to the currently logged in Adda manager
@@ -238,16 +317,11 @@ export default function App() {
       {/* Top Navigation */}
       <Navbar
         currentTab={currentTab}
-        setCurrentTab={(tab) => {
-          setCurrentTab(tab);
-          if (tab === 'home') {
-            window.history.pushState({}, '', '/');
-          }
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }}
+        setCurrentTab={(tab) => navigateTo(tab)}
         onOpenCreateModal={() => handleOpenCreateModal()}
         isLoggedIn={isLoggedIn}
         onLogout={handleLogout}
+        onOpenNotifications={() => setIsNotificationCenterOpen(true)}
       />
 
       {/* Main Content Area */}
@@ -258,11 +332,10 @@ export default function App() {
           <div className="no-print mb-4 flex items-center justify-between">
             <button
               onClick={() => {
-                if (isLoggedIn && (currentTab === 'my-slips' || currentTab === 'profile' || currentTab === 'whatsapp-groups')) {
-                  setCurrentTab('dashboard');
+                if (isLoggedIn && (currentTab === 'my-slips' || currentTab === 'profile' || currentTab === 'whatsapp-groups' || currentTab === 'create-slip')) {
+                  navigateTo('dashboard');
                 } else {
-                  setCurrentTab('home');
-                  window.history.pushState({}, '', '/');
+                  navigateTo('home');
                 }
               }}
               className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-600 hover:text-emerald-700 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-2xs transition"
@@ -283,8 +356,8 @@ export default function App() {
         {currentTab === 'home' && (
           <HeroSection
             onOpenCreate={() => handleOpenCreateModal()}
-            onNavigateToSearch={() => setCurrentTab('search')}
-            onNavigateToVerify={() => setCurrentTab('verify')}
+            onNavigateToSearch={() => navigateTo('search')}
+            onNavigateToVerify={() => navigateTo('verify')}
             onViewSlip={viewSlipDetail}
             recentSlips={slips}
           />
@@ -299,10 +372,7 @@ export default function App() {
               onEditOrReuse={() => handleOpenCreateModal(activeSlip)}
               isManagerView={isLoggedIn}
               onToggleStatus={() => handleToggleSlipStatus(activeSlip)}
-              onSearchLoads={() => {
-                setCurrentTab('search');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
+              onSearchLoads={() => navigateTo('search')}
             />
           </div>
         )}
@@ -315,15 +385,15 @@ export default function App() {
               onSlipCreated={handleSlipCreated}
               recentSlips={myAddaSlips}
               prefillSlip={prefillSlip}
-              onCancel={() => setCurrentTab(isLoggedIn ? 'dashboard' : 'home')}
+              onCancel={() => navigateTo(isLoggedIn ? 'dashboard' : 'home')}
             />
           ) : (
             <AddaLoginView
               onLoginSuccess={(phone) => {
                 handleLoginSuccess(phone);
-                setCurrentTab('create-slip');
+                navigateTo('create-slip');
               }}
-              onNavigateToHome={() => setCurrentTab('home')}
+              onNavigateToHome={() => navigateTo('home')}
               currentProfile={profile}
               initialMode="register"
               noticeMessage="نئی لوڈ سلپ بنانے کے لیے پہلے اپنا اڈا اکاؤنٹ رجسٹر یا لاگ ان کریں۔"
@@ -337,10 +407,11 @@ export default function App() {
             profile={profile}
             slips={myAddaSlips}
             onOpenCreateSlip={() => handleOpenCreateModal()}
-            onNavigateToMySlips={() => setCurrentTab('my-slips')}
-            onNavigateToProfile={() => setCurrentTab('profile')}
-            onNavigateToGroups={() => setCurrentTab('whatsapp-groups')}
+            onNavigateToMySlips={() => navigateTo('my-slips')}
+            onNavigateToProfile={() => navigateTo('profile')}
+            onNavigateToGroups={() => navigateTo('whatsapp-groups')}
             onViewSlip={viewSlipDetail}
+            onOpenNotifications={() => setIsNotificationCenterOpen(true)}
           />
         )}
 
@@ -362,7 +433,7 @@ export default function App() {
           <AddaProfileView
             profile={profile}
             onSaveProfile={handleSaveProfile}
-            onContinueToDashboard={() => setCurrentTab('dashboard')}
+            onContinueToDashboard={() => navigateTo('dashboard')}
             isInitialRegistration={false}
           />
         )}
@@ -389,7 +460,8 @@ export default function App() {
             groups={groups}
             onAddGroup={handleAddGroup}
             onDeleteGroup={handleDeleteGroup}
-            recentSlip={activeSlip || slips[0]}
+            recentSlip={activeSlip || (myAddaSlips.length > 0 ? myAddaSlips[0] : slips[0])}
+            onReloadGroups={() => setGroups(StorageService.getWhatsAppGroups())}
           />
         )}
 
@@ -417,7 +489,7 @@ export default function App() {
         {currentTab === 'login' && (
           <AddaLoginView
             onLoginSuccess={handleLoginSuccess}
-            onNavigateToHome={() => setCurrentTab('home')}
+            onNavigateToHome={() => navigateTo('home')}
             currentProfile={profile}
             initialMode={loginInitialMode}
             noticeMessage={loginNoticeMessage}
@@ -428,7 +500,7 @@ export default function App() {
           <AddaProfileView
             profile={profile}
             onSaveProfile={handleSaveProfile}
-            onContinueToDashboard={() => setCurrentTab('dashboard')}
+            onContinueToDashboard={() => navigateTo('dashboard')}
             isInitialRegistration={true}
           />
         )}
@@ -436,14 +508,8 @@ export default function App() {
         {/* 12. About Us Page */}
         {currentTab === 'about' && (
           <AboutUsView
-            onNavigateToContact={() => {
-              setCurrentTab('contact');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            onNavigateToDriver={() => {
-              setCurrentTab('driver');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
+            onNavigateToContact={() => navigateTo('contact')}
+            onNavigateToDriver={() => navigateTo('driver')}
           />
         )}
 
@@ -475,15 +541,23 @@ export default function App() {
         />
       )}
 
+      {/* Browser Push Notifications & Driver Search Matching Alerts */}
+      <NotificationCenterModal
+        isOpen={isNotificationCenterOpen}
+        onClose={() => setIsNotificationCenterOpen(false)}
+        onViewSlip={(slipId) => {
+          const target = slips.find(s => s.id === slipId) || StorageService.getSlipById(slipId);
+          if (target) viewSlipDetail(target);
+        }}
+        myActiveSlips={myAddaSlips}
+      />
+
       {/* PWA Install Banner */}
       <PWAInstallBanner />
 
       {/* General Site Footer */}
       <Footer
-        onNavigate={(tab) => {
-          setCurrentTab(tab);
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }}
+        onNavigate={(tab) => navigateTo(tab)}
       />
 
     </div>
