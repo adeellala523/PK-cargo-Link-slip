@@ -9,6 +9,10 @@ export type VehicleType =
   | '18 Foot'
   | '20 Foot'
   | '40 Foot Container'
+  | 'Mazda 16 Foot'
+  | 'Mazda 18 Foot'
+  | 'Mazda 20 Foot'
+  | '40 Foot'
   | 'Other';
 
 export type BodyType = 'پھٹا' | 'ہاف باڈی' | 'فل باڈی' | 'کنٹینر';

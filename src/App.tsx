@@ -20,6 +20,7 @@ import { PrivacyPolicyView } from './components/PrivacyPolicyView';
 import { AdPlaceholder } from './components/AdPlaceholder';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { NotificationCenterModal } from './components/NotificationCenterModal';
+import { MobileBottomNav } from './components/MobileBottomNav';
 import { StorageService } from './services/storage';
 import { LoadSlip, AddaProfile, WhatsAppGroup } from './types';
 import { updateOpenGraphMetaTags } from './utils/formatters';
@@ -187,10 +188,14 @@ export default function App() {
     };
 
     handleUrlRoute();
-    StorageService.syncWithServer().then((synced) => {
-      setSlips(synced);
-    });
-    StorageService.syncUsersWithServer();
+    StorageService.syncWithServer()
+      .then((synced) => {
+        if (Array.isArray(synced)) {
+          setSlips(synced);
+        }
+      })
+      .catch(() => {});
+    StorageService.syncUsersWithServer().catch(() => {});
     window.addEventListener('popstate', handleUrlRoute);
     return () => window.removeEventListener('popstate', handleUrlRoute);
   }, []);
@@ -411,6 +416,9 @@ export default function App() {
             onNavigateToProfile={() => navigateTo('profile')}
             onNavigateToGroups={() => navigateTo('whatsapp-groups')}
             onViewSlip={viewSlipDetail}
+            onShareSlip={(slip) => setShareModalSlip(slip)}
+            onDuplicateSlip={(slip) => handleOpenCreateModal(slip)}
+            onToggleSlipStatus={handleToggleSlipStatus}
             onOpenNotifications={() => setIsNotificationCenterOpen(true)}
           />
         )}
@@ -558,6 +566,14 @@ export default function App() {
       {/* General Site Footer */}
       <Footer
         onNavigate={(tab) => navigateTo(tab)}
+      />
+
+      {/* Global Mobile Bottom Navigation for Logged-In Adda Manager (Section 5) */}
+      <MobileBottomNav
+        currentTab={currentTab}
+        onNavigate={(tab) => navigateTo(tab)}
+        onOpenCreate={() => handleOpenCreateModal()}
+        isLoggedIn={isLoggedIn}
       />
 
     </div>

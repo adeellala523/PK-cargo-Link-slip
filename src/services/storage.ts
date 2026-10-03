@@ -110,11 +110,13 @@ export const StorageService = {
           }
         });
 
-        // 1. Try local server endpoint
+        // Sync with local backend server endpoint (which handles remote sync internally)
         try {
-          const res = await fetch('/api/users-sync');
+          const res = await fetch('/api/users-sync', {
+            signal: AbortSignal.timeout(4000),
+          });
           if (res.ok) {
-            const serverUsers = await res.json();
+            const serverUsers = await res.json().catch(() => null);
             if (Array.isArray(serverUsers)) {
               serverUsers.forEach((u) => {
                 if (u && u.phone) {
@@ -124,36 +126,18 @@ export const StorageService = {
               });
             }
           }
-        } catch (e) {
-          console.warn('Local users-sync failed', e);
-        }
-
-        // 2. Also directly sync with live pkcargolink.com hosting
-        try {
-          const liveRes = await fetch('https://pkcargolink.com/api/users.php', {
-            signal: AbortSignal.timeout(4000)
-          });
-          if (liveRes.ok) {
-            const liveUsers = await liveRes.json();
-            if (Array.isArray(liveUsers)) {
-              liveUsers.forEach((u) => {
-                if (u && u.phone) {
-                  const k = u.phone.replace(/[^0-9]/g, '');
-                  map.set(k, { ...(map.get(k) || {}), ...u });
-                }
-              });
-            }
-          }
-        } catch (e) {
-          // Cross-origin or offline
+        } catch {
+          // Graceful fallback to local cached users
         }
 
         const merged = Array.from(map.values()).map((u) => this.checkUserSubscriptionStatus(u));
-        localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(merged));
+        try {
+          localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(merged));
+        } catch {}
         return merged;
       }
-    } catch (e) {
-      console.error('Error syncing users with server', e);
+    } catch {
+      // Fallback safely to local users
     }
     return this.getUsers();
   },
@@ -695,9 +679,7 @@ export const StorageService = {
 
   createSlip(slip: LoadSlip): LoadSlip {
     // Fire async server sync in background while returning immediately for responsive UI
-    this.createSlipAsync(slip).catch((err) => {
-      console.error('[StorageService] Unexpected error in createSlipAsync:', err);
-    });
+    this.createSlipAsync(slip).catch(() => {});
     return slip;
   },
 
@@ -713,14 +695,13 @@ export const StorageService = {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(slip),
-        }).catch((err) => console.warn('[StorageService:Update] Error updating on server:', err));
+        }).catch(() => {});
       }
     }
   },
 
   async deleteSlipAsync(id: string): Promise<{ success: boolean; id: string; serverDeleted: boolean; error?: string }> {
     const cleanId = id.trim();
-    console.log(`[StorageService:Delete] 🗑️ Deleting slip ID: ${cleanId}`);
 
     // 1. Record ID in deleted list so it NEVER resurfaces
     try {
@@ -732,9 +713,7 @@ export const StorageService = {
         if (!deletedIds.includes(noHyphen)) deletedIds.push(noHyphen);
         localStorage.setItem(STORAGE_KEYS.DELETED_SLIP_IDS, JSON.stringify(deletedIds));
       }
-    } catch (err) {
-      console.warn('[StorageService:Delete] Warning updating deleted IDs:', err);
-    }
+    } catch {}
 
     // 2. Remove from local active slips
     const slips = this.getAllSlips().filter((s) => {
@@ -747,7 +726,6 @@ export const StorageService = {
     // 3. Remove from pending queue if present
     const pending = this.getPendingSyncSlips().filter((s) => s.id !== cleanId);
     this.setPendingSyncSlips(pending);
-    console.log(`[StorageService:Delete] 💾 Removed from localStorage. Remaining active slips: ${slips.length}`);
 
     // 4. Send DELETE request to server
     let serverDeleted = false;
@@ -755,25 +733,24 @@ export const StorageService = {
 
     if (typeof fetch !== 'undefined') {
       try {
-        console.log(`[StorageService:Delete] 🚀 Sending DELETE /api/slips/${cleanId}...`);
-        const res = await fetch(`/api/slips/${encodeURIComponent(cleanId)}`, { method: 'DELETE' });
+        const res = await fetch(`/api/slips/${encodeURIComponent(cleanId)}`, { 
+          method: 'DELETE',
+          signal: AbortSignal.timeout(3500),
+        });
         if (res.ok) {
           serverDeleted = true;
-          console.log(`[StorageService:Delete] ✅ Server confirmed deletion for slip: ${cleanId}`);
         } else {
           // Try fallback query param
-          const fallbackRes = await fetch(`/api/slips?id=${encodeURIComponent(cleanId)}`, { method: 'DELETE' });
+          const fallbackRes = await fetch(`/api/slips?id=${encodeURIComponent(cleanId)}`, { 
+            method: 'DELETE',
+            signal: AbortSignal.timeout(3500),
+          });
           if (fallbackRes.ok) {
             serverDeleted = true;
-            console.log(`[StorageService:Delete] ✅ Server confirmed deletion via query param for: ${cleanId}`);
-          } else {
-            serverError = `Server returned status ${res.status}`;
-            console.warn(`[StorageService:Delete] ⚠️ Server could not delete slip (${res.status}): ${serverError}`);
           }
         }
-      } catch (err: any) {
-        serverError = err?.message || 'Network error';
-        console.warn(`[StorageService:Delete] ⚠️ Network error calling DELETE on server:`, err);
+      } catch {
+        // Handled silently
       }
     }
 
@@ -782,13 +759,10 @@ export const StorageService = {
 
   deleteSlip(id: string): void {
     // Fire async server delete in background while executing local removal immediately
-    this.deleteSlipAsync(id).catch((err) => {
-      console.error('[StorageService] Unexpected error in deleteSlipAsync:', err);
-    });
+    this.deleteSlipAsync(id).catch(() => {});
   },
 
   async syncWithServer(): Promise<LoadSlip[]> {
-    console.log('[StorageService:Sync] 🔄 Starting server synchronization...');
     try {
       if (typeof fetch === 'undefined') {
         return this.getAllSlips();
@@ -797,7 +771,6 @@ export const StorageService = {
       // Step 1: Retry any pending slips that failed in prior attempts
       const pendingSlips = this.getPendingSyncSlips();
       if (pendingSlips.length > 0) {
-        console.log(`[StorageService:Sync] 📤 Retrying ${pendingSlips.length} pending un-synced slips...`);
         const remainingPending: LoadSlip[] = [];
         for (const p of pendingSlips) {
           if (this.isSlipDeleted(p.id)) continue;
@@ -806,6 +779,7 @@ export const StorageService = {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(p),
+              signal: AbortSignal.timeout(3000),
             });
             if (!pushRes.ok) remainingPending.push(p);
           } catch {
@@ -815,20 +789,25 @@ export const StorageService = {
         this.setPendingSyncSlips(remainingPending);
       }
 
-      // Step 2: Fetch current server slips
-      const res = await fetch('/api/slips');
-      if (!res.ok) {
-        console.warn(`[StorageService:Sync] ⚠️ Server returned HTTP ${res.status}. Falling back to local data.`);
-        return this.getAllSlips();
+      // Step 2: Fetch current server slips with timeout
+      let serverSlips: LoadSlip[] | null = null;
+      try {
+        const res = await fetch('/api/slips', {
+          signal: AbortSignal.timeout(4500),
+        });
+        if (res.ok) {
+          const data = await res.json().catch(() => null);
+          if (Array.isArray(data)) {
+            serverSlips = data;
+          }
+        }
+      } catch {
+        // Normal when offline or during initial server warmup - fallback to local slips
       }
 
-      const serverSlips: LoadSlip[] = await res.json();
-      if (!Array.isArray(serverSlips)) {
-        console.warn('[StorageService:Sync] ⚠️ Server response is not an array:', serverSlips);
+      if (!serverSlips) {
         return this.getAllSlips();
       }
-
-      console.log(`[StorageService:Sync] 📥 Retrieved ${serverSlips.length} slips from server`);
 
       // Step 3: Purge any deleted slips that the server still has
       const currentSlips = this.getAllSlips();
@@ -837,8 +816,10 @@ export const StorageService = {
       for (const s of serverSlips) {
         if (!s || !s.id) continue;
         if (this.isSlipDeleted(s.id)) {
-          console.log(`[StorageService:Sync] 🧹 Server has deleted slip ${s.id}. Sending DELETE command...`);
-          fetch(`/api/slips/${encodeURIComponent(s.id)}`, { method: 'DELETE' }).catch(() => {});
+          fetch(`/api/slips/${encodeURIComponent(s.id)}`, { 
+            method: 'DELETE',
+            signal: AbortSignal.timeout(3000),
+          }).catch(() => {});
           continue;
         }
         validServerSlips.push(s);
@@ -854,12 +835,12 @@ export const StorageService = {
       currentSlips.forEach((loc) => {
         if (!this.isSlipDeleted(loc.id)) {
           if (!mergedMap.has(loc.id)) {
-            // Local slip is missing on server -> push it to server
-            console.log(`[StorageService:Sync] 📤 Pushing local slip ${loc.id} to server...`);
+            // Local slip is missing on server -> push it to server in background
             fetch('/api/slips', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(loc),
+              signal: AbortSignal.timeout(3000),
             }).catch(() => {});
           }
           mergedMap.set(loc.id, loc);
@@ -870,11 +851,11 @@ export const StorageService = {
       // Sort by newest first
       finalSlips.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
 
-      localStorage.setItem(STORAGE_KEYS.SLIPS, JSON.stringify(finalSlips));
-      console.log(`[StorageService:Sync] ✨ Synchronization complete. Total active slips: ${finalSlips.length}`);
+      try {
+        localStorage.setItem(STORAGE_KEYS.SLIPS, JSON.stringify(finalSlips));
+      } catch {}
       return finalSlips;
-    } catch (err) {
-      console.error('[StorageService:Sync] ❌ Synchronization failed with error:', err);
+    } catch {
       return this.getAllSlips();
     }
   },

@@ -118,10 +118,17 @@ export const ShareModal: React.FC<ShareModalProps> = ({
           </div>
 
           {/* WhatsApp Chat Bubble Simulation */}
-          <div className="bg-[#E7FFDB] rounded-2xl p-3.5 border border-[#c4eab0] shadow-sm space-y-3 font-nafees">
+          <div className="bg-[#E7FFDB] rounded-2xl p-4 border border-[#c4eab0] shadow-sm space-y-3 font-nafees">
             
+            {/* Prominent Bismillah header at top of preview */}
+            <div className="bg-[#0B2545] text-emerald-300 py-2.5 px-4 rounded-xl text-center shadow-xs border border-emerald-500/20 select-none">
+              <span className="text-sm sm:text-base font-bold font-nafees tracking-wide">
+                بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+              </span>
+            </div>
+
             {/* 1. The Rich Link Card Preview (Containing that specific Adda's Picture) */}
-            <div className="bg-white/95 rounded-xl overflow-hidden border border-slate-200 shadow-xs flex flex-row items-center gap-3 p-2.5">
+            <div className="bg-white rounded-xl overflow-hidden border border-slate-200/90 shadow-2xs flex flex-row items-center gap-3 p-3">
               {/* Adda Picture / Logo Thumbnail */}
               <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg bg-gradient-to-tr from-[#0B2545] to-[#15803D] flex items-center justify-center text-white overflow-hidden flex-shrink-0 border border-slate-200 shadow-2xs">
                 {addaPhoto ? (
@@ -144,7 +151,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               </div>
 
               {/* Link metadata snippet */}
-              <div className="flex-1 space-y-0.5 text-right overflow-hidden">
+              <div className="flex-1 space-y-1 text-right overflow-hidden">
                 <span className="text-[11px] font-bold text-emerald-700 block truncate">
                   {slip.addaName} ({slip.addaCity})
                 </span>
@@ -161,12 +168,12 @@ export const ShareModal: React.FC<ShareModalProps> = ({
             </div>
 
             {/* 2. Text Summary */}
-            <div className="text-xs text-slate-800 leading-relaxed whitespace-pre-line border-t border-[#d1efbc] pt-2 font-nafees">
+            <div className="bg-white/70 p-3 rounded-xl border border-[#d1efbc] text-xs text-slate-800 leading-relaxed whitespace-pre-line font-nafees">
               {whatsappText}
             </div>
 
             {/* Gallery notice tag */}
-            <div className="bg-emerald-100/80 border border-emerald-300 rounded-lg p-2.5 text-[11px] text-emerald-950 flex items-start gap-2">
+            <div className="bg-emerald-100/90 border border-emerald-300/80 rounded-xl p-3 text-[11px] text-emerald-950 flex items-start gap-2.5">
               <ShieldCheck className="w-4 h-4 text-emerald-700 flex-shrink-0 mt-0.5" />
               <div className="space-y-0.5">
                 <span className="font-bold block">واٹس ایپ میں تصویر نظر آنے کا طریقہ:</span>

@@ -855,8 +855,11 @@ export const AdminQuickSlipCreator: React.FC<AdminQuickSlipCreatorProps> = ({
               </div>
 
               {/* Simulated Card Image */}
-              <div className="aspect-[1.91/1] w-full rounded-2xl overflow-hidden relative bg-gradient-to-br from-slate-950 via-[#0B2545] to-slate-900 border border-slate-700 p-3 flex flex-col justify-between">
-                <div className="flex items-center justify-between">
+              <div className="aspect-[1.91/1] w-full rounded-2xl overflow-hidden relative bg-gradient-to-br from-slate-950 via-[#0B2545] to-slate-900 border border-slate-700 p-3.5 flex flex-col justify-between shadow-md">
+                <div className="text-center text-xs font-bold text-emerald-300 font-nafees border-b border-emerald-500/20 pb-1.5 bg-black/20 -mx-3.5 -mt-3.5 pt-2">
+                  بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+                </div>
+                <div className="flex items-center justify-between pt-1">
                   <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-mono">
                     PK CARGO LINK
                   </span>

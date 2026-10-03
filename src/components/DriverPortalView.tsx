@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   Truck, 
   MapPin, 
@@ -6,27 +6,24 @@ import {
   MessageSquare, 
   Search, 
   Calendar, 
-  ExternalLink, 
   CheckCircle2, 
-  Package, 
-  Scale, 
-  AlertCircle,
-  Building2,
-  DollarSign,
-  Filter,
-  RotateCcw
+  RotateCcw,
+  FileText,
+  ShieldCheck,
+  Package
 } from 'lucide-react';
-import { LoadSlip, VehicleType } from '../types';
+import { LoadSlip } from '../types';
 import { 
-  formatUrduDateTime, 
   sanitizePhoneForCall, 
   getWhatsAppShareUrl 
 } from '../utils/formatters';
-import { NotificationService } from '../services/notificationService';
 
 interface DriverPortalViewProps {
   slips: LoadSlip[];
   onViewSlip: (slip: LoadSlip) => void;
+  onNavigateToSearch?: () => void;
+  onNavigateToTrucks?: () => void;
+  onNavigateToVerify?: () => void;
 }
 
 const TOP_CITIES = [
@@ -43,34 +40,18 @@ const TOP_CITIES = [
   'رحیم یار خان',
   'سکھر',
   'حیدرآباد',
-  'سیالکوٹ',
-  'سرگودھا',
-];
-
-const VEHICLE_OPTIONS: string[] = [
-  'تمام گاڑیاں',
-  '22 وہیلر (ٹرالر)',
-  '10 وہیلر',
-  '6 وہیلر',
-  'مزدا (Mazda)',
-  'شہزور (Shahzor)',
-  'کنٹینر',
-  'فلیٹ بیڈ',
-  'لو بیڈ',
-  'ٹینکر / باؤزر',
-  'دیگر گاڑیاں'
 ];
 
 export const DriverPortalView: React.FC<DriverPortalViewProps> = ({
   slips,
   onViewSlip,
+  onNavigateToSearch,
+  onNavigateToTrucks,
+  onNavigateToVerify,
 }) => {
   const [selectedCity, setSelectedCity] = useState<string>('تمام پاکستان');
-  const [selectedVehicle, setSelectedVehicle] = useState<string>('تمام گاڑیاں');
-  const [destCityInput, setDestCityInput] = useState<string>('');
-  const [searchKeyword, setSearchKeyword] = useState<string>('');
 
-  // Only active (unbooked) loads
+  // Only active loads
   const activeSlips = useMemo(() => {
     return slips.filter((s) => s.status === 'active');
   }, [slips]);
@@ -86,109 +67,92 @@ export const DriverPortalView: React.FC<DriverPortalViewProps> = ({
     return counts;
   }, [activeSlips]);
 
-  // Filtered loads based on driver selections
+  // Filtered loads based on selected city
   const matchingSlips = useMemo(() => {
     return activeSlips.filter((s) => {
-      const matchCity = selectedCity === 'تمام پاکستان' || s.loadingCity.includes(selectedCity);
-      const matchVehicle = selectedVehicle === 'تمام گاڑیاں' || s.vehicleType === selectedVehicle;
-      const matchDest = !destCityInput.trim() || s.destinationCity.toLowerCase().includes(destCityInput.trim().toLowerCase());
-      const matchKeyword = !searchKeyword.trim() || 
-        s.goods.toLowerCase().includes(searchKeyword.toLowerCase()) ||
-        s.weight.toLowerCase().includes(searchKeyword.toLowerCase()) ||
-        s.addaName.toLowerCase().includes(searchKeyword.toLowerCase()) ||
-        s.loadingLocation.toLowerCase().includes(searchKeyword.toLowerCase());
-
-      return matchCity && matchVehicle && matchDest && matchKeyword;
+      return selectedCity === 'تمام پاکستان' || s.loadingCity.includes(selectedCity);
     });
-  }, [activeSlips, selectedCity, selectedVehicle, destCityInput, searchKeyword]);
-
-  // Alert matching active Adda loads when driver searches
-  useEffect(() => {
-    NotificationService.notifyIfSearchMatches(
-      {
-        fromCity: selectedCity,
-        toCity: destCityInput,
-        vehicleType: selectedVehicle,
-        keyword: searchKeyword,
-      },
-      activeSlips
-    );
-  }, [selectedCity, destCityInput, selectedVehicle, searchKeyword, activeSlips]);
-
-  // Fallback: If driver chose a specific city but no loads exist for it, show other cities' loads
-  const otherSlips = useMemo(() => {
-    if (selectedCity === 'تمام پاکستان' || matchingSlips.length > 0) return [];
-    return activeSlips.filter((s) => !s.loadingCity.includes(selectedCity));
-  }, [activeSlips, selectedCity, matchingSlips]);
-
-  const handleWhatsAppContact = (slip: LoadSlip) => {
-    const targetPhone = slip.whatsappNumber || slip.primaryPhone;
-    const msg = `السلام علیکم، میں PK Cargo Link ڈرائیور پورٹل پر آپ کا لوڈ (${slip.loadingCity} تا ${slip.destinationCity}) دیکھ رہا ہوں۔ سلپ نمبر: ${slip.id}۔ کیا یہ لوڈ ابھی دستیاب ہے؟`;
-    window.open(getWhatsAppShareUrl(msg, targetPhone), '_blank');
-  };
-
-  const handleResetFilters = () => {
-    setSelectedCity('تمام پاکستان');
-    setSelectedVehicle('تمام گاڑیاں');
-    setDestCityInput('');
-    setSearchKeyword('');
-  };
+  }, [activeSlips, selectedCity]);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 font-nafees">
       
-      {/* Driver Portal Hero Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0B2545] via-[#103866] to-[#081B33] text-white p-6 sm:p-8 shadow-xl border border-emerald-500/30">
-        <div className="absolute -top-12 -left-12 w-48 h-48 rounded-full bg-emerald-500/15 blur-2xl pointer-events-none"></div>
-        <div className="absolute -bottom-12 -right-12 w-48 h-48 rounded-full bg-amber-500/10 blur-2xl pointer-events-none"></div>
-
-        <div className="relative z-10 space-y-4">
-          <div className="inline-flex items-center gap-2 bg-emerald-500/20 border border-emerald-400/40 px-3.5 py-1.5 rounded-full text-emerald-300 text-xs sm:text-sm font-bold">
-            <Truck className="w-4 h-4 text-emerald-400" />
-            <span>ٹرک و ٹرانسپورٹ ڈرائیورز پورٹل — براہِ راست رابطہ</span>
-          </div>
-
-          <h1 className="text-2xl sm:text-4xl font-extrabold text-white leading-tight">
-            اپنے شہر کا لوڈ تلاش کریں اور فوری گاڑی بھریں
-          </h1>
-
-          <p className="text-sm sm:text-base text-slate-200 max-w-2xl leading-relaxed">
-            آپ اس وقت پاکستان کے جس شہر میں بھی موجود ہیں، نیچے اپنے شہر کا انتخاب کریں اور اڈا منیجر سے واٹس ایپ یا فون کال پر براہِ راست بات کریں۔
-          </p>
-
-          <div className="pt-2 flex flex-wrap items-center gap-4 text-xs text-slate-300">
-            <div className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              <span>مفت سروس، بغیر کمیشن</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              <span>مصدقہ اڈا رابطے اور فون نمبر</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              <span>لائیو اپڈیٹ شدہ لوڈز</span>
-            </div>
-          </div>
-        </div>
+      {/* 1. Header (Section 22) */}
+      <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200 space-y-2">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-[#08284F]">
+          ڈرائیور پورٹل
+        </h1>
+        <p className="text-sm text-slate-500 font-medium">
+          اپنے روٹ کے مطابق لوڈ تلاش کریں۔
+        </p>
       </div>
 
-      {/* City Selector: "آپ اس وقت کس شہر میں ہیں؟" */}
+      {/* 2. Main 3 Cards (Section 22) */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+        
+        {/* Card 1: 🔎 لوڈ تلاش کریں */}
+        <button
+          type="button"
+          onClick={onNavigateToSearch}
+          className="flex items-center gap-3.5 p-5 rounded-2xl sm:rounded-3xl bg-white hover:bg-slate-50 border border-slate-200 hover:border-[#123A6D]/40 shadow-sm active:scale-95 transition text-right min-h-[72px]"
+        >
+          <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#123A6D] flex items-center justify-center flex-shrink-0">
+            <Search className="w-6 h-6 text-[#123A6D]" />
+          </div>
+          <div>
+            <h3 className="font-extrabold text-lg text-[#08284F]">لوڈ تلاش کریں</h3>
+            <p className="text-xs text-slate-500">شہر و روٹ کے مطابق</p>
+          </div>
+        </button>
+
+        {/* Card 2: 🚛 دستیاب گاڑیاں */}
+        <button
+          type="button"
+          onClick={onNavigateToTrucks}
+          className="flex items-center gap-3.5 p-5 rounded-2xl sm:rounded-3xl bg-white hover:bg-slate-50 border border-slate-200 hover:border-amber-400/40 shadow-sm active:scale-95 transition text-right min-h-[72px]"
+        >
+          <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
+            <Truck className="w-6 h-6 text-[#FF9F43]" />
+          </div>
+          <div>
+            <h3 className="font-extrabold text-lg text-[#08284F]">دستیاب گاڑیاں</h3>
+            <p className="text-xs text-slate-500">گاڑی اور باڈی کے لحاظ سے</p>
+          </div>
+        </button>
+
+        {/* Card 3: 📄 سلپ ویریفائی کریں */}
+        <button
+          type="button"
+          onClick={onNavigateToVerify}
+          className="flex items-center gap-3.5 p-5 rounded-2xl sm:rounded-3xl bg-white hover:bg-slate-50 border border-slate-200 hover:border-purple-400/40 shadow-sm active:scale-95 transition text-right min-h-[72px]"
+        >
+          <div className="w-12 h-12 rounded-2xl bg-purple-50 text-[#7567E8] flex items-center justify-center flex-shrink-0">
+            <ShieldCheck className="w-6 h-6 text-[#7567E8]" />
+          </div>
+          <div>
+            <h3 className="font-extrabold text-lg text-[#08284F]">سلپ ویریفائی کریں</h3>
+            <p className="text-xs text-slate-500">آن لائن تصدیق چیک کریں</p>
+          </div>
+        </button>
+
+      </div>
+
+      {/* 3. 1-Tap City Filter: "آپ اس وقت کس شہر میں ہیں؟" */}
       <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-200 space-y-4">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2">
-            <MapPin className="w-5 h-5 text-emerald-600" />
-            <h2 className="text-base sm:text-lg font-extrabold text-slate-900">
-              آپ اس وقت کس شہر میں ہیں؟ (لوڈنگ کا شہر منتخب کریں)
+            <MapPin className="w-5 h-5 text-[#19A974]" />
+            <h2 className="text-base font-extrabold text-[#08284F]">
+              آپ اس وقت کس شہر میں ہیں؟ (1-Tap لوڈز چیک کریں)
             </h2>
           </div>
           {selectedCity !== 'تمام پاکستان' && (
             <button
               onClick={() => setSelectedCity('تمام پاکستان')}
-              className="text-xs text-emerald-700 hover:text-emerald-800 font-bold flex items-center gap-1 cursor-pointer"
+              className="text-xs text-[#19A974] hover:underline font-bold flex items-center gap-1"
             >
-              <RotateCcw className="w-3 h-3" />
-              <span>تمام پاکستان دیکھیں</span>
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>تمام پاکستان</span>
             </button>
           )}
         </div>
@@ -204,16 +168,16 @@ export const DriverPortalView: React.FC<DriverPortalViewProps> = ({
                 key={city}
                 type="button"
                 onClick={() => setSelectedCity(city)}
-                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all min-h-[44px] ${
                   isSelected
-                    ? 'bg-emerald-600 text-white shadow-md scale-105'
-                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900'
+                    ? 'bg-[#19A974] text-white shadow-md'
+                    : 'bg-[#F4F7FB] hover:bg-slate-200 text-slate-700'
                 }`}
               >
                 <span>{city}</span>
                 <span
-                  className={`text-[10px] px-1.5 py-0.5 rounded-full font-sans ${
-                    isSelected ? 'bg-emerald-800 text-emerald-100' : 'bg-slate-200 text-slate-600'
+                  className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono ${
+                    isSelected ? 'bg-emerald-900 text-emerald-100' : 'bg-slate-200 text-slate-600'
                   }`}
                 >
                   {count}
@@ -222,259 +186,95 @@ export const DriverPortalView: React.FC<DriverPortalViewProps> = ({
             );
           })}
         </div>
-
-        {/* Advanced Filters: Vehicle & Destination */}
-        <div className="pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div>
-            <label className="block text-xs font-bold text-slate-600 mb-1">
-              مطلوبہ گاڑی (Vehicle Type):
-            </label>
-            <select
-              value={selectedVehicle}
-              onChange={(e) => setSelectedVehicle(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 focus:bg-white outline-none"
-            >
-              {VEHICLE_OPTIONS.map((v) => (
-                <option key={v} value={v}>
-                  {v}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-600 mb-1">
-              منزل کا شہر (جہاں جانا چاہتے ہیں):
-            </label>
-            <input
-              type="text"
-              value={destCityInput}
-              onChange={(e) => setDestCityInput(e.target.value)}
-              placeholder="مثلاً: کراچی، پشاور، کوئٹہ..."
-              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 focus:bg-white outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-600 mb-1">
-              مال یا اڈا کا نام تلاش کریں:
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                value={searchKeyword}
-                onChange={(e) => setSearchKeyword(e.target.value)}
-                placeholder="مثلاً: گندم، کھاد، سکریپ..."
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 focus:bg-white outline-none"
-              />
-              {(destCityInput || searchKeyword || selectedVehicle !== 'تمام گاڑیاں') && (
-                <button
-                  type="button"
-                  onClick={handleResetFilters}
-                  className="absolute left-2 top-2 text-[10px] text-red-600 font-bold hover:underline"
-                >
-                  ریسیٹ
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
       </div>
 
-      {/* Load List Header */}
-      <div className="flex items-center justify-between px-1">
-        <div className="flex items-center gap-2">
-          <Truck className="w-5 h-5 text-emerald-600" />
-          <h2 className="text-lg sm:text-xl font-extrabold text-slate-900">
-            {selectedCity === 'تمام پاکستان'
-              ? `تمام پاکستان کے دستیاب لوڈز (${matchingSlips.length})`
-              : `${selectedCity} سے دستیاب لوڈز (${matchingSlips.length})`}
-          </h2>
+      {/* 4. Active Loads for Selected City */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between px-2 text-xs text-slate-500 font-bold">
+          <span>دستیاب فعال لوڈز ({selectedCity}): <strong className="text-[#123A6D]">{matchingSlips.length}</strong></span>
+          <span>براہِ راست کال و واٹس ایپ</span>
         </div>
-        <span className="text-xs text-slate-500">
-          لائیو دستیاب لوڈز
-        </span>
-      </div>
 
-      {/* Main Matching Loads List */}
-      {matchingSlips.length > 0 ? (
-        <div className="space-y-4">
-          {matchingSlips.map((slip) => (
-            <div 
-              key={slip.id} 
-              className="bg-white rounded-3xl p-5 sm:p-6 shadow-sm hover:shadow-md border border-slate-200 transition-all space-y-4"
+        {matchingSlips.length === 0 ? (
+          <div className="bg-white rounded-3xl p-8 text-center border border-slate-200 space-y-2">
+            <Truck className="w-10 h-10 text-slate-300 mx-auto" />
+            <p className="font-bold text-slate-700">{selectedCity} کے لیے فی الوقت کوئی لوڈ فعال نہیں ہے</p>
+            <p className="text-xs text-slate-400">دوسرا شہر منتخب کریں یا 'تمام پاکستان' دیکھیں۔</p>
+          </div>
+        ) : (
+          matchingSlips.map((slip) => (
+            <div
+              key={slip.id}
+              className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 hover:border-[#19A974]/40 transition space-y-3"
             >
-              {/* Top Bar: Adda Name & Status */}
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center shrink-0">
-                    {slip.addaLogo ? (
-                      <img src={slip.addaLogo} alt={slip.addaName} className="w-full h-full object-cover" />
-                    ) : (
-                      <Building2 className="w-5 h-5 text-slate-400" />
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="text-base font-extrabold text-slate-900 leading-tight">
-                      {slip.addaName}
-                    </h3>
-                    <p className="text-xs text-slate-500">
-                      اڈا مقام: {slip.addaCity} • انچارج: {slip.managerName || 'اڈا منیجر'}
-                    </p>
-                  </div>
+              {/* Pickup -> Destination */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-slate-100 pb-2.5">
+                <div className="font-black text-lg text-[#08284F]">
+                  📍 {slip.loadingCity} ➔ {slip.destinationCity}
                 </div>
-
-                <div className="text-left">
-                  <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-xs px-2.5 py-1 rounded-full font-bold">
-                    <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
-                    <span>دستیاب لوڈ</span>
-                  </span>
-                  <p className="text-[10px] text-slate-400 mt-1 font-sans">
-                    {formatUrduDateTime(slip.createdAt)}
-                  </p>
+                <div className="text-xs text-slate-400 font-mono">
+                  {slip.createdAt ? new Date(slip.createdAt).toLocaleDateString('ur-PK') : ''}
                 </div>
               </div>
 
-              {/* Route Highlight: Loading -> Destination */}
-              <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
-                    روٹ
-                  </div>
-                  <div>
-                    <div className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
-                      <span className="text-emerald-700">{slip.loadingCity}</span>
-                      <span className="text-slate-400 text-sm">تا</span>
-                      <span className="text-amber-700">{slip.destinationCity}</span>
-                    </div>
-                    <div className="text-xs text-slate-600 mt-0.5">
-                      <span>لوڈنگ: {slip.loadingLocation || slip.loadingCity}</span>
-                      <span className="mx-1.5">•</span>
-                      <span>اتار: {slip.destinationLocation || slip.destinationCity}</span>
-                    </div>
-                  </div>
+              {/* Goods & Vehicle */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs bg-[#F4F7FB] p-3 rounded-xl border border-slate-200">
+                <div>
+                  <span className="text-slate-400 block">مال</span>
+                  <strong className="text-slate-800">{slip.goods}</strong>
                 </div>
-
-                {slip.fareOffer && (
-                  <div className="bg-amber-100 text-amber-900 border border-amber-300 px-3 py-1.5 rounded-xl text-center self-start sm:self-auto">
-                    <span className="text-[10px] block font-bold text-amber-700">پیشکش کرایہ:</span>
-                    <span className="text-sm font-extrabold">{slip.fareOffer}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Cargo & Vehicle Specifications */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                  <span className="text-[10px] text-slate-500 block">مال / سامان:</span>
-                  <span className="font-bold text-slate-900">{slip.goods}</span>
+                <div>
+                  <span className="text-slate-400 block">گاڑی</span>
+                  <strong className="text-slate-800">{slip.vehicleType}</strong>
                 </div>
-                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                  <span className="text-[10px] text-slate-500 block">وزن / وزن کی حد:</span>
-                  <span className="font-bold text-slate-900">{slip.weight}</span>
+                <div>
+                  <span className="text-slate-400 block">مقدار</span>
+                  <strong className="text-slate-800">{slip.quantity || slip.weight}</strong>
                 </div>
-                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                  <span className="text-[10px] text-slate-500 block">مطلوبہ گاڑی:</span>
-                  <span className="font-bold text-emerald-800">{slip.vehicleType}</span>
-                </div>
-                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                  <span className="text-[10px] text-slate-500 block">باڈی کی قسم:</span>
-                  <span className="font-bold text-slate-800">{slip.bodyType || 'کوئی بھی'}</span>
+                <div>
+                  <span className="text-slate-400 block">اڈا</span>
+                  <strong className="text-slate-800 truncate block">{slip.addaName}</strong>
                 </div>
               </div>
 
-              {/* Action Buttons: WhatsApp, Call, View Full Slip */}
-              <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+              {/* Direct Buttons: Call | WhatsApp | تفصیل */}
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
                 <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleWhatsAppContact(slip)}
-                    className="inline-flex items-center gap-1.5 bg-[#25D366] hover:bg-[#20ba59] text-white px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition active:scale-95 cursor-pointer"
-                  >
-                    <MessageSquare className="w-4 h-4 fill-white" />
-                    <span>واٹس ایپ رابطہ کریں</span>
-                  </button>
-
                   <a
                     href={`tel:${sanitizePhoneForCall(slip.primaryPhone)}`}
-                    className="inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-900 text-white px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition active:scale-95"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-800 bg-slate-100 hover:bg-slate-200 px-4 py-2.5 rounded-xl transition min-h-[44px]"
                   >
-                    <Phone className="w-4 h-4" />
-                    <span>کال کریں</span>
+                    <Phone className="w-3.5 h-3.5 text-[#19A974]" />
+                    <span>Call</span>
+                  </a>
+
+                  <a
+                    href={getWhatsAppShareUrl(
+                      `السلام علیکم! میں ڈرائیور ہوں اور PK Cargo Link پر آپ کا لوڈ (${slip.loadingCity} تا ${slip.destinationCity}) دیکھا ہے۔ کیا یہ لوڈ دستیاب ہے؟`,
+                      slip.whatsappNumber || slip.primaryPhone
+                    )}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-[#25D366] hover:bg-[#20ba59] px-4 py-2.5 rounded-xl transition min-h-[44px]"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    <span>WhatsApp</span>
                   </a>
                 </div>
 
                 <button
                   type="button"
                   onClick={() => onViewSlip(slip)}
-                  className="inline-flex items-center gap-1 text-xs text-slate-600 hover:text-emerald-700 font-bold bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-xl transition cursor-pointer"
+                  className="text-xs font-bold text-[#123A6D] hover:underline px-3 py-2 min-h-[44px]"
                 >
-                  <span>مکمل لوڈ سلپ دیکھیں</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
+                  تفصیل دیکھیں ➔
                 </button>
               </div>
             </div>
-          ))}
-        </div>
-      ) : (
-        /* If no loads for selected city/filters */
-        <div className="space-y-6">
-          <div className="bg-amber-50 border border-amber-200 rounded-3xl p-6 text-center space-y-3">
-            <AlertCircle className="w-10 h-10 text-amber-600 mx-auto" />
-            <h3 className="text-base sm:text-lg font-extrabold text-amber-900">
-              {selectedCity !== 'تمام پاکستان'
-                ? `فی الحال ${selectedCity} کے لیے کوئی نیا لوڈ دستیاب نہیں ہے۔`
-                : 'کوئی لوڈ نہیں ملا۔'}
-            </h3>
-            <p className="text-xs sm:text-sm text-amber-700 max-w-md mx-auto">
-              جیسے ہی کوئی اڈا منیجر نیا لوڈ شامل کرے گا، وہ یہاں فوری ظاہر ہو جائے گا۔ آپ نیچے پاکستان کے دیگر شہروں کے دستیاب لوڈز دیکھ سکتے ہیں:
-            </p>
-            <button
-              type="button"
-              onClick={handleResetFilters}
-              className="inline-flex items-center gap-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm transition cursor-pointer"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>تمام پاکستان کے لوڈز دکھائیں</span>
-            </button>
-          </div>
+          ))
+        )}
+      </div>
 
-          {/* Show other active loads if available */}
-          {otherSlips.length > 0 && (
-            <div className="space-y-4">
-              <h3 className="text-sm font-bold text-slate-700 flex items-center gap-1.5">
-                <Truck className="w-4 h-4 text-emerald-600" />
-                <span>دیگر شہروں کے دستیاب لوڈز:</span>
-              </h3>
-              {otherSlips.slice(0, 5).map((slip) => (
-                <div 
-                  key={slip.id} 
-                  className="bg-white rounded-3xl p-4 sm:p-5 shadow-sm border border-slate-200 space-y-3"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-sm font-extrabold text-slate-900">
-                        {slip.loadingCity} تا {slip.destinationCity}
-                      </span>
-                      <p className="text-xs text-slate-500">
-                        {slip.addaName} ({slip.addaCity}) • مال: {slip.goods} ({slip.weight})
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleWhatsAppContact(slip)}
-                      className="bg-[#25D366] text-white text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 cursor-pointer"
-                    >
-                      <MessageSquare className="w-3.5 h-3.5" />
-                      <span>رابطہ</span>
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 };

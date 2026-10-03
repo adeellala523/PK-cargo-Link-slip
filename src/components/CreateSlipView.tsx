@@ -4,11 +4,10 @@ import {
   MapPin, 
   Truck, 
   Package, 
-  Scale, 
+  Calendar,
   Building2, 
   History, 
   Sparkles, 
-  Check, 
   ArrowLeft,
   Info
 } from 'lucide-react';
@@ -34,39 +33,20 @@ const COMMON_GOODS = [
   'لوہا و سٹیل', 'کپاس / روئی', 'فروٹ و سبزی', 'کیمیکل ڈرم', 'کریانہ جنرل'
 ];
 
-const COMMON_WEIGHTS = ['10 ٹن', '15 ٹن', '20 ٹن', '25 ٹن', '30 ٹن', '35 ٹن', '40 ٹن'];
-
-const COMMON_QUANTITIES = ['400 بوریاں', '500 بوریاں', '600 بوریاں', '800 بوریاں', '1000 کارٹن', 'کھلا مال'];
-
 const VEHICLE_OPTIONS: VehicleType[] = [
   '22 Wheeler',
   '10 Wheeler',
   'Shahzor',
   'JAC',
   'Porter',
-  'Mazda',
-  '16 Foot',
-  '18 Foot',
-  '20 Foot',
-  '40 Foot Container',
+  'Mazda 16 Foot',
+  'Mazda 18 Foot',
+  'Mazda 20 Foot',
+  '40 Foot',
   'Other',
 ];
 
-const VEHICLE_LABELS: Record<string, string> = {
-  '22 Wheeler': '22 وہیلر (ٹرالر)',
-  '10 Wheeler': '10 وہیلر (دس چکّا)',
-  'Shahzor': 'شہزور',
-  'JAC': 'جے اے سی (JAC)',
-  'Porter': 'پورٹر',
-  'Mazda': 'مزدا (Mazda)',
-  '16 Foot': '16 فٹ',
-  '18 Foot': '18 فٹ',
-  '20 Foot': '20 فٹ',
-  '40 Foot Container': '40 فٹ کنٹینر',
-  'Other': 'دیگر گاڑی',
-};
-
-const BODY_OPTIONS: BodyType[] = ['فل باڈی', 'ہاف باڈی', 'پھٹا', 'کنٹینر'];
+const BODY_OPTIONS: BodyType[] = ['پھٹا', 'ہاف باڈی', 'فل باڈی', 'کنٹینر'];
 
 export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
   addaProfile,
@@ -75,37 +55,37 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
   prefillSlip,
   onCancel,
 }) => {
-  // Loading Details
+  // Pickup Details
   const [loadingCity, setLoadingCity] = useState(prefillSlip?.loadingCity || addaProfile.city || 'لاہور');
   const [loadingLocation, setLoadingLocation] = useState(prefillSlip?.loadingLocation || '');
 
   // Destination Details
   const [destinationCity, setDestinationCity] = useState(prefillSlip?.destinationCity || 'کراچی');
-  const [destinationLocation, setDestinationLocation] = useState(prefillSlip?.destinationLocation || '');
 
-  // Goods & Load
+  // Goods & Quantity
   const [goods, setGoods] = useState(prefillSlip?.goods || '');
-  const [weight, setWeight] = useState(prefillSlip?.weight || '25 ٹن');
   const [quantity, setQuantity] = useState(prefillSlip?.quantity || '');
 
-  // Vehicle
+  // Vehicle & Body
   const [vehicleType, setVehicleType] = useState<VehicleType>(prefillSlip?.vehicleType || '22 Wheeler');
   const [bodyType, setBodyType] = useState<BodyType>(prefillSlip?.bodyType || 'فل باڈی');
   const [vehicleNumber, setVehicleNumber] = useState(prefillSlip?.vehicleNumber || '');
+  
+  // Date & Instructions
+  const todayIso = new Date().toISOString().split('T')[0];
+  const [loadDate, setLoadDate] = useState(todayIso);
   const [fareOffer, setFareOffer] = useState(prefillSlip?.fareOffer || '');
   const [specialInstructions, setSpecialInstructions] = useState(prefillSlip?.specialInstructions || '');
 
-  // Form error
+  // Error state
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Handle reuse of an existing slip
+  // Reuse previous slip
   const handleApplyPreviousSlip = (slip: LoadSlip) => {
     setLoadingCity(slip.loadingCity);
     setLoadingLocation(slip.loadingLocation);
     setDestinationCity(slip.destinationCity);
-    setDestinationLocation(slip.destinationLocation);
     setGoods(slip.goods);
-    setWeight(slip.weight);
     setQuantity(slip.quantity);
     setVehicleType(slip.vehicleType);
     setBodyType(slip.bodyType);
@@ -118,58 +98,57 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
     e.preventDefault();
     
     if (!loadingCity.trim()) {
-      setErrorMessage('براہ کرم لوڈنگ کا شہر درج کریں۔');
+      setErrorMessage('براہ کرم پک اپ شہر درج کریں۔');
       return;
     }
     if (!destinationCity.trim()) {
-      setErrorMessage('براہ کرم منزل کا شہر درج کریں۔');
+      setErrorMessage('براہ کرم ڈیلیوری شہر درج کریں۔');
       return;
     }
     if (!goods.trim()) {
-      setErrorMessage('براہ کرم مال کی قسم درج کریں۔');
-      return;
-    }
-    if (!weight.trim()) {
-      setErrorMessage('براہ کرم وزن درج کریں۔');
+      setErrorMessage('براہ کرم سامان کی تفصیل درج کریں۔');
       return;
     }
 
     setErrorMessage('');
 
-    // Additional contacts array from addaProfile
-    const contacts: string[] = [
+    // Generate unique PKCL slip ID
+    const newSlipId = generateSlipId();
+
+    const addaContactsList = [
+      addaProfile.primaryPhone,
       addaProfile.contact1,
       addaProfile.contact2,
       addaProfile.contact3,
       addaProfile.contact4,
       addaProfile.contact5,
-    ].filter((c): c is string => Boolean(c && c.trim()));
+    ].filter(Boolean) as string[];
 
     const newSlip: LoadSlip = {
-      id: generateSlipId(), // Unique non-duplicating ID
-      addaId: addaProfile.id,
-      addaName: addaProfile.addaName,
-      addaCity: addaProfile.city,
+      id: newSlipId,
+      addaId: addaProfile.id || `adda-${Date.now()}`,
+      addaName: addaProfile.addaName || 'گڈز ٹرانسپورٹ اڈا',
+      addaCity: addaProfile.city || loadingCity,
       addaAddress: addaProfile.address,
       addaLogo: addaProfile.logoUrl,
-      managerName: addaProfile.managerName,
-      primaryPhone: addaProfile.primaryPhone,
-      whatsappNumber: addaProfile.whatsappNumber || addaProfile.primaryPhone,
-      additionalContacts: contacts,
+      managerName: addaProfile.managerName || 'اڈا منیجر',
+      primaryPhone: addaProfile.primaryPhone || '03001234567',
+      whatsappNumber: addaProfile.whatsappNumber || addaProfile.primaryPhone || '03001234567',
+      additionalContacts: addaContactsList,
       loadingCity: loadingCity.trim(),
-      loadingLocation: loadingLocation.trim() || 'مرکزی گڈز اڈا',
+      loadingLocation: loadingLocation.trim() || 'مرکزی اڈا / گودام',
       destinationCity: destinationCity.trim(),
-      destinationLocation: destinationLocation.trim() || 'مرکزی مارکیٹ',
+      destinationLocation: 'مرکزی گڈز اڈا / مارکیٹ',
       goods: goods.trim(),
-      weight: weight.trim(),
-      quantity: quantity.trim() || 'حسب ضرورت',
+      weight: quantity.trim() ? quantity.trim() : 'حسبِ ضرورت',
+      quantity: quantity.trim() || 'کھلا مال',
       vehicleType,
       bodyType,
       vehicleNumber: vehicleNumber.trim() || undefined,
       fareOffer: fareOffer.trim() || undefined,
       specialInstructions: specialInstructions.trim() || undefined,
       status: 'active',
-      createdAt: new Date().toISOString(),
+      createdAt: loadDate ? new Date(loadDate).toISOString() : new Date().toISOString(),
       viewsCount: 0,
       sharesCount: 0,
     };
@@ -180,36 +159,34 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
   return (
     <div className="max-w-2xl mx-auto space-y-6 font-nafees">
       
-      {/* Top Heading & Value Card */}
+      {/* Heading & Subheading (Section 10) */}
       <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200 space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
           <div>
-            <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
-              چند سیکنڈ میں لوڈ سلپ
-            </span>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0B2545] mt-1">
-              نئی لوڈ سلپ
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#08284F]">
+              نئی لوڈ سلپ بنائیں
             </h1>
-            <p className="text-xs sm:text-sm text-slate-500">
-              اڈا معلومات: <span className="font-bold text-slate-800">{addaProfile.addaName} ({addaProfile.city})</span>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1">
+              لوڈ کی معلومات درج کریں اور فوراً ڈیجیٹل سلپ تیار کریں۔
             </p>
           </div>
 
           {onCancel && (
             <button
+              type="button"
               onClick={onCancel}
-              className="self-start sm:self-auto text-xs text-slate-500 hover:text-slate-800 px-3 py-1.5 rounded-lg border border-slate-200"
+              className="self-start sm:self-auto text-xs text-slate-500 hover:text-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 min-h-[44px]"
             >
               منسوخ کریں
             </button>
           )}
         </div>
 
-        {/* Feature 21: Reuse previous slip quick picker */}
+        {/* Reuse previous slip quick picker */}
         {recentSlips && recentSlips.length > 0 && (
-          <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+          <div className="p-3 bg-[#F4F7FB] rounded-2xl border border-slate-200 space-y-2">
             <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
-              <History className="w-4 h-4 text-emerald-600" />
+              <History className="w-4 h-4 text-[#19A974]" />
               <span>پچھلی سلپ سے ڈیٹا لائیں (وقت بچائیں):</span>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -218,7 +195,7 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
                   key={s.id}
                   type="button"
                   onClick={() => handleApplyPreviousSlip(s)}
-                  className="bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 border border-slate-200 px-2.5 py-1 rounded-lg text-xs font-medium transition flex items-center gap-1"
+                  className="bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 border border-slate-200 px-2.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1 min-h-[36px]"
                 >
                   <span>{s.loadingCity} ➔ {s.destinationCity} ({s.goods})</span>
                 </button>
@@ -235,32 +212,30 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
         </div>
       )}
 
-      {/* Main Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Main Form (Section 10) */}
+      <form onSubmit={handleSubmit} className="space-y-5">
         
-        {/* Section 8: لوڈنگ کی معلومات */}
+        {/* Pickup: لوڈ کہاں سے ہے؟ */}
         <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200 space-y-4">
-          <h2 className="text-lg font-bold text-[#0B2545] flex items-center gap-2 border-b border-slate-100 pb-2">
-            <MapPin className="w-5 h-5 text-emerald-600" />
-            <span>1. لوڈنگ کی معلومات (Loading Origin)</span>
+          <h2 className="text-base font-bold text-[#08284F] flex items-center gap-2 border-b border-slate-100 pb-2">
+            <MapPin className="w-5 h-5 text-[#19A974]" />
+            <span>لوڈ کہاں سے ہے؟ (پک اپ)</span>
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            
-            {/* Loading City */}
+            {/* پک اپ شہر */}
             <div className="space-y-1.5">
               <label className="text-sm font-bold text-slate-800 block">
-                لوڈنگ شہر <span className="text-red-500">*</span>
+                پک اپ شہر <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={loadingCity}
                 onChange={(e) => setLoadingCity(e.target.value)}
                 placeholder="مثال: ملتان"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-base text-slate-900 focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none transition"
+                className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-base text-slate-900 focus:bg-white focus:border-[#19A974] outline-none transition min-h-[44px]"
                 required
               />
-              {/* Quick cities chips */}
               <div className="flex flex-wrap gap-1 pt-1">
                 {COMMON_CITIES.slice(0, 5).map((c) => (
                   <button
@@ -275,102 +250,80 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
               </div>
             </div>
 
-            {/* Loading Location */}
+            {/* پک اپ مقام */}
             <div className="space-y-1.5">
               <label className="text-sm font-bold text-slate-800 block">
-                لوڈنگ مقام (چوک / منڈی / ایریا)
+                پک اپ مقام
               </label>
               <input
                 type="text"
                 value={loadingLocation}
                 onChange={(e) => setLoadingLocation(e.target.value)}
                 placeholder="مثال: شیر شاہ، غلہ منڈی"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-base text-slate-900 focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none transition"
+                className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-base text-slate-900 focus:bg-white focus:border-[#19A974] outline-none transition min-h-[44px]"
               />
-              <span className="text-[11px] text-slate-400">مثال: بائی پاس، انڈسٹریل اسٹیٹ، شیر شاہ</span>
+              <span className="text-[11px] text-slate-400">مثال: بائی پاس، غلہ منڈی، اڈا</span>
             </div>
-
           </div>
         </div>
 
-        {/* Section 8: منزل کی معلومات */}
+        {/* Destination: ڈیلیوری شہر */}
         <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200 space-y-4">
-          <h2 className="text-lg font-bold text-[#0B2545] flex items-center gap-2 border-b border-slate-100 pb-2">
-            <MapPin className="w-5 h-5 text-orange-600" />
-            <span>2. منزل کی معلومات</span>
+          <h2 className="text-base font-bold text-[#08284F] flex items-center gap-2 border-b border-slate-100 pb-2">
+            <MapPin className="w-5 h-5 text-[#FF9F43]" />
+            <span>منزل (ڈیلیوری)</span>
+          </h2>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-bold text-slate-800 block">
+              ڈیلیوری شہر <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={destinationCity}
+              onChange={(e) => setDestinationCity(e.target.value)}
+              placeholder="مثال: کراچی"
+              className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-base text-slate-900 focus:bg-white focus:border-[#19A974] outline-none transition min-h-[44px]"
+              required
+            />
+            <div className="flex flex-wrap gap-1 pt-1">
+              {['کراچی', 'لاہور', 'فیصل آباد', 'راولپنڈی', 'پشاور'].map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setDestinationCity(c)}
+                  className="text-[11px] bg-slate-100 hover:bg-emerald-100 text-slate-700 px-2 py-0.5 rounded transition"
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Goods & Quantity: سامان اور مقدار */}
+        <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200 space-y-4">
+          <h2 className="text-base font-bold text-[#08284F] flex items-center gap-2 border-b border-slate-100 pb-2">
+            <Package className="w-5 h-5 text-[#19A974]" />
+            <span>سامان اور مقدار</span>
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            
-            {/* Destination City */}
+            {/* سامان */}
             <div className="space-y-1.5">
               <label className="text-sm font-bold text-slate-800 block">
-                منزل شہر <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={destinationCity}
-                onChange={(e) => setDestinationCity(e.target.value)}
-                placeholder="مثال: لاہور"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-base text-slate-900 focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none transition"
-                required
-              />
-              <div className="flex flex-wrap gap-1 pt-1">
-                {['لاہور', 'کراچی', 'راولپنڈی', 'فیصل آباد', 'پشاور'].map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => setDestinationCity(c)}
-                    className="text-[11px] bg-slate-100 hover:bg-emerald-100 text-slate-700 px-2 py-0.5 rounded transition"
-                  >
-                    {c}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Destination Location */}
-            <div className="space-y-1.5">
-              <label className="text-sm font-bold text-slate-800 block">
-                منزل کا مقام
-              </label>
-              <input
-                type="text"
-                value={destinationLocation}
-                onChange={(e) => setDestinationLocation(e.target.value)}
-                placeholder="مثال: بادامی باغ، سبزی منڈی"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-base text-slate-900 focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none transition"
-              />
-              <span className="text-[11px] text-slate-400">مثال: بادامی باغ، پورٹ قاسم، گڈز اڈا</span>
-            </div>
-
-          </div>
-        </div>
-
-        {/* Section 8: مال، وزن، مقدار */}
-        <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200 space-y-4">
-          <h2 className="text-lg font-bold text-[#0B2545] flex items-center gap-2 border-b border-slate-100 pb-2">
-            <Package className="w-5 h-5 text-emerald-600" />
-            <span>3. مال اور وزن کی تفصیلات</span>
-          </h2>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            
-            {/* Goods */}
-            <div className="space-y-1.5 sm:col-span-1">
-              <label className="text-sm font-bold text-slate-800 block">
-                مال کی تفصیل <span className="text-red-500">*</span>
+                سامان <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={goods}
                 onChange={(e) => setGoods(e.target.value)}
-                placeholder="مثال: چاول"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-base text-slate-900 focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none transition"
+                placeholder="مثال: چاول، گندم، کھاد"
+                className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-base text-slate-900 focus:bg-white focus:border-[#19A974] outline-none transition min-h-[44px]"
                 required
               />
               <div className="flex flex-wrap gap-1 pt-1">
-                {['چاول', 'گندم', 'کھاد', 'سیمنٹ'].map((g) => (
+                {COMMON_GOODS.slice(0, 4).map((g) => (
                   <button
                     key={g}
                     type="button"
@@ -383,88 +336,78 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
               </div>
             </div>
 
-            {/* Weight */}
-            <div className="space-y-1.5 sm:col-span-1">
+            {/* مقدار */}
+            <div className="space-y-1.5">
               <label className="text-sm font-bold text-slate-800 block">
-                کل وزن <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={weight}
-                onChange={(e) => setWeight(e.target.value)}
-                placeholder="مثال: 30 ٹن"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-base text-slate-900 focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none transition"
-                required
-              />
-              <div className="flex flex-wrap gap-1 pt-1">
-                {['20 ٹن', '25 ٹن', '30 ٹن', '35 ٹن'].map((w) => (
-                  <button
-                    key={w}
-                    type="button"
-                    onClick={() => setWeight(w)}
-                    className="text-[11px] bg-slate-100 hover:bg-emerald-100 text-slate-700 px-2 py-0.5 rounded transition"
-                  >
-                    {w}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Quantity */}
-            <div className="space-y-1.5 sm:col-span-1">
-              <label className="text-sm font-bold text-slate-800 block">
-                مقدار / بوریاں (اختیاری)
+                مقدار (بوریاں / وزن)
               </label>
               <input
                 type="text"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
-                placeholder="مثال: 500 بوریاں"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-base text-slate-900 focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none transition"
+                placeholder="مثال: 500 بوریاں / 30 ٹن"
+                className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-base text-slate-900 focus:bg-white focus:border-[#19A974] outline-none transition min-h-[44px]"
               />
-              <div className="flex flex-wrap gap-1 pt-1">
-                {['500 بوریاں', '600 بوریاں', 'کھلا مال'].map((q) => (
-                  <button
-                    key={q}
-                    type="button"
-                    onClick={() => setQuantity(q)}
-                    className="text-[11px] bg-slate-100 hover:bg-emerald-100 text-slate-700 px-2 py-0.5 rounded transition"
-                  >
-                    {q}
-                  </button>
-                ))}
-              </div>
             </div>
-
           </div>
         </div>
 
-        {/* Section 9: Vehicle Information (گاڑی کی تفصیلات) */}
+        {/* Vehicle & Body Type Dropdowns (Section 10) */}
         <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200 space-y-4">
-          <h2 className="text-lg font-bold text-[#0B2545] flex items-center gap-2 border-b border-slate-100 pb-2">
-            <Truck className="w-5 h-5 text-emerald-600" />
-            <span>4. مطلوبہ گاڑی اور باڈی کی معلومات</span>
+          <h2 className="text-base font-bold text-[#08284F] flex items-center gap-2 border-b border-slate-100 pb-2">
+            <Truck className="w-5 h-5 text-[#19A974]" />
+            <span>گاڑی اور باڈی کی معلومات</span>
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            
             {/* Vehicle Type Dropdown */}
             <div className="space-y-1.5">
               <label className="text-sm font-bold text-slate-800 block">
-                مطلوبہ گاڑی کی قسم <span className="text-red-500">*</span>
+                مطلوبہ گاڑی (Vehicle Type) <span className="text-red-500">*</span>
               </label>
               <select
                 value={vehicleType}
                 onChange={(e) => setVehicleType(e.target.value as VehicleType)}
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-base text-slate-900 focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none transition font-nafees"
+                className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-base text-slate-900 focus:bg-white focus:border-[#19A974] outline-none transition font-sans min-h-[44px]"
               >
                 {VEHICLE_OPTIONS.map((vt) => (
-                  <option key={vt} value={vt}>{VEHICLE_LABELS[vt] || vt}</option>
+                  <option key={vt} value={vt}>{vt}</option>
                 ))}
               </select>
             </div>
 
-            {/* Optional Vehicle Number */}
+            {/* Body Type Dropdown */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-bold text-slate-800 block">
+                باڈی کی قسم (Body Type) <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={bodyType}
+                onChange={(e) => setBodyType(e.target.value as BodyType)}
+                className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-base text-slate-900 focus:bg-white focus:border-[#19A974] outline-none transition font-nafees min-h-[44px]"
+              >
+                {BODY_OPTIONS.map((bt) => (
+                  <option key={bt} value={bt}>{bt}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Date: لوڈ کی تاریخ */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+            <div className="space-y-1.5">
+              <label className="text-sm font-bold text-slate-800 block">
+                لوڈ کی تاریخ <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="date"
+                value={loadDate}
+                onChange={(e) => setLoadDate(e.target.value)}
+                className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-base text-slate-900 focus:bg-white focus:border-[#19A974] outline-none transition min-h-[44px]"
+                required
+              />
+            </div>
+
             <div className="space-y-1.5">
               <label className="text-sm font-bold text-slate-800 block">
                 گاڑی نمبر (اختیاری)
@@ -474,44 +417,13 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
                 value={vehicleNumber}
                 onChange={(e) => setVehicleNumber(e.target.value)}
                 placeholder="مثال: LEA-1234"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-base text-slate-900 focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none transition font-mono ltr-content"
+                className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-base text-slate-900 focus:bg-white focus:border-[#19A974] outline-none transition font-mono ltr-content min-h-[44px]"
               />
-              <span className="text-[11px] text-slate-400">اگر گاڑی پہلے سے طے ہو تو نمبر درج کریں۔</span>
-            </div>
-
-          </div>
-
-          {/* Body Type Radio Buttons */}
-          <div className="space-y-2 pt-2">
-            <label className="text-sm font-bold text-slate-800 block">
-              باڈی کی قسم <span className="text-red-500">*</span>
-            </label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-              {BODY_OPTIONS.map((bt) => (
-                <label
-                  key={bt}
-                  className={`flex items-center justify-center p-3 rounded-xl border cursor-pointer font-bold text-base transition ${
-                    bodyType === bt
-                      ? 'bg-emerald-50 border-emerald-600 text-emerald-900 ring-2 ring-emerald-600/20'
-                      : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="bodyType"
-                    value={bt}
-                    checked={bodyType === bt}
-                    onChange={() => setBodyType(bt)}
-                    className="sr-only"
-                  />
-                  <span>{bt}</span>
-                </label>
-              ))}
             </div>
           </div>
 
-          {/* Optional: Fare offer & Instructions */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+          {/* Optional: Fare offer & special instructions */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
             <div className="space-y-1.5">
               <label className="text-sm font-bold text-slate-800 block">
                 پیشکش کرایہ (اختیاری)
@@ -521,7 +433,7 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
                 value={fareOffer}
                 onChange={(e) => setFareOffer(e.target.value)}
                 placeholder="مثال: مارکیٹ ریٹ / 1,40,000 روپے"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-emerald-600 outline-none transition"
+                className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none transition min-h-[44px]"
               />
             </div>
 
@@ -534,24 +446,21 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
                 value={specialInstructions}
                 onChange={(e) => setSpecialInstructions(e.target.value)}
                 placeholder="مثال: ترپال لازمی، مال فوری لوڈ ہے"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-emerald-600 outline-none transition"
+                className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none transition min-h-[44px]"
               />
             </div>
           </div>
         </div>
 
-        {/* Section 10: Generate Slip Large Button */}
+        {/* Button: سلپ تیار کریں (Section 10) */}
         <div className="pt-2">
           <button
             type="submit"
-            className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white font-extrabold text-xl sm:text-2xl py-4 sm:py-5 px-6 rounded-2xl shadow-xl hover:shadow-emerald-600/30 active:scale-[0.98] transition-all"
+            className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-[#19A974] to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-extrabold text-xl sm:text-2xl py-4 sm:py-5 px-6 rounded-2xl shadow-xl active:scale-[0.98] transition-all min-h-[56px]"
           >
             <Sparkles className="w-6 h-6 text-emerald-200" />
             <span>سلپ تیار کریں</span>
           </button>
-          <p className="text-center text-xs text-slate-500 mt-2">
-            ایک سیکنڈ میں مصدقہ ویب سلپ تیار ہو جائے گی اور واٹس ایپ شیئر لنک مل جائے گا۔
-          </p>
         </div>
 
       </form>

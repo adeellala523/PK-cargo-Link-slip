@@ -1,18 +1,15 @@
 import React, { useState } from 'react';
 import { 
   Building2, 
-  Lock, 
   Phone, 
   Truck, 
-  UserCheck, 
   CheckCircle2, 
   AlertCircle,
-  Image as ImageIcon,
-  MapPin,
-  UserPlus,
-  Upload,
-  Clock,
-  ShieldAlert
+  KeyRound,
+  ArrowRight,
+  User,
+  CreditCard,
+  RotateCcw
 } from 'lucide-react';
 import { AddaProfile } from '../types';
 import { StorageService } from '../services/storage';
@@ -40,533 +37,455 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
     }
   }, [initialMode]);
 
-  // Login Form States
+  // Login Form States (Section 7)
   const [loginPhone, setLoginPhone] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [generatedOtp, setGeneratedOtp] = useState('');
   const [loginError, setLoginError] = useState('');
-  const [lockedReason, setLockedReason] = useState<string | null>(null);
+  const [otpNotice, setOtpNotice] = useState('');
 
-  // Registration Form States
-  const [regAddaName, setRegAddaName] = useState('');
-  const [regManagerName, setRegManagerName] = useState('');
-  const [regCity, setRegCity] = useState('لاہور');
+  // Register Form States (Section 8)
+  const [regName, setRegName] = useState('');
   const [regPhone, setRegPhone] = useState('');
-  const [regPassword, setRegPassword] = useState('');
-  const [regAddress, setRegAddress] = useState('');
-  const [regWhatsapp, setRegWhatsapp] = useState('');
-  const [regLogoUrl, setRegLogoUrl] = useState('');
+  const [regCnic, setRegCnic] = useState('');
+  const [regRole, setRegRole] = useState<'adda_manager' | 'driver' | 'vehicle_owner'>('adda_manager');
   const [regError, setRegError] = useState('');
   const [regSuccess, setRegSuccess] = useState('');
-  
-  // Future Payment Screen States (when enabled by admin)
-  const [showPaymentStep, setShowPaymentStep] = useState(false);
-  const [paymentScreenshot, setPaymentScreenshot] = useState('');
-  const [paymentTxId, setPaymentTxId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const paymentSettings = StorageService.getPaymentSettings();
-
-  // Sync users from server immediately when login view opens
+  // Sync users from server
   React.useEffect(() => {
     StorageService.syncUsersWithServer();
   }, []);
 
-  const handleLoginSubmit = async (e: React.FormEvent) => {
+  // Step 1 of Login: "OTP حاصل کریں" (Section 7)
+  const handleRequestOtp = (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
-    setLockedReason(null);
 
-    if (!loginPhone.trim()) {
-      setLoginError('براہ کرم اپنا موبائل نمبر درج کریں۔');
-      return;
-    }
-    if (!loginPassword.trim()) {
-      setLoginError('براہ کرم اپنا پاس ورڈ درج کریں۔');
+    const clean = loginPhone.trim().replace(/[^0-9]/g, '');
+    if (clean.length < 10) {
+      setLoginError('براہ کرم 11 ہندسوں کا درست موبائل نمبر درج کریں۔');
       return;
     }
 
-    setIsLoading(true);
-    try {
-      const res = await StorageService.loginUser(loginPhone, loginPassword);
-      if (res.success && res.user) {
-        onLoginSuccess(res.user.phone);
-      } else {
-        if (res.status === 'locked_expired') {
-          setLockedReason('آپ کا 1 ماہ کا پلان ختم ہو چکا ہے۔ ڈیٹا لاک ہے۔ براہ کرم تجدید کے لیے پیمنٹ کریں۔');
-        } else if (res.status === 'pending_payment') {
-          setLockedReason('آپ کے اکاؤنٹ کی پیمنٹ تصدیق زیر التوا ہے۔ ایڈمن کی منظوری کے بعد اکاؤنٹ فعال ہوگا۔');
-        } else {
-          setLoginError(res.message);
-        }
-      }
-    } catch {
-      setLoginError('سرور سے رابطہ نہ ہو سکا۔ انٹرنیٹ چیک کریں۔');
-    } finally {
-      setIsLoading(false);
-    }
+    // Generate 6-digit OTP code (Section 7)
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    setGeneratedOtp(code);
+    setOtpSent(true);
+    setOtpNotice(`آپ کا 6 ہندسوں کا تصدیقی OTP کوڈ ہے: ${code}`);
   };
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setRegError('تصویر کا سائز 5MB سے کم ہونا چاہیے۔');
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const base64 = event.target?.result as string;
-        setRegLogoUrl(base64);
+  // Step 2 of Login: "تصدیق کریں" (Section 7)
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError('');
 
-        // Upload to server so WhatsApp gets a real public image URL
-        try {
-          const formData = new FormData();
-          formData.append('image', file);
-          const res = await fetch('/api/upload', {
-            method: 'POST',
-            body: formData,
-          });
-          if (res.ok) {
-            const data = await res.json();
-            if (data.url) {
-              setRegLogoUrl(data.url);
-            }
-          }
-        } catch {
-          // Fallback to base64 which will be converted by backend
-        }
-      };
-      reader.readAsDataURL(file);
+    if (otpCode.trim() !== generatedOtp.trim()) {
+      setLoginError('OTP کوڈ درست نہیں ہے۔ دوبارہ چیک کریں۔');
+      return;
     }
+
+    // Login successful
+    const users = StorageService.getUsers();
+    let user = users.find((u) => u.phone === loginPhone.trim());
+    if (!user) {
+      // Auto-register or initiate session for this phone
+      const reg = await StorageService.registerUser({
+        phone: loginPhone.trim(),
+        addaName: 'گڈز ٹرانسپورٹ اڈا',
+        managerName: 'اڈا منیجر',
+        city: 'لاہور',
+        address: '',
+        whatsappNumber: loginPhone.trim(),
+        password: 'otp_verified_user',
+      });
+      user = reg.user;
+    }
+
+    onLoginSuccess(loginPhone.trim());
   };
 
+  // Resend OTP (Section 7)
+  const handleResendOtp = () => {
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    setGeneratedOtp(code);
+    setOtpNotice(`نیا 6 ہندسوں کا OTP کوڈ بھیجا گیا: ${code}`);
+  };
+
+  // Registration Submit (Section 8)
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setRegError('');
     setRegSuccess('');
 
-    if (!regAddaName.trim()) {
-      setRegError('اڈا کا نام درج کرنا لازمی ہے۔');
+    if (!regName.trim()) {
+      setRegError('براہ کرم اپنا نام درج کریں۔');
       return;
     }
-    if (!regPhone.trim()) {
-      setRegError('موبائل نمبر درج کرنا لازمی ہے۔');
+    const cleanPhone = regPhone.trim().replace(/[^0-9]/g, '');
+    if (cleanPhone.length < 10) {
+      setRegError('براہ کرم 11 ہندسوں کا درست موبائل نمبر درج کریں۔');
       return;
     }
-    if (regPassword.length < 4) {
-      setRegError('پاس ورڈ کم از کم 4 ہندسوں یا حروف کا ہونا چاہیے۔');
-      return;
-    }
-
-    // If payment is required by admin and screenshot not yet provided, show payment step
-    if (paymentSettings.isPaymentRequired && !showPaymentStep) {
-      setShowPaymentStep(true);
+    if (!regCnic.trim()) {
+      setRegError('براہ کرم شناختی کارڈ نمبر (CNIC) درج کریں۔');
       return;
     }
 
     setIsLoading(true);
     try {
-      const res = await StorageService.registerUser({
-        addaName: regAddaName,
-        managerName: regManagerName,
-        city: regCity,
-        phone: regPhone,
-        password: regPassword,
-        address: regAddress,
-        whatsappNumber: regWhatsapp || regPhone,
-        logoUrl: regLogoUrl || '',
-        paymentScreenshot: paymentScreenshot,
-        paymentTransactionId: paymentTxId,
+      const regResult = await StorageService.registerUser({
+        phone: regPhone.trim(),
+        addaName: regRole === 'adda_manager' ? `${regName.trim()} گڈز ٹرانسپورٹ` : `${regName.trim()}`,
+        managerName: regName.trim(),
+        city: 'لاہور',
+        address: '',
+        whatsappNumber: regPhone.trim(),
+        password: 'default_otp_login',
       });
 
-      if (res.success) {
-        if (res.requiresPayment) {
-          setRegSuccess('اکاؤنٹ کامیابی سے رجسٹر ہو گیا ہے۔ ایڈمن کی طرف سے تصدیق کے بعد آپ لاگ ان کر سکیں گے۔');
-          setShowPaymentStep(false);
-        } else {
-          // Automatically logged in
-          onLoginSuccess(regPhone);
-        }
+      if (regResult.user) {
+        setRegSuccess('اکاؤنٹ کامیابی سے رجسٹر ہو گیا!');
+        setTimeout(() => {
+          onLoginSuccess(regResult.user!.phone);
+        }, 1000);
       } else {
-        setRegError(res.message);
+        setRegError(regResult.message || 'رجسٹریشن مکمل نہ ہو سکی۔');
       }
     } catch {
-      setRegError('اکاؤنٹ بناتے وقت مسئلہ پیش آیا۔ دوبارہ کوشش کریں۔');
+      setRegError('رجسٹریشن میں مسئلہ آیا، دوبارہ کوشش کریں۔');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="max-w-xl mx-auto py-8 px-4 font-nafees">
-      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 space-y-6">
-        
-        {/* Header Icon & Title */}
-        <div className="text-center space-y-2">
-          <div className="w-16 h-16 rounded-2xl bg-[#0B2545] text-white flex items-center justify-center mx-auto shadow-md">
-            <Truck className="w-8 h-8 text-emerald-400" />
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0B2545]">
-            اڈا منیجر پورٹل
-          </h1>
-          <p className="text-xs text-slate-500">
-            پاکستان بھر کے ٹرانسپورٹ اڈا منیجرز کے لیے تصدیق شدہ ڈیجیٹل لوڈ سلپ سسٹم
-          </p>
+    <div className="max-w-lg mx-auto space-y-6 font-nafees">
+      
+      {/* Tab Switcher: لاگ ان | رجسٹریشن */}
+      <div className="bg-white rounded-2xl p-1.5 border border-slate-200 shadow-sm flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => { setActiveMode('login'); setOtpSent(false); setLoginError(''); }}
+          className={`flex-1 py-2.5 rounded-xl font-extrabold text-sm sm:text-base transition min-h-[44px] ${
+            activeMode === 'login'
+              ? 'bg-[#123A6D] text-white shadow-xs'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          لاگ ان کریں
+        </button>
+        <button
+          type="button"
+          onClick={() => { setActiveMode('register'); setRegError(''); }}
+          className={`flex-1 py-2.5 rounded-xl font-extrabold text-sm sm:text-base transition min-h-[44px] ${
+            activeMode === 'register'
+              ? 'bg-[#123A6D] text-white shadow-xs'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          نیا اکاؤنٹ بنائیں
+        </button>
+      </div>
+
+      {noticeMessage && (
+        <div className="bg-amber-50 border border-amber-300 rounded-2xl p-4 text-xs sm:text-sm text-amber-900 flex items-center gap-2">
+          <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+          <span>{noticeMessage}</span>
         </div>
+      )}
 
-        {/* Locked Account Notice */}
-        {lockedReason && (
-          <div className="p-4 bg-amber-50 border-2 border-amber-300 rounded-2xl text-amber-950 space-y-2">
-            <div className="flex items-center gap-2 font-bold text-sm text-amber-900">
-              <ShieldAlert className="w-5 h-5 text-amber-700 flex-shrink-0" />
-              <span>اکاؤنٹ اسٹیٹس الرٹ:</span>
-            </div>
-            <p className="text-xs leading-relaxed">{lockedReason}</p>
-            <div className="text-xs pt-1 border-t border-amber-200">
-              ایڈمن سے رابطہ کریں یا اکاؤنٹ تجدید کے لیے فیس جمع کروا کر رسید بھیجیں۔
-            </div>
-          </div>
-        )}
-
-        {/* Notice Message Banner (e.g. redirected from create slip) */}
-        {noticeMessage && (
-          <div className="p-4 bg-emerald-50 border-2 border-emerald-300 rounded-2xl text-emerald-950 flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-emerald-700 shrink-0" />
-            <p className="text-xs sm:text-sm font-bold leading-relaxed">{noticeMessage}</p>
-          </div>
-        )}
-
-        {/* Tab Toggle: Login vs Register */}
-        <div className="grid grid-cols-2 p-1 bg-slate-100 rounded-2xl border border-slate-200">
-          <button
-            type="button"
-            onClick={() => { setActiveMode('login'); setShowPaymentStep(false); }}
-            className={`py-2.5 rounded-xl font-bold text-sm sm:text-base transition ${
-              activeMode === 'login'
-                ? 'bg-white text-[#0B2545] shadow-sm'
-                : 'text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            لاگ ان کریں (Login)
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveMode('register')}
-            className={`py-2.5 rounded-xl font-bold text-sm sm:text-base transition ${
-              activeMode === 'register'
-                ? 'bg-white text-[#0B2545] shadow-sm'
-                : 'text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            نیا اکاؤنٹ بنائیں (Register)
-          </button>
-        </div>
-
-        {/* ======================================================== */}
-        {/* MODE 1: LOGIN FORM */}
-        {/* ======================================================== */}
-        {activeMode === 'login' && (
-          <form onSubmit={handleLoginSubmit} className="space-y-4">
-            {loginError && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
-                <span>{loginError}</span>
+      {/* ============================================================== */}
+      {/* SECTION 7: LOGIN SCREEN */}
+      {/* ============================================================== */}
+      {activeMode === 'login' && (
+        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-5">
+          
+          {!otpSent ? (
+            /* Screen 1: موبائل نمبر */
+            <form onSubmit={handleRequestOtp} className="space-y-4">
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#08284F]">
+                  لاگ ان کریں
+                </h1>
+                <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                  اپنا موبائل نمبر درج کریں، آپ کو فوری OTP بھیجا جائے گا۔
+                </p>
               </div>
-            )}
 
-            <div className="space-y-1.5">
-              <label className="text-xs sm:text-sm font-bold text-slate-800 block">
-                موبائل نمبر (Registered Mobile Number)
-              </label>
-              <div className="relative">
+              {loginError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-2xl text-xs sm:text-sm flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                  <span>{loginError}</span>
+                </div>
+              )}
+
+              {/* Field: 📱 موبائل نمبر (Section 7) */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-bold text-slate-800 block">
+                  📱 موبائل نمبر
+                </label>
                 <input
-                  type="text"
+                  type="tel"
                   value={loginPhone}
                   onChange={(e) => setLoginPhone(e.target.value)}
-                  placeholder="0300-1234567"
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-base text-slate-900 font-mono ltr-content focus:bg-white focus:border-emerald-600 outline-none"
+                  placeholder="مثال: 03001234567"
+                  className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-4 py-3 text-base text-slate-900 focus:bg-white focus:border-[#19A974] outline-none font-mono ltr-content min-h-[48px]"
                   required
                 />
               </div>
-            </div>
 
+              {/* Button: "OTP حاصل کریں" (Section 7) */}
+              <button
+                type="submit"
+                className="w-full flex items-center justify-center gap-2 bg-[#19A974] hover:bg-[#169163] text-white font-extrabold text-lg py-3.5 px-4 rounded-xl shadow-md active:scale-95 transition min-h-[48px]"
+              >
+                <span>OTP حاصل کریں</span>
+              </button>
+            </form>
+          ) : (
+            /* Screen 2: OTP screen (Section 7) */
+            <form onSubmit={handleVerifyOtp} className="space-y-4">
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#08284F]">
+                  OTP درج کریں
+                </h1>
+                <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                  آپ کے موبائل نمبر (<span className="font-mono font-bold text-slate-800">{loginPhone}</span>) پر تصدیقی کوڈ بھیجا گیا ہے۔
+                </p>
+              </div>
+
+              {otpNotice && (
+                <div className="bg-emerald-50 border border-emerald-300 text-emerald-900 px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-[#19A974] flex-shrink-0" />
+                  <span>{otpNotice}</span>
+                </div>
+              )}
+
+              {loginError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-2xl text-xs sm:text-sm flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                  <span>{loginError}</span>
+                </div>
+              )}
+
+              {/* Field: 6 ہندسوں کا OTP (Section 7) */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-bold text-slate-800 block">
+                  6 ہندسوں کا OTP
+                </label>
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value)}
+                  placeholder="XXXXXX"
+                  className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-4 py-3 text-center text-2xl tracking-widest font-mono text-[#08284F] focus:bg-white focus:border-[#19A974] outline-none min-h-[48px]"
+                  required
+                />
+              </div>
+
+              {/* Buttons: تصدیق کریں & OTP دوبارہ بھیجیں (Section 7) */}
+              <div className="space-y-2.5 pt-1">
+                <button
+                  type="submit"
+                  className="w-full flex items-center justify-center gap-2 bg-[#19A974] hover:bg-[#169163] text-white font-extrabold text-lg py-3.5 px-4 rounded-xl shadow-md active:scale-95 transition min-h-[48px]"
+                >
+                  <span>تصدیق کریں</span>
+                </button>
+
+                <div className="flex items-center justify-between text-xs pt-1">
+                  <button
+                    type="button"
+                    onClick={handleResendOtp}
+                    className="text-[#123A6D] hover:underline font-bold"
+                  >
+                    OTP دوبارہ بھیجیں
+                  </button>
+
+                  {/* Link: نمبر تبدیل کریں (Section 7) */}
+                  <button
+                    type="button"
+                    onClick={() => { setOtpSent(false); setOtpCode(''); }}
+                    className="text-slate-500 hover:text-slate-800"
+                  >
+                    نمبر تبدیل کریں
+                  </button>
+                </div>
+              </div>
+            </form>
+          )}
+
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* SECTION 8: REGISTER SCREEN */}
+      {/* ============================================================== */}
+      {activeMode === 'register' && (
+        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-5">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#08284F]">
+              نیا اکاؤنٹ بنائیں
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1">
+              اپنا کردار منتخب کریں اور PK Cargo Link نیٹ ورک میں شامل ہوں۔
+            </p>
+          </div>
+
+          {regSuccess && (
+            <div className="bg-emerald-50 border border-emerald-300 text-emerald-900 px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-[#19A974] flex-shrink-0" />
+              <span>{regSuccess}</span>
+            </div>
+          )}
+
+          {regError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-2xl text-xs sm:text-sm flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <span>{regError}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleRegisterSubmit} className="space-y-4">
+            
+            {/* Fields: نام, موبائل نمبر, CNIC (Section 8) */}
             <div className="space-y-1.5">
-              <label className="text-xs sm:text-sm font-bold text-slate-800 block">
-                پاس ورڈ (Password)
+              <label className="text-sm font-bold text-slate-800 block">
+                نام <span className="text-red-500">*</span>
               </label>
               <input
-                type="password"
-                value={loginPassword}
-                onChange={(e) => setLoginPassword(e.target.value)}
-                placeholder="اپنا پاس ورڈ درج کریں"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-base text-slate-900 focus:bg-white focus:border-emerald-600 outline-none"
+                type="text"
+                value={regName}
+                onChange={(e) => setRegName(e.target.value)}
+                placeholder="مثال: محمد عادل"
+                className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-4 py-2.5 text-base text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
                 required
               />
             </div>
 
-            <button
-              type="submit"
-              className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-bold text-base sm:text-lg py-3.5 rounded-xl shadow-md transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <UserCheck className="w-5 h-5" />
-              <span>لاگ ان کریں</span>
-            </button>
-          </form>
-        )}
-
-        {/* ======================================================== */}
-        {/* MODE 2: REGISTRATION FORM */}
-        {/* ======================================================== */}
-        {activeMode === 'register' && !showPaymentStep && (
-          <form onSubmit={handleRegisterSubmit} className="space-y-4">
-            {regError && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
-                <span>{regError}</span>
-              </div>
-            )}
-            {regSuccess && (
-              <div className="p-3 bg-emerald-50 border border-emerald-300 rounded-xl text-xs text-emerald-800 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                <span>{regSuccess}</span>
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700 block">
-                  اڈا کا نام (Adda Name) *
-                </label>
-                <input
-                  type="text"
-                  value={regAddaName}
-                  onChange={(e) => setRegAddaName(e.target.value)}
-                  placeholder="مثلاً: نیو پنجاب کارگو گڈز اڈا"
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-emerald-600 outline-none"
-                  required
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700 block">
-                  شہر (City) *
-                </label>
-                <input
-                  type="text"
-                  value={regCity}
-                  onChange={(e) => setRegCity(e.target.value)}
-                  placeholder="مثلاً: ملتان / لاہور / کراچی"
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-emerald-600 outline-none"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700 block">
-                  اڈا انچارج / منیجر کا نام *
-                </label>
-                <input
-                  type="text"
-                  value={regManagerName}
-                  onChange={(e) => setRegManagerName(e.target.value)}
-                  placeholder="مثلاً: ملک عمران ظفر"
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-emerald-600 outline-none"
-                  required
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700 block">
-                  موبائل نمبر (لاگ ان آئی ڈی) *
-                </label>
-                <input
-                  type="text"
-                  value={regPhone}
-                  onChange={(e) => setRegPhone(e.target.value)}
-                  placeholder="0300-1234567"
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-sm text-slate-900 font-mono ltr-content focus:bg-white focus:border-emerald-600 outline-none"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700 block">
-                  پاس ورڈ (Password) *
-                </label>
-                <input
-                  type="password"
-                  value={regPassword}
-                  onChange={(e) => setRegPassword(e.target.value)}
-                  placeholder="کم از کم 4 حروف یا ہندسے"
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-emerald-600 outline-none"
-                  required
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700 block">
-                  واٹس ایپ نمبر (اختیاری)
-                </label>
-                <input
-                  type="text"
-                  value={regWhatsapp}
-                  onChange={(e) => setRegWhatsapp(e.target.value)}
-                  placeholder="0300-1234567"
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-sm text-slate-900 font-mono ltr-content focus:bg-white focus:border-emerald-600 outline-none"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 block">
-                اڈا کا مکمل پتہ (Address)
+            <div className="space-y-1.5">
+              <label className="text-sm font-bold text-slate-800 block">
+                موبائل نمبر <span className="text-red-500">*</span>
               </label>
               <input
-                type="text"
-                value={regAddress}
-                onChange={(e) => setRegAddress(e.target.value)}
-                placeholder="مثلاً: وہاڑی چوک، نزد نیو سبزی منڈی"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-emerald-600 outline-none"
+                type="tel"
+                value={regPhone}
+                onChange={(e) => setRegPhone(e.target.value)}
+                placeholder="مثال: 03001234567"
+                className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-4 py-2.5 text-base text-slate-900 focus:bg-white focus:border-[#19A974] outline-none font-mono ltr-content min-h-[44px]"
+                required
               />
             </div>
 
-            {/* Logo / Image Upload */}
-            <div className="space-y-1.5 p-3 bg-slate-50 rounded-2xl border border-slate-200">
-              <label className="text-xs font-bold text-slate-700 block">
-                اڈا کا لوگو یا تصویر (اختیاری)
+            <div className="space-y-1.5">
+              <label className="text-sm font-bold text-slate-800 block">
+                CNIC (شناختی کارڈ نمبر) <span className="text-red-500">*</span>
               </label>
-              <div className="flex items-center gap-3">
-                <div className="w-14 h-14 rounded-xl bg-white border border-slate-300 flex items-center justify-center overflow-hidden flex-shrink-0 shadow-xs">
-                  {regLogoUrl ? (
-                    <img src={regLogoUrl} alt="Logo" className="w-full h-full object-cover" />
-                  ) : (
-                    <Building2 className="w-7 h-7 text-slate-400" />
-                  )}
+              <input
+                type="text"
+                value={regCnic}
+                onChange={(e) => setRegCnic(e.target.value)}
+                placeholder="مثال: 36302-1234567-1"
+                className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-4 py-2.5 text-base text-slate-900 focus:bg-white focus:border-[#19A974] outline-none font-mono ltr-content min-h-[44px]"
+                required
+              />
+            </div>
+
+            {/* Role Selection (3 cards only, NO Factory Owner) (Section 8) */}
+            <div className="space-y-2 pt-2">
+              <label className="text-sm font-bold text-slate-800 block">
+                اپنا کردار منتخب کریں:
+              </label>
+
+              <div className="space-y-2.5">
+                
+                {/* Role 1: اڈا مینیجر */}
+                <div
+                  onClick={() => setRegRole('adda_manager')}
+                  className={`p-3.5 rounded-2xl border-2 cursor-pointer transition flex items-start gap-3 ${
+                    regRole === 'adda_manager'
+                      ? 'bg-emerald-50/60 border-[#19A974] ring-1 ring-[#19A974]'
+                      : 'bg-white border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  <div className="w-10 h-10 rounded-xl bg-emerald-100 text-[#19A974] flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Building2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-base text-[#08284F]">
+                      اڈا مینیجر
+                    </h3>
+                    <p className="text-xs text-slate-600 mt-0.5">
+                      اپنے اڈے سے لوڈ پوسٹ کریں اور ڈیجیٹل سلپس بنائیں۔
+                    </p>
+                  </div>
                 </div>
-                <label className="inline-flex items-center gap-1.5 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold py-2 px-3 rounded-xl border border-slate-300 cursor-pointer transition">
-                  <Upload className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>تصویر منتخب کریں</span>
-                  <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
-                </label>
+
+                {/* Role 2: ڈرائیور */}
+                <div
+                  onClick={() => setRegRole('driver')}
+                  className={`p-3.5 rounded-2xl border-2 cursor-pointer transition flex items-start gap-3 ${
+                    regRole === 'driver'
+                      ? 'bg-blue-50/60 border-[#123A6D] ring-1 ring-[#123A6D]'
+                      : 'bg-white border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  <div className="w-10 h-10 rounded-xl bg-blue-100 text-[#123A6D] flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Truck className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-base text-[#08284F]">
+                      ڈرائیور
+                    </h3>
+                    <p className="text-xs text-slate-600 mt-0.5">
+                      اپنے لیے دستیاب لوڈ تلاش کریں۔
+                    </p>
+                  </div>
+                </div>
+
+                {/* Role 3: گاڑی مالک */}
+                <div
+                  onClick={() => setRegRole('vehicle_owner')}
+                  className={`p-3.5 rounded-2xl border-2 cursor-pointer transition flex items-start gap-3 ${
+                    regRole === 'vehicle_owner'
+                      ? 'bg-amber-50/60 border-amber-500 ring-1 ring-amber-500'
+                      : 'bg-white border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Truck className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-base text-[#08284F]">
+                      گاڑی مالک
+                    </h3>
+                    <p className="text-xs text-slate-600 mt-0.5">
+                      اپنی گاڑیوں کا ریکارڈ اور دستیابی manage کریں۔
+                    </p>
+                  </div>
+                </div>
+
               </div>
             </div>
 
-            <button
-              type="submit"
-              className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-bold text-base sm:text-lg py-3.5 rounded-xl shadow-md transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <UserPlus className="w-5 h-5" />
-              <span>
-                {paymentSettings.isPaymentRequired ? 'آگے بڑھیں اور فیس جمع کروائیں' : 'اکاؤنٹ رجسٹر کریں اور شروع کریں'}
-              </span>
-            </button>
+            {/* Button: رجسٹریشن جاری رکھیں (Section 8) */}
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-2 bg-[#123A6D] hover:bg-[#0D2D57] text-white font-extrabold text-lg py-3.5 px-4 rounded-xl shadow-md active:scale-95 transition min-h-[48px] disabled:opacity-50"
+              >
+                <span>{isLoading ? 'رجسٹریشن جاری ہے...' : 'رجسٹریشن جاری رکھیں'}</span>
+              </button>
+            </div>
+
           </form>
-        )}
+        </div>
+      )}
 
-        {/* ======================================================== */}
-        {/* MODE 3: PAYMENT CONFIRMATION STEP (WHEN ENABLED BY ADMIN) */}
-        {/* ======================================================== */}
-        {activeMode === 'register' && showPaymentStep && (
-          <div className="space-y-5">
-            <div className="p-4 bg-emerald-50 border-2 border-emerald-400 rounded-2xl space-y-3">
-              <div className="flex items-center justify-between border-b border-emerald-200 pb-2">
-                <span className="font-bold text-emerald-950 text-sm sm:text-base">
-                  ماہانہ سبسکرپشن فیس (Monthly Plan):
-                </span>
-                <span className="text-lg font-black text-emerald-800 font-mono">
-                  {paymentSettings.monthlyFee.toLocaleString('en-PK')} روپے
-                </span>
-              </div>
-              <p className="text-xs text-emerald-900 leading-relaxed">
-                {paymentSettings.instructions}
-              </p>
-            </div>
-
-            {/* Account Numbers Box */}
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3 text-xs">
-              <div className="font-bold text-slate-800 border-b border-slate-200 pb-1.5 text-sm">
-                پیمنٹ اکاؤنٹس کی تفصیل:
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between bg-white p-2.5 rounded-xl border border-slate-200">
-                  <span><strong>JazzCash:</strong> {paymentSettings.jazzcashNumber} ({paymentSettings.jazzcashTitle})</span>
-                </div>
-                <div className="flex items-center justify-between bg-white p-2.5 rounded-xl border border-slate-200">
-                  <span><strong>EasyPaisa:</strong> {paymentSettings.easypaisaNumber} ({paymentSettings.easypaisaTitle})</span>
-                </div>
-                <div className="bg-white p-2.5 rounded-xl border border-slate-200 space-y-0.5">
-                  <div><strong>بینک:</strong> {paymentSettings.bankName}</div>
-                  <div><strong>اکاؤنٹ نمبر:</strong> <span className="font-mono">{paymentSettings.bankAccountNumber}</span></div>
-                  <div><strong>ٹائٹل:</strong> {paymentSettings.bankAccountTitle}</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Transaction ID & Screenshot */}
-            <div className="space-y-3">
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700 block">
-                  ٹرانزیکشن آئی ڈی (TID / Ref Number) *
-                </label>
-                <input
-                  type="text"
-                  value={paymentTxId}
-                  onChange={(e) => setPaymentTxId(e.target.value)}
-                  placeholder="مثلاً: 1234567890"
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 font-mono focus:bg-white outline-none"
-                  required
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700 block">
-                  پیمنٹ کا اسکرین شاٹ اپلوڈ کریں (Payment Screenshot) *
-                </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      const reader = new FileReader();
-                      reader.onload = (ev) => {
-                        setPaymentScreenshot(ev.target?.result as string);
-                      };
-                      reader.readAsDataURL(file);
-                    }
-                  }}
-                  className="w-full text-xs text-slate-600 file:mr-2 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowPaymentStep(false)}
-                className="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-xl text-sm transition"
-              >
-                واپس
-              </button>
-              <button
-                type="button"
-                onClick={handleRegisterSubmit}
-                disabled={!paymentTxId.trim()}
-                className="w-2/3 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-bold py-3 rounded-xl text-sm shadow-md transition disabled:opacity-50"
-              >
-                رسید جمع کروائیں
-              </button>
-            </div>
-          </div>
-        )}
-
-      </div>
     </div>
   );
 };

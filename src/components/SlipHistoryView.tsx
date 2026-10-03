@@ -1,28 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   FileText, 
   Copy, 
   Share2, 
-  Repeat, 
   Trash2, 
   Eye, 
   Check, 
-  MapPin, 
-  Truck, 
   PlusCircle, 
-  Calendar,
   Search,
-  Filter,
-  CheckCircle,
-  AlertTriangle
+  RotateCcw
 } from 'lucide-react';
 import { LoadSlip } from '../types';
-import { 
-  formatUrduDateTime, 
-  getWhatsAppShareUrl, 
-  formatWhatsAppMessage, 
-  APP_BASE_URL 
-} from '../utils/formatters';
+import { OFFICIAL_WEBSITE_URL } from '../utils/formatters';
 
 interface SlipHistoryViewProps {
   slips: LoadSlip[];
@@ -30,8 +19,8 @@ interface SlipHistoryViewProps {
   onReuseSlip: (slip: LoadSlip) => void;
   onShareModal: (slip: LoadSlip) => void;
   onDeleteSlip: (id: string) => void;
-  onToggleStatus: (slip: LoadSlip) => void;
   onOpenCreate: () => void;
+  onToggleStatus?: (slip: LoadSlip) => void;
 }
 
 export const SlipHistoryView: React.FC<SlipHistoryViewProps> = ({
@@ -40,29 +29,68 @@ export const SlipHistoryView: React.FC<SlipHistoryViewProps> = ({
   onReuseSlip,
   onShareModal,
   onDeleteSlip,
-  onToggleStatus,
   onOpenCreate,
+  onToggleStatus,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [timeFilter, setTimeFilter] = useState<'all' | 'today' | 'yesterday' | 'week' | 'month'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'booked'>('all');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [animatingId, setAnimatingId] = useState<string | null>(null);
 
-  const filteredSlips = slips.filter((s) => {
-    const matchesSearch = 
-      s.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.loadingCity.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.destinationCity.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.goods.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.vehicleType.toLowerCase().includes(searchQuery.toLowerCase());
+  const handleToggle = (slip: LoadSlip) => {
+    if (onToggleStatus) {
+      setAnimatingId(slip.id);
+      onToggleStatus(slip);
+      setTimeout(() => {
+        setAnimatingId(null);
+      }, 400);
+    }
+  };
 
-    const matchesStatus = filterStatus === 'all' || s.status === filterStatus;
+  const filteredSlips = useMemo(() => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    return matchesSearch && matchesStatus;
-  });
+    return slips.filter((s) => {
+      // 1. Search Query (Slip number, city, goods, vehicle)
+      const matchesSearch = !searchQuery.trim() ||
+        s.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        s.loadingCity.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        s.destinationCity.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        s.goods.toLowerCase().includes(searchQuery.toLowerCase());
 
-  const handleCopyLink = async (slip: LoadSlip, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const url = `${APP_BASE_URL}/slip/${slip.id}`;
+      // 2. Status Filter
+      const matchesStatus = statusFilter === 'all' || s.status === statusFilter;
+
+      // 3. Time Filter
+      let matchesTime = true;
+      if (timeFilter !== 'all' && s.createdAt) {
+        const slipDate = new Date(s.createdAt);
+        if (timeFilter === 'today') {
+          matchesTime = slipDate >= today;
+        } else if (timeFilter === 'yesterday') {
+          matchesTime = slipDate >= yesterday && slipDate < today;
+        } else if (timeFilter === 'week') {
+          matchesTime = slipDate >= sevenDaysAgo;
+        } else if (timeFilter === 'month') {
+          matchesTime = slipDate >= startOfMonth;
+        }
+      }
+
+      return matchesSearch && matchesStatus && matchesTime;
+    });
+  }, [slips, searchQuery, statusFilter, timeFilter]);
+
+  const handleCopyLink = async (slip: LoadSlip) => {
+    const cleanId = slip.id.replace(/[^a-zA-Z0-9]/g, '');
+    const url = `${OFFICIAL_WEBSITE_URL}/slip/${cleanId}`;
     try {
       await navigator.clipboard.writeText(url);
       setCopiedId(slip.id);
@@ -72,231 +100,294 @@ export const SlipHistoryView: React.FC<SlipHistoryViewProps> = ({
     }
   };
 
-  const handleDirectWhatsApp = (slip: LoadSlip, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const text = formatWhatsAppMessage(slip);
-    const url = getWhatsAppShareUrl(text);
-    window.open(url, '_blank');
+  const handleConfirmDelete = (id: string) => {
+    onDeleteSlip(id);
+    setDeletingId(null);
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 font-nafees">
+    <div className="max-w-3xl mx-auto space-y-5 font-nafees">
       
-      {/* Header */}
-      <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+      {/* Header (Section 14) */}
+      <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0B2545]">
-              میری سلپس (سلپ ہسٹری)
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#08284F]">
+              میری سلپس
             </h1>
-            <p className="text-xs sm:text-sm text-slate-500">
-              آپ کے اڈا سے جاری کردہ تمام سابقہ اور موجودہ لوڈ سلپس کا مکمل ریکارڈ
+            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+              آپ کے اڈا سے جاری کردہ تمام سابقہ اور موجودہ لوڈ سلپس کا ریکارڈ
             </p>
           </div>
 
           <button
+            type="button"
             onClick={onOpenCreate}
-            className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-bold text-sm shadow transition active:scale-95"
+            className="inline-flex items-center justify-center gap-2 bg-[#19A974] hover:bg-[#169163] text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-sm transition active:scale-95 min-h-[44px]"
           >
             <PlusCircle className="w-4 h-4" />
-            <span>+ نئی لوڈ سلپ</span>
+            <span>نئی سلپ بنائیں</span>
           </button>
         </div>
 
-        {/* Filters and search */}
-        <div className="pt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="sm:col-span-2 relative">
-            <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-3.5" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="شہر، مال، گاڑی یا Slip ID تلاش کریں..."
-              className="w-full bg-slate-50 border border-slate-300 rounded-xl pr-10 pl-3 py-2 text-sm text-slate-900 focus:bg-white focus:border-emerald-600 outline-none"
-            />
-          </div>
+        {/* Top Search: "سلپ نمبر تلاش کریں" (Section 14) */}
+        <div className="relative">
+          <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-3.5" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="سلپ نمبر تلاش کریں..."
+            className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl pr-10 pl-3 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
+          />
+        </div>
 
-          <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-300 rounded-xl p-1 text-xs">
+        {/* Time Filters: آج | کل | گزشتہ 7 دن | اس ماہ (Section 14) */}
+        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+          <span className="text-slate-400 font-bold ml-1">مدت:</span>
+          {[
+            { id: 'all', label: 'تمام' },
+            { id: 'today', label: 'آج' },
+            { id: 'yesterday', label: 'کل' },
+            { id: 'week', label: 'گزشتہ 7 دن' },
+            { id: 'month', label: 'اس ماہ' },
+          ].map((tf) => (
             <button
-              onClick={() => setFilterStatus('all')}
-              className={`flex-1 py-1.5 rounded-lg font-bold transition ${
-                filterStatus === 'all' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500'
+              key={tf.id}
+              type="button"
+              onClick={() => setTimeFilter(tf.id as any)}
+              className={`px-3 py-1.5 rounded-lg font-bold transition min-h-[36px] ${
+                timeFilter === tf.id
+                  ? 'bg-[#123A6D] text-white'
+                  : 'bg-[#F4F7FB] text-slate-600 hover:bg-slate-200'
               }`}
             >
-              تمام ({slips.length})
+              {tf.label}
             </button>
+          ))}
+        </div>
+
+        {/* Status Filters: تمام | فعال | مکمل (Section 14) */}
+        <div className="flex flex-wrap items-center gap-1.5 text-xs pt-1 border-t border-slate-100">
+          <span className="text-slate-400 font-bold ml-1">اسٹیٹس:</span>
+          {[
+            { id: 'all', label: `تمام (${slips.length})` },
+            { id: 'active', label: 'فعال' },
+            { id: 'booked', label: 'مکمل' },
+          ].map((sf) => (
             <button
-              onClick={() => setFilterStatus('active')}
-              className={`flex-1 py-1.5 rounded-lg font-bold transition ${
-                filterStatus === 'active' ? 'bg-emerald-600 text-white' : 'text-slate-500'
+              key={sf.id}
+              type="button"
+              onClick={() => setStatusFilter(sf.id as any)}
+              className={`px-3 py-1.5 rounded-lg font-bold transition min-h-[36px] ${
+                statusFilter === sf.id
+                  ? 'bg-[#19A974] text-white'
+                  : 'bg-[#F4F7FB] text-slate-600 hover:bg-slate-200'
               }`}
             >
-              فعال
+              {sf.label}
             </button>
-            <button
-              onClick={() => setFilterStatus('booked')}
-              className={`flex-1 py-1.5 rounded-lg font-bold transition ${
-                filterStatus === 'booked' ? 'bg-blue-600 text-white' : 'text-slate-500'
-              }`}
-            >
-              بک شدہ
-            </button>
-          </div>
+          ))}
         </div>
       </div>
 
-      {/* Slips List (Cards as mandated by Section 20) */}
-      <div className="space-y-4">
+      {/* Slips List (Section 14) */}
+      <div className="space-y-3.5">
         {filteredSlips.length === 0 ? (
-          <div className="bg-white rounded-3xl p-10 text-center space-y-3 border border-slate-200">
-            <FileText className="w-12 h-12 text-slate-300 mx-auto" />
-            <p className="text-base text-slate-600 font-bold">کوئی لوڈ سلپ نہیں ملی</p>
-            <p className="text-xs text-slate-400">
-              {searchQuery ? 'تلاش کی شرائط بدل کر دیکھیں' : 'نئی لوڈ سلپ بنا کر واٹس ایپ پر شیئر کریں'}
-            </p>
+          <div className="bg-white rounded-3xl p-8 text-center border border-slate-200 space-y-2">
+            <FileText className="w-10 h-10 text-slate-300 mx-auto" />
+            <p className="font-bold text-slate-700">اس فلٹر پر کوئی سلپ نہیں ملی</p>
+            <p className="text-xs text-slate-400">فلٹرز ری سیٹ کریں یا نئی لوڈ سلپ بنائیں۔</p>
           </div>
         ) : (
           filteredSlips.map((slip) => (
             <div
               key={slip.id}
-              className="bg-white rounded-3xl p-5 shadow-sm border border-slate-200 hover:border-emerald-500/50 transition-all space-y-4"
+              className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 hover:border-slate-300 transition space-y-3"
             >
-              {/* Slip Card Top Header: ID, Date, Status */}
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+              {/* Slip Card Header: PKCL code & Status */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-xs font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded ltr-content">
+                  <span className="font-mono text-xs font-black bg-[#F4F7FB] px-2.5 py-1 rounded text-[#123A6D]">
                     {slip.id}
                   </span>
-                  <div className="flex items-center gap-1 text-[11px] text-slate-400">
-                    <Calendar className="w-3 h-3" />
-                    <span>{formatUrduDateTime(slip.createdAt)}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => onToggleStatus(slip)}
-                    className={`text-xs px-2.5 py-0.5 rounded-full font-bold transition cursor-pointer ${
+                  
+                  {/* Subtle State Transition Animated Status Badge */}
+                  {onToggleStatus ? (
+                    <button
+                      type="button"
+                      onClick={() => handleToggle(slip)}
+                      title={slip.status === 'active' ? 'لوڈ مکمل ہو گیا؟ کلک کر کے مکمل مارک کریں' : 'دوبارہ فعال مارک کرنے کے لیے کلک کریں'}
+                      className={`group relative inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full border transition-all duration-300 ease-in-out cursor-pointer shadow-2xs select-none ${
+                        animatingId === slip.id ? 'scale-110 ring-2 ring-emerald-500/50' : 'hover:scale-105 active:scale-95'
+                      } ${
+                        slip.status === 'active'
+                          ? 'bg-emerald-50 text-emerald-800 border-emerald-300/80 hover:bg-emerald-100 hover:border-emerald-400 ring-1 ring-emerald-500/20'
+                          : 'bg-slate-100 text-slate-700 border-slate-300/80 hover:bg-slate-200 hover:border-slate-400 ring-1 ring-slate-400/20'
+                      }`}
+                    >
+                      {slip.status === 'active' ? (
+                        <>
+                          <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600"></span>
+                          </span>
+                          <span className="transition-all duration-300">● فعال لوڈ</span>
+                        </>
+                      ) : (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-slate-600 stroke-[2.5] transition-transform duration-300 group-hover:scale-110" />
+                          <span className="transition-all duration-300">✓ مکمل</span>
+                        </>
+                      )}
+                      <span className="text-[9px] opacity-0 group-hover:opacity-75 transition-opacity duration-200 text-slate-500 mr-0.5 hidden sm:inline">
+                        (تبدیل کریں)
+                      </span>
+                    </button>
+                  ) : (
+                    <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full border transition-all duration-300 ease-in-out shadow-2xs ${
                       slip.status === 'active'
-                        ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300'
-                        : slip.status === 'booked'
-                        ? 'bg-blue-100 text-blue-800 hover:bg-blue-200 border border-blue-300'
-                        : 'bg-slate-200 text-slate-700 hover:bg-slate-300 border border-slate-300'
-                    }`}
-                    title="اسٹیٹس تبدیل کرنے کے لیے کلک کریں"
-                  >
-                    {slip.status === 'active' ? '● دستیاب لوڈ' : slip.status === 'booked' ? '✓ لوڈ ہوچکا' : 'ختم شدہ'}
-                  </button>
+                        ? 'bg-emerald-50 text-emerald-800 border-emerald-300/80 ring-1 ring-emerald-500/20'
+                        : 'bg-slate-100 text-slate-700 border-slate-300/80 ring-1 ring-slate-400/20'
+                    }`}>
+                      {slip.status === 'active' ? (
+                        <>
+                          <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600"></span>
+                          </span>
+                          <span>● فعال لوڈ</span>
+                        </>
+                      ) : (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-slate-600 stroke-[2.5]" />
+                          <span>✓ مکمل</span>
+                        </>
+                      )}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 text-xs text-slate-500">
+                  <span>اڈا: <strong className="text-slate-800">{slip.addaName}</strong></span>
+                  <span>•</span>
+                  <span className="font-mono">{slip.createdAt ? new Date(slip.createdAt).toLocaleDateString('ur-PK') : ''}</span>
                 </div>
               </div>
 
-              {/* Route & Cargo Grid (Section 20 details) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                
-                {/* Route */}
-                <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
-                  <div className="flex items-center justify-between text-base font-bold">
-                    <div className="text-right">
-                      <span className="text-xs text-slate-400 block font-normal">لوڈنگ شہر:</span>
-                      <span className="text-slate-900">{slip.loadingCity}</span>
-                      <span className="text-xs text-slate-500 block truncate max-w-[110px]">{slip.loadingLocation}</span>
-                    </div>
-
-                    <div className="text-slate-400 font-sans text-xs px-2">➔</div>
-
-                    <div className="text-left">
-                      <span className="text-xs text-slate-400 block font-normal">منزل:</span>
-                      <span className="text-emerald-800">{slip.destinationCity}</span>
-                      <span className="text-xs text-slate-500 block truncate max-w-[110px]">{slip.destinationLocation}</span>
-                    </div>
-                  </div>
+              {/* Pickup -> Destination & Vehicle */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="font-bold text-base text-[#08284F]">
+                  📍 {slip.loadingCity} ➔ {slip.destinationCity}
                 </div>
-
-                {/* Cargo Details */}
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                    <span className="text-slate-400 block">مال:</span>
-                    <span className="font-bold text-slate-800 text-sm">{slip.goods}</span>
-                  </div>
-                  <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                    <span className="text-slate-400 block">وزن:</span>
-                    <span className="font-bold text-slate-800 text-sm">{slip.weight}</span>
-                  </div>
-                  <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                    <span className="text-slate-400 block">گاڑی:</span>
-                    <span className="font-bold text-slate-800">{slip.vehicleType}</span>
-                  </div>
-                  <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                    <span className="text-slate-400 block">باڈی:</span>
-                    <span className="font-bold text-slate-800">{slip.bodyType}</span>
-                  </div>
+                <div className="text-xs text-slate-600 bg-slate-50 px-2.5 py-1 rounded-md self-start sm:self-auto">
+                  🚛 {slip.vehicleType} • {slip.goods} ({slip.quantity || slip.weight})
                 </div>
-
               </div>
 
-              {/* Mandatory Action Buttons (Section 20):
-                  - دیکھیں
-                  - لنک Copy کریں
-                  - دوبارہ Share کریں
-                  - دوبارہ استعمال کریں
-                  - حذف کریں
-              */}
-              <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
-                
+              {/* Action Buttons: دیکھیں | شیئر کریں | دوبارہ بنائیں | لنک کاپی کریں | حذف کریں (Section 14) */}
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
                 <div className="flex flex-wrap items-center gap-1.5">
-                  {/* دیکھیں (View) */}
+                  
+                  {/* دیکھیں */}
                   <button
+                    type="button"
                     onClick={() => onViewSlip(slip)}
-                    className="inline-flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-800 px-3 py-1.5 rounded-xl text-xs font-bold transition"
+                    className="inline-flex items-center gap-1 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition min-h-[36px]"
                   >
-                    <Eye className="w-3.5 h-3.5 text-slate-600" />
+                    <Eye className="w-3.5 h-3.5" />
                     <span>دیکھیں</span>
                   </button>
 
-                  {/* لنک Copy کریں */}
+                  {/* شیئر کریں */}
                   <button
-                    onClick={(e) => handleCopyLink(slip, e)}
-                    className="inline-flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-800 px-3 py-1.5 rounded-xl text-xs font-bold transition"
-                  >
-                    {copiedId === slip.id ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-600" />}
-                    <span>{copiedId === slip.id ? 'کاپی ہوگیا!' : 'لنک Copy کریں'}</span>
-                  </button>
-
-                  {/* دوبارہ Share کریں */}
-                  <button
+                    type="button"
                     onClick={() => onShareModal(slip)}
-                    className="inline-flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-xl text-xs font-bold border border-emerald-200 transition"
+                    className="inline-flex items-center gap-1 text-xs font-bold text-white bg-[#19A974] hover:bg-[#169163] px-3 py-1.5 rounded-lg transition min-h-[36px]"
                   >
-                    <Share2 className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>دوبارہ Share کریں</span>
+                    <Share2 className="w-3.5 h-3.5" />
+                    <span>شیئر کریں</span>
                   </button>
-                </div>
 
-                <div className="flex items-center gap-1.5">
-                  {/* دوبارہ استعمال کریں (Reuse Previous Slip - Section 21) */}
+                  {/* دوبارہ بنائیں (Section 15: Duplicate) */}
                   <button
+                    type="button"
                     onClick={() => onReuseSlip(slip)}
-                    className="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-xs transition"
-                    title="اس سلپ کی معلومات کے ساتھ نئی سلپ بنائیں"
+                    className="inline-flex items-center gap-1 text-xs font-bold text-[#123A6D] bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition min-h-[36px]"
+                    title="پرانا ڈیٹا اٹھا کر نیا سلپ بنائیں"
                   >
-                    <Repeat className="w-3.5 h-3.5" />
-                    <span>دوبارہ استعمال کریں</span>
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>دوبارہ بنائیں</span>
                   </button>
 
-                  {/* حذف کریں (Delete) */}
+                  {/* لنک کاپی کریں */}
                   <button
-                    onClick={() => {
-                      if (confirm(`کیا آپ واقعی سلپ ${slip.id} کو حذف کرنا چاہتے ہیں؟`)) {
-                        onDeleteSlip(slip.id);
-                      }
-                    }}
-                    className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition"
-                    title="حذف کریں"
+                    type="button"
+                    onClick={() => handleCopyLink(slip)}
+                    className="inline-flex items-center gap-1 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition min-h-[36px]"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    {copiedId === slip.id ? <Check className="w-3.5 h-3.5 text-[#19A974]" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
+                    <span>{copiedId === slip.id ? 'کاپی ہوگیا!' : 'لنک کاپی'}</span>
                   </button>
+
+                  {/* اسٹیٹس تبدیل کریں (Active <-> Booked) */}
+                  {onToggleStatus && (
+                    <button
+                      type="button"
+                      onClick={() => handleToggle(slip)}
+                      className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg transition-all duration-300 min-h-[36px] active:scale-95 ${
+                        slip.status === 'active'
+                          ? 'bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/80 shadow-2xs'
+                          : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 shadow-2xs'
+                      }`}
+                      title={slip.status === 'active' ? 'گاڑی لوڈ ہو چکی ہے؟ کلک کر کے مکمل مارک کریں' : 'دوبارہ فعال کریں'}
+                    >
+                      {slip.status === 'active' ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-amber-600 stroke-[2.5]" />
+                          <span>مکمل مارک کریں</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+                          <span>دوبارہ فعال کریں</span>
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
 
+                {/* حذف کریں (Requires confirmation) */}
+                <div>
+                  {deletingId === slip.id ? (
+                    <div className="flex items-center gap-1.5 bg-red-50 p-1 rounded-lg border border-red-200">
+                      <span className="text-[11px] text-red-700 font-bold px-1">حذف کریں؟</span>
+                      <button
+                        type="button"
+                        onClick={() => handleConfirmDelete(slip.id)}
+                        className="bg-red-600 text-white text-[11px] font-bold px-2 py-1 rounded hover:bg-red-700 transition"
+                      >
+                        ہاں
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDeletingId(null)}
+                        className="bg-slate-200 text-slate-700 text-[11px] font-bold px-2 py-1 rounded hover:bg-slate-300 transition"
+                      >
+                        نہیں
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setDeletingId(slip.id)}
+                      className="text-xs text-red-500 hover:text-red-700 p-1.5 hover:bg-red-50 rounded-lg transition min-h-[36px] inline-flex items-center gap-1"
+                      title="سلپ حذف کریں"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>حذف کریں</span>
+                    </button>
+                  )}
+                </div>
               </div>
 
             </div>

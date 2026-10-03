@@ -25,60 +25,54 @@ export function generateSlipId(): string {
 }
 
 /**
- * Builds the exact WhatsApp formatted text according to PK Cargo Link specifications
+ * Builds the exact WhatsApp formatted text according to PK Cargo Link Section 13 specifications
  */
 export function formatWhatsAppMessage(slip: LoadSlip): string {
-  // Strip any hyphens from ID in URL to ensure WhatsApp never breaks the link
   const cleanId = slip.id.replace(/[^a-zA-Z0-9]/g, '');
   const slipUrl = `${OFFICIAL_WEBSITE_URL}/slip/${cleanId}`;
-  const driverPortalUrl = `${OFFICIAL_WEBSITE_URL}/driver`;
   
   let contactLines = slip.primaryPhone;
   if (slip.whatsappNumber && slip.whatsappNumber !== slip.primaryPhone) {
-    contactLines += ` (واٹس ایپ: ${slip.whatsappNumber})`;
+    contactLines += ` (WhatsApp: ${slip.whatsappNumber})`;
   }
   if (slip.additionalContacts && slip.additionalContacts.length > 0) {
-    contactLines += `\nدیگر رابطہ: ${slip.additionalContacts.slice(0, 2).join(' / ')}`;
+    contactLines += ` / ${slip.additionalContacts.slice(0, 2).join(' / ')}`;
   }
 
-  const vehicleNumLine = slip.vehicleNumber ? `\n🔢 گاڑی نمبر:\n${slip.vehicleNumber}` : '';
-  const fareLine = slip.fareOffer ? `\n💰 پیشکش کرایہ:\n${slip.fareOffer}` : '';
+  const dateStr = slip.createdAt ? new Date(slip.createdAt).toLocaleDateString('ur-PK') : 'آج';
 
-  // Adda Name prominently above "دستیاب لوڈ"
-  const addaHeader = `🏢 ${slip.addaName}${slip.addaCity ? ` (${slip.addaCity})` : ''}`;
+  return `بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
 
-  return `بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ
+🚛 PK CARGO LOAD
 
-${addaHeader}
+📍 پک اپ:
+${slip.loadingCity} (${slip.loadingLocation})
 
-🚛 دستیاب لوڈ: ${slip.loadingCity} تا ${slip.destinationCity}
+📍 ڈیلیوری:
+${slip.destinationCity}
 
-📍 لوڈنگ:
-${slip.loadingCity} — ${slip.loadingLocation}
-
-📍 منزل:
-${slip.destinationCity} — ${slip.destinationLocation}
-
-📦 مال:
+📦 سامان:
 ${slip.goods}
 
-⚖️ وزن:
-${slip.weight}
+🔢 مقدار:
+${slip.quantity || slip.weight || 'حسبِ ضرورت'}
 
-📦 مقدار:
-${slip.quantity}
+🚚 گاڑی:
+${slip.vehicleType} (${slip.bodyType})
 
-🚛 مطلوبہ گاڑی:
-${slip.vehicleType}
+📅 تاریخ:
+${dateStr}
 
-🏗️ باڈی:
-${slip.bodyType}${vehicleNumLine}${fareLine}
+🏢 اڈا:
+${slip.addaName} (${slip.addaCity})
 
 📞 رابطہ:
 ${contactLines}
 
-🔗 آن لائن لوڈ سلپ اور تصویری تفصیلات:
-${slipUrl}`;
+🔗 سلپ:
+${slipUrl}
+
+Powered by PK Cargo Link`;
 }
 
 /**

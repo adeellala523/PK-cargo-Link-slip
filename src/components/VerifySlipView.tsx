@@ -7,11 +7,14 @@ import {
   Truck, 
   Calendar, 
   ArrowLeft,
+  QrCode,
   Building2,
-  ExternalLink
+  ExternalLink,
+  Phone,
+  MessageSquare
 } from 'lucide-react';
 import { LoadSlip } from '../types';
-import { formatUrduDateTime } from '../utils/formatters';
+import { formatUrduDateTime, sanitizePhoneForCall, getWhatsAppShareUrl } from '../utils/formatters';
 
 interface VerifySlipViewProps {
   onVerify: (id: string) => LoadSlip | null;
@@ -25,6 +28,7 @@ export const VerifySlipView: React.FC<VerifySlipViewProps> = ({
   initialId = '',
 }) => {
   const [slipIdInput, setSlipIdInput] = useState(initialId);
+  const [isScanning, setIsScanning] = useState(false);
   const [result, setResult] = useState<{
     searched: boolean;
     slip: LoadSlip | null;
@@ -45,27 +49,31 @@ export const VerifySlipView: React.FC<VerifySlipViewProps> = ({
     });
   };
 
+  const handleQrScanTrigger = () => {
+    setIsScanning(!isScanning);
+  };
+
   return (
     <div className="max-w-2xl mx-auto space-y-6 font-nafees">
       
-      {/* Header */}
-      <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200 space-y-3">
-        <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0">
-            <ShieldCheck className="w-6 h-6" />
+      {/* Header (Section 17) */}
+      <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200 space-y-4">
+        <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+          <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#123A6D] flex items-center justify-center flex-shrink-0">
+            <ShieldCheck className="w-6 h-6 text-[#123A6D]" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0B2545]">
-              سلپ کی تصدیق کریں
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#08284F]">
+              سلپ ویریفائی کریں
             </h1>
-            <p className="text-xs sm:text-sm text-slate-500">
-              جعلی یا پرانی سلپس سے بچنے کے لیے سلپ کا آفیشل نمبر درج کر کے تصدیق کریں۔
+            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+              PK Cargo Link کی سلپ کا ریکارڈ چیک کریں۔
             </p>
           </div>
         </div>
 
-        {/* Input Form */}
-        <form onSubmit={handleSearch} className="pt-2 space-y-3">
+        {/* Input Form (Section 17) */}
+        <form onSubmit={handleSearch} className="space-y-3.5">
           <label className="text-sm font-bold text-slate-800 block">
             سلپ نمبر درج کریں:
           </label>
@@ -74,85 +82,130 @@ export const VerifySlipView: React.FC<VerifySlipViewProps> = ({
               type="text"
               value={slipIdInput}
               onChange={(e) => setSlipIdInput(e.target.value)}
-              placeholder="مثال: PKCL-20261001-000125"
-              className="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-base text-slate-900 focus:bg-white focus:border-emerald-600 outline-none font-mono ltr-content"
+              placeholder="مثال: PKCL-8F42K1"
+              className="flex-1 bg-[#F4F7FB] border border-slate-300 rounded-xl px-4 py-3 text-base text-slate-900 focus:bg-white focus:border-[#19A974] outline-none font-mono ltr-content min-h-[48px]"
               required
             />
             <button
               type="submit"
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-xl shadow transition active:scale-95 flex items-center justify-center gap-2"
+              className="bg-[#19A974] hover:bg-[#169163] text-white font-bold px-6 py-3 rounded-xl shadow-sm transition active:scale-95 flex items-center justify-center gap-2 min-h-[48px]"
             >
               <Search className="w-5 h-5" />
-              <span>تصدیق کریں</span>
+              <span>سلپ چیک کریں</span>
             </button>
           </div>
 
-          <div className="text-xs text-slate-400">
-            ہر اصل لوڈ سلپ پر PKCL سے شروع ہونے والا 16 ہندسوں کا منفرد کوڈ موجود ہوتا ہے۔
+          <div className="flex items-center justify-between text-xs pt-1">
+            <span className="text-slate-400">
+              مثال: PKCL-8F42K1 یا مکمل کوڈ درج کریں
+            </span>
+            <button
+              type="button"
+              onClick={handleQrScanTrigger}
+              className="inline-flex items-center gap-1.5 text-[#123A6D] hover:underline font-bold"
+            >
+              <QrCode className="w-4 h-4" />
+              <span>QR Code اسکین کریں</span>
+            </button>
           </div>
         </form>
+
+        {isScanning && (
+          <div className="p-4 bg-blue-50 border border-blue-200 rounded-2xl text-center space-y-2">
+            <QrCode className="w-8 h-8 text-[#123A6D] mx-auto animate-pulse" />
+            <p className="text-xs text-blue-900 font-bold">
+              اپنے موبائل کیمرے سے کسی بھی پرنٹ شدہ یا موبائل لوڈ سلپ کا QR کوڈ اسکین کریں۔
+            </p>
+            <p className="text-[11px] text-blue-700">
+              اسکین کرنے پر سلپ کا پبلک ریکارڈ خود بخود کھل جائے گا۔
+            </p>
+          </div>
+        )}
       </div>
 
-      {/* Verification Result (Mandatory Wording Section 25) */}
+      {/* Verification Result (Section 17) */}
       {result.searched && (
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-200">
           {result.slip ? (
             <div className="bg-emerald-50 border-2 border-emerald-300 rounded-3xl p-5 sm:p-7 space-y-4 shadow-sm text-emerald-950">
               <div className="flex items-center gap-3">
-                <CheckCircle2 className="w-8 h-8 text-emerald-600 flex-shrink-0" />
+                <CheckCircle2 className="w-8 h-8 text-[#19A974] flex-shrink-0" />
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-extrabold text-emerald-900">
-                    یہ سلپ PK Cargo Link پر موجود ہے
-                  </h2>
-                  <p className="text-xs text-emerald-700">
-                    یہ سلپ ایک مصدقہ گڈز اڈا سے جاری کی گئی ہے اور ہمارے ڈیٹا بیس میں محفوظ ہے۔
+                  <h3 className="text-lg sm:text-xl font-extrabold text-emerald-900">
+                    یہ PK Cargo Link کی تصدیق شدہ سلپ ہے
+                  </h3>
+                  <p className="text-xs text-emerald-800">
+                    یہ سلپ مصدقہ گڈز اڈا سے آن لائن جاری کی گئی ہے۔
                   </p>
                 </div>
               </div>
 
-              {/* Quick details */}
-              <div className="bg-white rounded-2xl p-4 border border-emerald-200 space-y-2 text-sm text-slate-800">
-                <div className="flex justify-between border-b border-slate-100 pb-2">
-                  <span className="text-slate-500 text-xs">Slip ID:</span>
-                  <span className="font-mono font-bold text-xs ltr-content">{result.slip.id}</span>
+              {/* Public Slip Summary Card (Section 17) */}
+              <div className="bg-white rounded-2xl p-4 sm:p-5 border border-emerald-200 text-slate-800 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-slate-100 pb-2.5 text-xs">
+                  <span className="font-mono font-bold text-[#123A6D]">سلپ نمبر: {result.slip.id}</span>
+                  <span className="text-slate-500">تاریخ اجرا: {formatUrduDateTime(result.slip.createdAt)}</span>
                 </div>
-                <div className="flex justify-between border-b border-slate-100 pb-2">
-                  <span className="text-slate-500 text-xs">اڈا:</span>
-                  <span className="font-bold">{result.slip.addaName} ({result.slip.addaCity})</span>
-                </div>
-                <div className="flex justify-between border-b border-slate-100 pb-2">
-                  <span className="text-slate-500 text-xs">روٹ:</span>
-                  <span className="font-bold text-emerald-800">{result.slip.loadingCity} ➔ {result.slip.destinationCity}</span>
-                </div>
-                <div className="flex justify-between border-b border-slate-100 pb-2">
-                  <span className="text-slate-500 text-xs">مال و گاڑی:</span>
-                  <span>{result.slip.goods} • {result.slip.weight} • {result.slip.vehicleType}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500 text-xs">تاریخ اجراء:</span>
-                  <span className="text-xs text-slate-600">{formatUrduDateTime(result.slip.createdAt)}</span>
-                </div>
-              </div>
 
-              <div className="pt-2 flex justify-end">
-                <button
-                  onClick={() => onViewSlip(result.slip!)}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl text-sm flex items-center gap-1.5 shadow transition"
-                >
-                  <span>مکمل لوڈ سلپ کھولیں</span>
-                  <ExternalLink className="w-4 h-4" />
-                </button>
+                <div className="grid grid-cols-2 gap-3 py-1">
+                  <div>
+                    <span className="text-xs text-slate-400 block">پک اپ:</span>
+                    <strong className="text-base text-[#08284F]">{result.slip.loadingCity}</strong>
+                    <span className="text-xs text-slate-600 block">{result.slip.loadingLocation}</span>
+                  </div>
+
+                  <div>
+                    <span className="text-xs text-slate-400 block">ڈیلیوری:</span>
+                    <strong className="text-base text-[#19A974]">{result.slip.destinationCity}</strong>
+                    <span className="text-xs text-slate-600 block">{result.slip.destinationLocation}</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs bg-[#F4F7FB] p-3 rounded-xl border border-slate-200">
+                  <div>
+                    <span className="text-slate-400">سامان: </span>
+                    <strong>{result.slip.goods}</strong>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">مقدار: </span>
+                    <strong>{result.slip.quantity || result.slip.weight}</strong>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">گاڑی: </span>
+                    <strong>{result.slip.vehicleType}</strong>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+                  <div className="text-xs">
+                    <span className="text-slate-400">اڈا نام: </span>
+                    <strong className="text-slate-800">{result.slip.addaName} ({result.slip.addaCity})</strong>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => onViewSlip(result.slip!)}
+                    className="inline-flex items-center justify-center gap-1.5 bg-[#123A6D] hover:bg-[#0D2D57] text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-xs transition active:scale-95 min-h-[44px]"
+                  >
+                    <span>مکمل سلپ دیکھیں</span>
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             </div>
           ) : (
-            <div className="bg-red-50 border-2 border-red-300 rounded-3xl p-6 sm:p-8 space-y-3 shadow-sm text-red-950 text-center">
-              <XCircle className="w-12 h-12 text-red-500 mx-auto" />
-              <h2 className="text-2xl font-extrabold text-red-800">
-                سلپ نہیں ملی
-              </h2>
-              <p className="text-sm text-red-700 max-w-md mx-auto leading-relaxed">
-                اس آئی ڈی کے ساتھ کوئی لوڈ سلپ ہمارے ریکارڈ میں موجود نہیں ہے۔ براہ کرم درست Slip ID چیک کر کے دوبارہ کوشش کریں۔
-              </p>
+            <div className="bg-red-50 border-2 border-red-300 rounded-3xl p-5 sm:p-7 space-y-3 shadow-sm text-red-950">
+              <div className="flex items-center gap-3">
+                <XCircle className="w-8 h-8 text-red-600 flex-shrink-0" />
+                <div>
+                  <h3 className="text-lg sm:text-xl font-extrabold text-red-900">
+                    یہ سلپ نمبر درست نہیں یا دستیاب نہیں۔
+                  </h3>
+                  <p className="text-xs text-red-700">
+                    براہ کرم سلپ نمبر چیک کریں اور دوبارہ درج کریں۔
+                  </p>
+                </div>
+              </div>
             </div>
           )}
         </div>

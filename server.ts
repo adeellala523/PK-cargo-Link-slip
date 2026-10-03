@@ -301,10 +301,10 @@ app.get('/api/slip-og-image/:id', async (req: Request, res: Response) => {
       <rect width="600" height="600" rx="30" fill="url(#bgGrad)"/>
       <rect x="15" y="15" width="570" height="570" rx="25" fill="none" stroke="#10B981" stroke-width="6"/>
 
-      <!-- Header Ribbon -->
+      <!-- Header Ribbon with Bismillah -->
       <path d="M30 40 L570 40 L550 85 L50 85 Z" fill="#10B981"/>
       <text x="300" y="70" font-family="Arial, sans-serif" font-weight="900" font-size="22" fill="#FFFFFF" text-anchor="middle">
-        ★ مصدقہ گڈز ٹرانسپورٹ اڈا ★
+        بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
       </text>
 
       <!-- Adda Name in Massive Bold Text -->
