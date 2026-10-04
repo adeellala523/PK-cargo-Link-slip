@@ -52,12 +52,16 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
   const [pinError, setPinError] = useState(false);
   const [showPin, setShowPin] = useState(false);
   const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
-  const [activeTab, setActiveTab] = useState<'users' | 'quick_slip' | 'slips' | 'payment_settings' | 'ads' | 'backup'>('quick_slip');
+  const [activeTab, setActiveTab] = useState<'users' | 'quick_slip' | 'slips' | 'payment_settings' | 'subscriptions' | 'ads' | 'backup'>('quick_slip');
   const [searchFilter, setSearchFilter] = useState('');
 
   // Users state
   const [users, setUsers] = useState<UserAccount[]>(StorageService.getUsers());
   const [selectedScreenshot, setSelectedScreenshot] = useState<string | null>(null);
+
+  // AI & Payment Subscriptions state
+  const [subscriptionsList, setSubscriptionsList] = useState<any[]>([]);
+  const [isRefreshingSubs, setIsRefreshingSubs] = useState(false);
 
   // Payment Settings state
   const [paymentSettings, setPaymentSettings] = useState<PaymentSettings>(StorageService.getPaymentSettings());
@@ -84,12 +88,40 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
     setTimeout(() => setSettingsSavedToast(false), 3000);
   };
 
-  // Sync users with server on open or tab change
+  const loadSubscriptions = async () => {
+    setIsRefreshingSubs(true);
+    try {
+      const list = await StorageService.fetchAllSubscriptions();
+      setSubscriptionsList(list);
+    } finally {
+      setIsRefreshingSubs(false);
+    }
+  };
+
+  // Sync users and subscriptions with server on open or tab change
   React.useEffect(() => {
     if (isAuthenticated) {
       StorageService.syncUsersWithServer().then((u) => setUsers(u));
+      loadSubscriptions();
     }
   }, [isAuthenticated, activeTab]);
+
+  const handleApproveSubscription = async (phone: string, tid: string) => {
+    const ok = await StorageService.approveSubscription(phone, tid, 30);
+    if (ok) {
+      await loadSubscriptions();
+      const updated = await StorageService.syncUsersWithServer();
+      setUsers(updated);
+    }
+  };
+
+  const handleRejectSubscription = async (phone: string, tid: string) => {
+    const reason = prompt('منسوخ کرنے کی وجہ لکھیں (اختیاری):', 'ادائیگی کی رقم جاز کیش کھاتے میں موصول نہیں ہوئی۔');
+    const ok = await StorageService.rejectSubscription(phone, tid, reason || undefined);
+    if (ok) {
+      await loadSubscriptions();
+    }
+  };
 
   const handleApproveUser = async (userId: string) => {
     await StorageService.updateUserStatus(userId, 'active', 30);
@@ -251,6 +283,18 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
         >
           <CreditCard className="w-4 h-4" />
           <span>ماہانہ فیس و پیمنٹ سیٹنگز</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('subscriptions')}
+          className={`flex-1 py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 ${
+            activeTab === 'subscriptions' 
+              ? 'bg-amber-600 text-white shadow-lg font-bold' 
+              : 'text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-300'
+          }`}
+        >
+          <CheckCircle2 className="w-4 h-4 text-amber-500" />
+          <span>💳 AI و فیس منظوری ({subscriptionsList.filter(s => s.status === 'pending').length})</span>
         </button>
 
         <button
@@ -660,6 +704,127 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
               سیٹنگز محفوظ کریں
             </button>
           </form>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* TAB 2.5: AI & JAZZCASH PAYMENT SUBSCRIPTIONS APPROVAL */}
+      {/* ======================================================== */}
+      {activeTab === 'subscriptions' && (
+        <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-200 space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div>
+              <h2 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
+                <span>💳 AI و ماہانہ فیس پیمنٹ تصدیق درخواستیں</span>
+                <span className="bg-amber-100 text-amber-900 border border-amber-300 text-xs px-2.5 py-0.5 rounded-full font-bold">
+                  {subscriptionsList.filter(s => s.status === 'pending').length} زیر التوا
+                </span>
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                جیسے ہی آپ 30 دن کی منظوری دیں گے، صارف کا پیکیج لائیو چالو ہو جائے گا اور AI فعال ہو جائے گی۔
+              </p>
+            </div>
+            <button
+              onClick={loadSubscriptions}
+              disabled={isRefreshingSubs}
+              className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshingSubs ? 'animate-spin' : ''}`} />
+              <span>ریفریش کریں</span>
+            </button>
+          </div>
+
+          {subscriptionsList.length === 0 ? (
+            <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200 space-y-2">
+              <CreditCard className="w-8 h-8 text-slate-400 mx-auto" />
+              <p className="text-sm font-bold text-slate-600">کوئی نئی ادائیگی کی درخواست نہیں آئی۔</p>
+              <p className="text-xs text-slate-400">صارفین کی طرف سے جمع کروائی گئی جاز کیش رسیدیں یہاں لائیو دکھیں گی۔</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {subscriptionsList.map((sub, idx) => (
+                <div
+                  key={sub.id || idx}
+                  className={`p-4 rounded-2xl border transition flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${
+                    sub.status === 'pending'
+                      ? 'bg-amber-50/60 border-amber-300'
+                      : sub.status === 'verified'
+                      ? 'bg-emerald-50/60 border-emerald-300'
+                      : 'bg-red-50/60 border-red-200'
+                  }`}
+                >
+                  <div className="space-y-1.5 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-extrabold text-slate-900 text-sm">{sub.phone}</span>
+                      <span className="bg-slate-200 text-slate-800 text-[10px] px-2 py-0.5 rounded-md font-mono">
+                        {sub.userType === 'driver' ? '🚛 ڈرائیور' : '🏢 اڈا منیجر'}
+                      </span>
+                      {sub.status === 'pending' && (
+                        <span className="bg-amber-500 text-slate-950 font-bold text-[10px] px-2 py-0.5 rounded-full animate-pulse">
+                          🟡 زیر التوا (Pending)
+                        </span>
+                      )}
+                      {sub.status === 'verified' && (
+                        <span className="bg-emerald-600 text-white font-bold text-[10px] px-2 py-0.5 rounded-full">
+                          🟢 فعال (Verified 30 Days)
+                        </span>
+                      )}
+                      {sub.status === 'rejected' && (
+                        <span className="bg-red-600 text-white font-bold text-[10px] px-2 py-0.5 rounded-full">
+                          🔴 منسوخ (Rejected)
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="text-xs text-slate-600 space-y-0.5 font-sans">
+                      <div><strong className="text-slate-800">TID / رسید نمبر:</strong> <span className="font-mono text-emerald-800 font-bold">{sub.tid || 'TID موجود نہیں'}</span></div>
+                      <div><strong className="text-slate-800">تاریخ:</strong> {sub.requestedAt ? new Date(sub.requestedAt).toLocaleString('ur-PK') : 'تازہ'}</div>
+                      {sub.notes && <div><strong className="text-slate-800">نوٹ:</strong> {sub.notes}</div>}
+                    </div>
+
+                    {sub.screenshotUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedScreenshot(sub.screenshotUrl)}
+                        className="text-xs text-emerald-700 underline font-bold flex items-center gap-1 cursor-pointer pt-1"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>پیمنٹ رسید کا سکرین شاٹ دیکھیں</span>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    {sub.status === 'pending' ? (
+                      <>
+                        <button
+                          onClick={() => handleApproveSubscription(sub.phone, sub.tid)}
+                          className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow transition cursor-pointer flex items-center justify-center gap-1"
+                        >
+                          <Check className="w-4 h-4" />
+                          <span>30 دن کی منظوری دیں</span>
+                        </button>
+                        <button
+                          onClick={() => handleRejectSubscription(sub.phone, sub.tid)}
+                          className="flex-1 sm:flex-none bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-2.5 rounded-xl transition cursor-pointer flex items-center justify-center gap-1"
+                        >
+                          <Ban className="w-4 h-4" />
+                          <span>منسوخ</span>
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => handleApproveSubscription(sub.phone, sub.tid)}
+                        className="bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold px-3 py-2 rounded-xl transition cursor-pointer"
+                      >
+                        دوبارہ 30 دن بڑھائیں
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

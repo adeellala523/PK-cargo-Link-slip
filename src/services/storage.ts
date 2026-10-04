@@ -525,7 +525,65 @@ export const StorageService = {
     }
   },
 
-  // Auth / Session State (Adda Manager)
+  // Subscription & Payment Claims API Methods for Admin Panel
+  async fetchAllSubscriptions(): Promise<any[]> {
+    try {
+      const res = await fetch('/api/admin/subscriptions/all', {
+        headers: { 'X-Admin-PIN': 'pkadmin786' }
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {
+      console.warn('Failed fetching subscriptions', e);
+    }
+    return [];
+  },
+
+  async approveSubscription(phone: string, tid: string, days: number = 30): Promise<boolean> {
+    try {
+      const res = await fetch('/api/admin/subscriptions/approve', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-PIN': 'pkadmin786'
+        },
+        body: JSON.stringify({ phone, tid, days })
+      });
+      if (res.ok) {
+        // Also activate user status if matching user account exists
+        const cleanP = phone.replace(/[^0-9]/g, '');
+        if (cleanP) {
+          const users = this.getUsers();
+          const user = users.find(u => u.phone.replace(/[^0-9]/g, '') === cleanP);
+          if (user) {
+            await this.updateUserStatus(user.id, 'active', days);
+          }
+        }
+        return true;
+      }
+    } catch (e) {
+      console.error('Failed approving subscription', e);
+    }
+    return false;
+  },
+
+  async rejectSubscription(phone: string, tid: string, reason?: string): Promise<boolean> {
+    try {
+      const res = await fetch('/api/admin/subscriptions/reject', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-PIN': 'pkadmin786'
+        },
+        body: JSON.stringify({ phone, tid, reason })
+      });
+      return res.ok;
+    } catch (e) {
+      console.error('Failed rejecting subscription', e);
+      return false;
+    }
+  },
   isLoggedIn(): boolean {
     return localStorage.getItem(STORAGE_KEYS.IS_LOGGED_IN) === 'true';
   },

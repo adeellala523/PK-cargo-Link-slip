@@ -345,6 +345,16 @@ app.post('/api/subscriptions/claim', (req: Request, res: Response) => {
   res.json({ success: true, status: 'pending', message: 'ادائیگی کی درخواست موصول ہو گئی۔ اڈمن سے واٹس ایپ (03298111391) پر تصدیق کے بعد 30 دن کی سبسکرپشن فعال ہو جائے گی۔' });
 });
 
+// Admin fetch all subscription claims (pending, verified, rejected)
+app.get('/api/admin/subscriptions/all', (req: Request, res: Response) => {
+  if (!verifyAdminAuth(req)) {
+    res.status(403).json({ error: '403 Forbidden: Admin authorization required' });
+    return;
+  }
+  const subs = getStoredSubscriptions();
+  res.json(subs);
+});
+
 // Admin approves payment claim (Status: verified, 30 days)
 app.post('/api/admin/subscriptions/approve', (req: Request, res: Response) => {
   if (!verifyAdminAuth(req)) {
