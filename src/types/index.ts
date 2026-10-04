@@ -212,6 +212,8 @@ export interface PaymentSettings {
   monthlyFee: number;
   jazzcashNumber: string;
   jazzcashTitle: string;
+  jazzcashTillId?: string;
+  jazzcashQrImage?: string;
   easypaisaNumber: string;
   easypaisaTitle: string;
   bankName: string;

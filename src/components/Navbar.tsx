@@ -136,6 +136,15 @@ export const Navbar: React.FC<NavbarProps> = ({
               ہمارے بارے میں
             </button>
             <button
+              onClick={() => setCurrentTab('payment-settings')}
+              className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-colors flex items-center gap-1 ${
+                currentTab === 'payment-settings' ? 'bg-[#19A974] text-white' : 'text-amber-300 hover:bg-white/10'
+              }`}
+            >
+              <span>🎙️ AI پیمنٹ</span>
+            </button>
+
+            <button
               onClick={() => setCurrentTab('contact')}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 currentTab === 'contact' ? 'bg-[#08284F] text-white' : 'text-slate-200 hover:bg-white/10'
@@ -272,6 +281,17 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               ہمارے بارے میں
+            </button>
+            <button
+              onClick={() => { setCurrentTab('payment-settings'); setMenuOpen(false); }}
+              className={`w-full text-right px-3 py-2.5 rounded-xl text-base font-bold min-h-[44px] flex items-center justify-between ${
+                currentTab === 'payment-settings' ? 'bg-[#19A974] text-white' : 'text-amber-300 hover:bg-white/5'
+              }`}
+            >
+              <span>🎙️ AI وائس پیمنٹ</span>
+              <span className="bg-amber-500/30 text-amber-200 text-xs px-2 py-0.5 rounded-full font-nafees">
+                500/ماہ
+              </span>
             </button>
             <button
               onClick={() => { setCurrentTab('contact'); setMenuOpen(false); }}

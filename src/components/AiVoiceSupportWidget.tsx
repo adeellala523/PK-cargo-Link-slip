@@ -32,6 +32,7 @@ interface AiVoiceSupportWidgetProps {
   onOpenCreateSlip?: () => void;
   onNavigateToTrucks?: () => void;
   onNavigateToDriverPortal?: () => void;
+  onOpenPaymentSettings?: () => void;
 }
 
 export const AiVoiceSupportWidget: React.FC<AiVoiceSupportWidgetProps> = ({
@@ -40,6 +41,7 @@ export const AiVoiceSupportWidget: React.FC<AiVoiceSupportWidgetProps> = ({
   onOpenCreateSlip,
   onNavigateToTrucks,
   onNavigateToDriverPortal,
+  onOpenPaymentSettings,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [subscription, setSubscription] = useState(() => StorageService.getAiVoiceSubscription());
@@ -191,11 +193,21 @@ export const AiVoiceSupportWidget: React.FC<AiVoiceSupportWidgetProps> = ({
     }
 
     try {
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      }
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'ur-PK';
-      utterance.rate = 0.95;
+      utterance.rate = 0.92;
       utterance.pitch = 1.0;
+
+      // Select Urdu / Pakistani voice if available in browser
+      const voices = window.speechSynthesis.getVoices();
+      const urduVoice = voices.find(v => v.lang.includes('ur') || v.lang.includes('PK') || v.name.toLowerCase().includes('urdu'));
+      if (urduVoice) {
+        utterance.voice = urduVoice;
+      }
 
       utterance.onstart = () => setIsSpeaking(true);
       utterance.onend = () => setIsSpeaking(false);
@@ -298,7 +310,81 @@ export const AiVoiceSupportWidget: React.FC<AiVoiceSupportWidgetProps> = ({
     setIsCallActive(false);
   };
 
-  // Process Real Voice Query (Zero Fake Data)
+  // Deterministic Local Real Data Processor (Works 100% on Static / Hosted Environments)
+  const processVoiceQueryLocally = (queryText: string) => {
+    const text = queryText.toLowerCase();
+    const PAKISTAN_CITIES = [
+      'کراچی', 'لاہور', 'اسلام آباد', 'پشاور', 'کوئٹہ', 'ملتان', 'فیصل آباد', 'گجرانوالہ',
+      'راولپنڈی', 'حیدرآباد', 'سکھر', 'رحیم یار خان', 'بہاولپور', 'سیالکوٹ', 'سرگودھا',
+      'مردان', 'سوات', 'صوابی', 'ڈیرہ غازی خان', 'اوکاڑہ', 'خانیوال', 'ساہیوال', 'شیخوپورہ'
+    ];
+
+    let fromCity = '';
+    let toCity = '';
+
+    for (const city of PAKISTAN_CITIES) {
+      if (text.includes(city)) {
+        if (!fromCity) fromCity = city;
+        else if (!toCity && city !== fromCity) toCity = city;
+      }
+    }
+
+    const activeSlips = slips.filter(s => s.status === 'active');
+    const availableTrucks = StorageService.getAvailableTrucks();
+    let matchedSlips: LoadSlip[] = [];
+
+    if (fromCity || toCity) {
+      matchedSlips = activeSlips.filter(s => {
+        const matchFrom = !fromCity || (s.loadingCity && (s.loadingCity.includes(fromCity) || fromCity.includes(s.loadingCity)));
+        const matchTo = !toCity || (s.destinationCity && (s.destinationCity.includes(toCity) || toCity.includes(s.destinationCity)));
+        return matchFrom && matchTo;
+      });
+    } else if (text.includes('لوڈ') || text.includes('مال') || text.includes('load')) {
+      matchedSlips = activeSlips;
+    }
+
+    let spokenUrdu = '';
+    let action: AiVoiceCallAction = { type: 'info' };
+
+    if (text.includes('اکاؤنٹ') || text.includes('رجسٹر')) {
+      spokenUrdu = 'استاد جی! ڈرائیور پورٹل کھول دیا گیا ہے، یہاں سے اپنا نیا اکاؤنٹ بنائیں یا لاگ ان کریں۔';
+      action = { type: 'register_driver' };
+    } else if (text.includes('سلپ') || text.includes('slip')) {
+      spokenUrdu = 'جی اڈا منیجر صاحب! نئی لوڈ سلپ بنانے کا فارم کھول دیا گیا ہے۔';
+      action = { type: 'create_slip' };
+    } else if ((text.includes('گاڑی') || text.includes('خالی') || text.includes('ٹرک')) && !text.includes('لوڈ') && !text.includes('مال')) {
+      if (text.includes('لسٹ') || text.includes('ایڈ')) {
+        spokenUrdu = 'استاد جی! اپنی گاڑی مفت لسٹ کرنے کا فارم کھول دیا گیا ہے۔';
+        action = { type: 'register_truck' };
+      } else {
+        const matchedTrucks = availableTrucks.filter(t => !fromCity || (t.currentCity && t.currentCity.includes(fromCity)));
+        if (matchedTrucks.length === 0) {
+          spokenUrdu = fromCity 
+            ? `استاد جی! اس وقت ${fromCity} میں کوئی خالی گاڑی دستیاب نہیں ہے۔ آپ اپنی گاڑی لسٹ کر سکتے ہیں۔`
+            : `استاد جی! اس وقت سسٹم میں کوئی خالی گاڑی نہیں ہے۔`;
+        } else {
+          const first = matchedTrucks[0];
+          spokenUrdu = `استاد جی! ${matchedTrucks.length} خالی گاڑیاں موجود ہیں: ${first.driverOrOwnerName} (${first.vehicleType}) بمقام ${first.currentCity}، فون: ${first.phone}۔`;
+        }
+        action = { type: 'register_truck' };
+      }
+    } else {
+      if (matchedSlips.length === 0) {
+        const routeStr = fromCity && toCity ? `${fromCity} سے ${toCity}` : fromCity ? `${fromCity}` : 'اس روٹ';
+        spokenUrdu = `استاد جی! معذرت، اس وقت سسٹم میں ${routeStr} کا کوئی تصدیق شدہ لوڈ دستیاب نہیں ہے۔ جیسے ہی کوئی اڈا لوڈ پوسٹ کرے گا آپ کو مل جائے گا۔`;
+        action = { type: 'search_loads', params: { loadingCity: fromCity, destinationCity: toCity, found: false, count: 0 } };
+      } else {
+        const first = matchedSlips[0];
+        const routeStr = `${first.loadingCity} تا ${first.destinationCity}`;
+        spokenUrdu = `استاد جی! ${routeStr} کے لیے ${matchedSlips.length} اصلی لوڈ دستیاب ہیں: ${first.addaName} (${first.addaCity}) پر ${first.goods} کا مال ہے، گاڑی: ${first.vehicleType}، رابطہ نمبر: ${first.primaryPhone}۔`;
+        action = { type: 'search_loads', params: { loadingCity: fromCity || first.loadingCity, destinationCity: toCity || first.destinationCity, found: true, count: matchedSlips.length, matchedSlipIds: [first.id] } };
+      }
+    }
+
+    return { spokenUrdu, action, matchedSlips };
+  };
+
+  // Process Real Voice Query (Zero Fake Data & 100% Hosted Network Resilience)
   const handleProcessVoiceQuery = async (queryText: string) => {
     if (!queryText.trim()) return;
 
@@ -324,6 +410,10 @@ export const AiVoiceSupportWidget: React.FC<AiVoiceSupportWidgetProps> = ({
     setIsAiProcessing(true);
     setMicError(null);
 
+    let aiSpoken = '';
+    let action: AiVoiceCallAction = { type: 'info' };
+    let matched: LoadSlip[] = [];
+
     try {
       const activeSlips = slips.filter((s) => s.status === 'active');
       const availableTrucks = StorageService.getAvailableTrucks();
@@ -338,49 +428,53 @@ export const AiVoiceSupportWidget: React.FC<AiVoiceSupportWidgetProps> = ({
         }),
       });
 
-      const data = await response.json();
-      const aiSpoken = data.spokenUrdu || 'جی استاد جی، میں نے آپ کی بات سمجھ لی ہے۔';
-      const action: AiVoiceCallAction = data.action || { type: 'info' };
-      const matched = Array.isArray(data.matchedSlips) ? data.matchedSlips : [];
-
-      setLastMatchedSlips(matched);
-
-      const aiMsg: AiVoiceMessage = {
-        id: `ai-${Date.now()}`,
-        sender: 'ai',
-        text: aiSpoken,
-        timestamp: new Date().toISOString(),
-        action,
-      };
-
-      setMessages((prev) => [...prev, aiMsg]);
-      speakUrduText(aiSpoken);
-
-      // Actions execution
-      if (action.type === 'search_loads' && action.params?.found && onNavigateToSearchWithQuery) {
-        const from = action.params?.loadingCity || '';
-        const to = action.params?.destinationCity || '';
-        onNavigateToSearchWithQuery(from, to);
-      } else if (action.type === 'register_truck' && onNavigateToTrucks) {
-        onNavigateToTrucks();
-      } else if (action.type === 'register_driver' && onNavigateToDriverPortal) {
-        onNavigateToDriverPortal();
-      } else if (action.type === 'create_slip' && onOpenCreateSlip) {
-        onOpenCreateSlip();
+      if (response.ok) {
+        const data = await response.json().catch(() => null);
+        if (data && data.spokenUrdu) {
+          aiSpoken = data.spokenUrdu;
+          action = data.action || { type: 'info' };
+          matched = Array.isArray(data.matchedSlips) ? data.matchedSlips : [];
+        }
       }
-    } catch (err) {
-      console.error('AI call processing error:', err);
-      const fallbackMsg: AiVoiceMessage = {
-        id: `ai-err-${Date.now()}`,
-        sender: 'ai',
-        text: 'استاد جی! میں نے سسٹم میں موجود اصلی لوڈز چیک کر لیے ہیں، اسکرین پر تمام دستیاب لوڈز کھلے ہیں۔',
-        timestamp: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, fallbackMsg]);
-      speakUrduText(fallbackMsg.text);
-    } finally {
-      setIsAiProcessing(false);
+    } catch {
+      // Backend fetch failed (e.g. static host/CDN routing) -> fallback to client-side deterministic processor
     }
+
+    // Fallback if backend returned empty or failed
+    if (!aiSpoken) {
+      const localResult = processVoiceQueryLocally(queryText.trim());
+      aiSpoken = localResult.spokenUrdu;
+      action = localResult.action;
+      matched = localResult.matchedSlips;
+    }
+
+    setLastMatchedSlips(matched);
+
+    const aiMsg: AiVoiceMessage = {
+      id: `ai-${Date.now()}`,
+      sender: 'ai',
+      text: aiSpoken,
+      timestamp: new Date().toISOString(),
+      action,
+    };
+
+    setMessages((prev) => [...prev, aiMsg]);
+    speakUrduText(aiSpoken);
+
+    // Actions execution
+    if (action.type === 'search_loads' && action.params?.found && onNavigateToSearchWithQuery) {
+      const from = action.params?.loadingCity || '';
+      const to = action.params?.destinationCity || '';
+      onNavigateToSearchWithQuery(from, to);
+    } else if (action.type === 'register_truck' && onNavigateToTrucks) {
+      onNavigateToTrucks();
+    } else if (action.type === 'register_driver' && onNavigateToDriverPortal) {
+      onNavigateToDriverPortal();
+    } else if (action.type === 'create_slip' && onOpenCreateSlip) {
+      onOpenCreateSlip();
+    }
+
+    setIsAiProcessing(false);
   };
 
   // 1-Day Free Trial Activation
@@ -548,15 +642,29 @@ export const AiVoiceSupportWidget: React.FC<AiVoiceSupportWidgetProps> = ({
                     </div>
 
                     {/* Quick Free Trial Button */}
-                    <div className="pt-2">
+                    <div className="pt-2 space-y-2">
                       <button
                         type="button"
                         onClick={handleStartFreeTrial}
-                        className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white py-3 px-4 rounded-2xl font-bold text-sm shadow-md active:scale-95 transition flex items-center justify-center gap-2"
+                        className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white py-3 px-4 rounded-2xl font-bold text-sm shadow-md active:scale-95 transition flex items-center justify-center gap-2 cursor-pointer"
                       >
                         <Zap className="w-4 h-4 text-amber-300" />
                         <span>🎁 1 دن کا مفت ٹرائل آزمائیں (Start Free Trial)</span>
                       </button>
+
+                      {onOpenPaymentSettings && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsOpen(false);
+                            onOpenPaymentSettings();
+                          }}
+                          className="w-full bg-[#123A6D] hover:bg-[#0D2D57] text-white py-2.5 px-4 rounded-2xl font-bold text-xs transition flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                          <CreditCard className="w-4 h-4 text-amber-300" />
+                          <span>مکمل پیمنٹ پورٹل و ہسٹری دیکھیں (Payment Portal)</span>
+                        </button>
+                      )}
                     </div>
                   </div>
 

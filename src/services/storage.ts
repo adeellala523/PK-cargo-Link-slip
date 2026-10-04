@@ -42,18 +42,20 @@ export const DEFAULT_ADDA: AddaProfile = {
 // Zero demo slips (clean state, demo data removed as requested)
 export const INITIAL_SLIPS: LoadSlip[] = [];
 
-// Default Payment Settings (Disabled by default as requested: "yeh abhi admin se disabled rkhna mein enable krlon ga")
+// Default Payment Settings
 export const DEFAULT_PAYMENT_SETTINGS: PaymentSettings = {
   isPaymentRequired: false,
-  monthlyFee: 1500,
+  monthlyFee: 500,
   jazzcashNumber: '0300-1234567',
-  jazzcashTitle: 'محمد عادل',
+  jazzcashTitle: 'PK Cargo Link Business',
+  jazzcashTillId: '031294',
+  jazzcashQrImage: 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=JazzCashTill031294-PKCargoLink',
   easypaisaNumber: '0300-1234567',
-  easypaisaTitle: 'محمد عادل',
+  easypaisaTitle: 'PK Cargo Link Business',
   bankName: 'حبیب بینک لمیٹڈ (HBL)',
   bankAccountNumber: '0010023456789012',
   bankAccountTitle: 'PK Cargo Link',
-  instructions: 'براہ کرم ماہانہ فیس ادا کر کے رسید (Screenshot) اور Transaction ID درج کریں۔ ایڈمن کی تصدیق کے بعد اکاؤنٹ فعال ہو جائے گا۔',
+  instructions: 'براہ کرم جاز کیش بزنس کیو آر کوڈ اسکین کر کے یا 500 روپے کا مینوئل ٹرانسفر کر کے ٹرانزیکشن ID (TID) درج کریں۔',
 };
 
 export const StorageService = {
@@ -1312,36 +1314,82 @@ export const StorageService = {
   },
 
   // -------------------------------------------------------------
-  // AI Voice Call 500 PKR Monthly Subscription
+  // AI Voice Call 500 PKR Monthly Subscription & Payment Gateway
   // -------------------------------------------------------------
-  getAiVoiceSubscription(): { isSubscribed: boolean; isTrial: boolean; expiresAt?: string; planFee: number } {
+  getAiVoiceSubscription(): { 
+    isSubscribed: boolean; 
+    isTrial: boolean; 
+    status: 'paid' | 'trial' | 'expired' | 'none';
+    expiresAt?: string; 
+    subscribedAt?: string;
+    paymentMethod?: string;
+    transactionId?: string;
+    planFee: number;
+    daysRemaining: number;
+    history: Array<{ id: string; date: string; method: string; amount: number; tid: string; status: string }>;
+  } {
+    let history: Array<any> = [];
+    try {
+      const hData = localStorage.getItem('pkcargolink_ai_voice_history_v1');
+      if (hData) history = JSON.parse(hData);
+    } catch {}
+
     try {
       const data = localStorage.getItem('pkcargolink_ai_voice_sub_v1');
       if (data) {
         const sub = JSON.parse(data);
         if (sub && sub.expiresAt) {
-          const isExpired = new Date(sub.expiresAt).getTime() < Date.now();
-          if (!isExpired) {
+          const expiresMs = new Date(sub.expiresAt).getTime();
+          const nowMs = Date.now();
+          const diffMs = expiresMs - nowMs;
+          const daysRemaining = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+
+          if (diffMs > 0) {
             return {
               isSubscribed: true,
               isTrial: !!sub.isTrial,
+              status: sub.isTrial ? 'trial' : 'paid',
               expiresAt: sub.expiresAt,
+              subscribedAt: sub.subscribedAt,
+              paymentMethod: sub.paymentMethod || 'jazzcash',
+              transactionId: sub.transactionId || 'TID-1001',
               planFee: 500,
+              daysRemaining,
+              history,
+            };
+          } else {
+            return {
+              isSubscribed: false,
+              isTrial: false,
+              status: 'expired',
+              expiresAt: sub.expiresAt,
+              subscribedAt: sub.subscribedAt,
+              paymentMethod: sub.paymentMethod,
+              transactionId: sub.transactionId,
+              planFee: 500,
+              daysRemaining: 0,
+              history,
             };
           }
         }
       }
     } catch {}
+
     return {
       isSubscribed: false,
       isTrial: false,
+      status: 'none',
       planFee: 500,
+      daysRemaining: 0,
+      history,
     };
   },
 
-  activateAiVoiceSubscription(days: number = 30, paymentMethod: 'jazzcash' | 'easypaisa' | 'bank' | 'trial' = 'trial', transactionId?: string): boolean {
+  activateAiVoiceSubscription(days: number = 30, paymentMethod: 'jazzcash' | 'easypaisa' | 'bank' | 'card' | 'trial' = 'trial', transactionId?: string): boolean {
     const now = new Date();
     const expires = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+    const tid = transactionId || (paymentMethod === 'trial' ? 'FREE-TRIAL-1DAY' : `${paymentMethod.toUpperCase().slice(0, 2)}-${Math.floor(100000 + Math.random() * 900000)}`);
+    
     const sub = {
       isSubscribed: true,
       isTrial: paymentMethod === 'trial',
@@ -1349,10 +1397,29 @@ export const StorageService = {
       subscribedAt: now.toISOString(),
       expiresAt: expires.toISOString(),
       paymentMethod,
-      transactionId: transactionId || (paymentMethod === 'trial' ? 'TRIAL-FREE-1DAY' : `TID-${Date.now().toString().slice(-6)}`),
+      transactionId: tid,
     };
+
     try {
       localStorage.setItem('pkcargolink_ai_voice_sub_v1', JSON.stringify(sub));
+
+      // Append to history log
+      let history: Array<any> = [];
+      try {
+        const hData = localStorage.getItem('pkcargolink_ai_voice_history_v1');
+        if (hData) history = JSON.parse(hData);
+      } catch {}
+
+      history.unshift({
+        id: `tx-${Date.now()}`,
+        date: now.toISOString(),
+        method: paymentMethod === 'trial' ? '1-Day Free Trial' : paymentMethod.toUpperCase(),
+        amount: paymentMethod === 'trial' ? 0 : 500,
+        tid,
+        status: 'Completed',
+      });
+
+      localStorage.setItem('pkcargolink_ai_voice_history_v1', JSON.stringify(history.slice(0, 20)));
       return true;
     } catch {
       return false;

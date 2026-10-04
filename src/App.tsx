@@ -23,6 +23,7 @@ import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { NotificationCenterModal } from './components/NotificationCenterModal';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { AiVoiceSupportWidget } from './components/AiVoiceSupportWidget';
+import { PaymentSettings } from './components/PaymentSettings';
 import { StorageService } from './services/storage';
 import { LoadSlip, AddaProfile, WhatsAppGroup } from './types';
 import { updateOpenGraphMetaTags } from './utils/formatters';
@@ -586,6 +587,16 @@ export default function App() {
           <ContactUsView />
         )}
 
+        {/* 14. AI Voice Payment & Subscription Settings Page */}
+        {currentTab === 'payment-settings' && (
+          <PaymentSettings
+            onBack={() => navigateTo('home')}
+            onSubscriptionUpdated={() => {
+              // Trigger UI refresh
+            }}
+          />
+        )}
+
         {/* 14. Privacy Policy Page */}
         {currentTab === 'privacy' && (
           <PrivacyPolicyView />
@@ -633,6 +644,7 @@ export default function App() {
         onOpenCreateSlip={() => handleOpenCreateModal()}
         onNavigateToTrucks={() => navigateTo('trucks')}
         onNavigateToDriverPortal={() => navigateTo('driver')}
+        onOpenPaymentSettings={() => navigateTo('payment-settings')}
       />
 
       {/* General Site Footer */}
