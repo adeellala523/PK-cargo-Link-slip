@@ -105,6 +105,29 @@ export const GeminiLiveVoiceWidget: React.FC<GeminiLiveVoiceWidgetProps> = ({
     } else {
       const userPhone = StorageService.getCurrentUserPhone();
       engineRef.current?.startSession(userPhone);
+
+      // Browser Web Speech Recognition Fallback for Hosted Environments
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        try {
+          const recognition = new SpeechRecognition();
+          recognition.lang = 'ur-PK';
+          recognition.interimResults = false;
+          recognition.maxAlternatives = 1;
+
+          recognition.onresult = (e: any) => {
+            const transcript = e.results[0][0].transcript;
+            if (transcript) {
+              setUserTranscript(transcript);
+              engineRef.current?.sendTextMessage(transcript);
+            }
+          };
+
+          recognition.start();
+        } catch (err) {
+          console.warn('Browser SpeechRecognition active or unsupported', err);
+        }
+      }
     }
   };
 

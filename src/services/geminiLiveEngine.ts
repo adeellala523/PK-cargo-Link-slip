@@ -197,9 +197,48 @@ export class GeminiLiveEngine {
     }
   }
 
-  public sendTextMessage(text: string) {
+  public async sendTextMessage(text: string) {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify({ type: 'text', query: text }));
+    } else {
+      // HTTP REST Failover for Hosted Website & Cloud Run Proxy
+      this.setState('connecting', 'تلاش کیا جا رہا ہے...');
+      try {
+        const response = await fetch('/api/ai-voice-call', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userSpeech: text }),
+        });
+        const data = await response.json();
+        if (data.replyText) {
+          this.callbacks.onTranscriptUpdate(text, data.replyText);
+          this.setState('speaking', 'PK Cargo Assistant بول رہا ہے...');
+
+          // Speak using Web Speech API Utterance
+          if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(data.replyText);
+            utterance.lang = 'ur-PK';
+            utterance.onend = () => {
+              this.setState('listening', '💬 اپنا کام لکھیں یا مائیک استعمال کریں');
+            };
+            window.speechSynthesis.speak(utterance);
+          } else {
+            this.setState('listening', '💬 اپنا کام لکھیں یا مائیک استعمال کریں');
+          }
+
+          if (data.action && this.callbacks.onActionTriggered) {
+            this.callbacks.onActionTriggered(data.action);
+          } else if (data.matchedSlips && this.callbacks.onActionTriggered) {
+            this.callbacks.onActionTriggered({ type: 'search_loads', params: { found: true } });
+          }
+        } else {
+          this.setState('error', 'جواب موصول نہیں ہوا۔ دوبارہ کوشش کریں۔');
+        }
+      } catch (err) {
+        console.error('AI Voice Call HTTP Failover Error', err);
+        this.setState('error', 'ہوسٹنگ سرور سے رابطہ قائم نہیں ہو سکا۔');
+      }
     }
   }
 
