@@ -812,18 +812,39 @@ async function startServer() {
 
         if (data.type === 'text' && data.query) {
           const queryText = data.query.trim();
-          const lower = queryText.toLowerCase();
           const allSlips = getStoredSlips().filter((s: any) => s.status === 'active');
 
-          let matched = allSlips;
-          if (lower.includes('لاہور')) matched = matched.filter((s: any) => s.loadingCity?.includes('لاہور') || s.destinationCity?.includes('لاہور'));
-          if (lower.includes('کراچی')) matched = matched.filter((s: any) => s.loadingCity?.includes('کراچی') || s.destinationCity?.includes('کراچی'));
-          if (lower.includes('ملتان')) matched = matched.filter((s: any) => s.loadingCity?.includes('ملتان') || s.destinationCity?.includes('ملتان'));
+          let replyText = '';
+          if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim().length > 10) {
+            try {
+              const activeSlipsSummary = allSlips.slice(0, 10).map((s: any, idx: number) => 
+                `${idx + 1}. ID: ${s.id} | اڈا: ${s.addaName} | روٹ: ${s.loadingCity} تا ${s.destinationCity} | مال: ${s.goods} (${s.weight || ''}) | فون: ${s.primaryPhone}`
+              ).join('\n');
 
-          const count = matched.length;
-          const replyText = count > 0 
-            ? `جی استاد جی! ${count} اصلی لوڈز مل گئے ہیں، سامنے سکرین پر دکھا دیے ہیں۔`
-            : `معذرت استاد جی! اس وقت اس روٹ کے لیے کوئی دستیاب لوڈ نہیں ہے۔`;
+              const systemInstruction = `
+آپ PK Cargo Live AI Voice Assistant ہیں۔ آپ کا کام ڈرائیورز اور اڈا منیجرز کو باادب، سچی اور مختصر اردو میں جواب دینا ہے۔
+سسٹم میں موجود فعال لوڈز (${allSlips.length}):
+${activeSlipsSummary || 'کوئی فعال لوڈ نہیں ہے'}
+`;
+
+              const aiRes = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: [{ role: 'user', parts: [{ text: queryText }] }],
+                config: { systemInstruction, temperature: 0.1 }
+              });
+
+              replyText = aiRes.text || '';
+            } catch (err) {
+              console.warn('[Gemini Live WS] Gemini API call exception:', err);
+            }
+          }
+
+          if (!replyText) {
+            const count = allSlips.length;
+            replyText = count > 0 
+              ? `جی استاد جی! ${count} اصلی لوڈز دستیاب ہیں، سامنے سکرین پر دکھا دیے ہیں۔`
+              : `معذرت استاد جی! اس وقت کوئی بھی دستیاب لوڈ نہیں ہے۔`;
+          }
 
           ws.send(JSON.stringify({
             type: 'transcript',
@@ -833,7 +854,7 @@ async function startServer() {
 
           ws.send(JSON.stringify({
             type: 'action',
-            action: { type: 'search_loads', params: { found: count > 0, count } }
+            action: { type: 'search_loads', params: { count: allSlips.length } }
           }));
 
         } else if (data.type === 'audio' && data.pcmBase64) {

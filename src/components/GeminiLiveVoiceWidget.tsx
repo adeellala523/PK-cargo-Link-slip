@@ -99,28 +99,57 @@ export const GeminiLiveVoiceWidget: React.FC<GeminiLiveVoiceWidgetProps> = ({
     }
   };
 
+  const recognitionRef = useRef<any>(null);
+
   const handleMicToggle = () => {
     if (voiceState === 'listening' || voiceState === 'speaking') {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch {}
+      }
       engineRef.current?.stopSession();
+      setStatusText('💬 مائیک دبائیں اور بولیں');
     } else {
       const userPhone = StorageService.getCurrentUserPhone();
       engineRef.current?.startSession(userPhone);
 
-      // Browser Web Speech Recognition Fallback for Hosted Environments
+      // Browser Web Speech Recognition for Hosted Website Compatibility
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (SpeechRecognition) {
         try {
+          if (recognitionRef.current) {
+            try { recognitionRef.current.stop(); } catch {}
+          }
+
           const recognition = new SpeechRecognition();
+          recognitionRef.current = recognition;
           recognition.lang = 'ur-PK';
           recognition.interimResults = false;
           recognition.maxAlternatives = 1;
 
+          recognition.onstart = () => {
+            setVoiceState('listening');
+            setStatusText('🔴 میں اردو سن رہا ہوں... بولیں');
+          };
+
           recognition.onresult = (e: any) => {
-            const transcript = e.results[0][0].transcript;
-            if (transcript) {
+            const transcript = e.results && e.results[0] && e.results[0][0] ? e.results[0][0].transcript : '';
+            if (transcript && transcript.trim()) {
               setUserTranscript(transcript);
               engineRef.current?.sendTextMessage(transcript);
             }
+          };
+
+          recognition.onerror = (e: any) => {
+            console.warn('[SpeechRecognition] error:', e?.error);
+            if (e?.error === 'not-allowed') {
+              setStatusText('مائیک الاؤ کریں یا نیچے والے سوال بٹن دبائیں');
+            } else if (e?.error !== 'no-speech') {
+              setStatusText('دوبارہ بولیں یا ٹیکسٹ لکھیں');
+            }
+          };
+
+          recognition.onend = () => {
+            recognitionRef.current = null;
           };
 
           recognition.start();
@@ -129,6 +158,11 @@ export const GeminiLiveVoiceWidget: React.FC<GeminiLiveVoiceWidgetProps> = ({
         }
       }
     }
+  };
+
+  const handleQuickPresetQuery = (queryText: string) => {
+    setUserTranscript(queryText);
+    engineRef.current?.sendTextMessage(queryText);
   };
 
   return (
@@ -256,6 +290,29 @@ export const GeminiLiveVoiceWidget: React.FC<GeminiLiveVoiceWidgetProps> = ({
                     {voiceState === 'listening' ? 'بات بند کریں' : 'مائیک دبائیں اور بولیں'}
                   </h4>
                   <p className="text-xs text-slate-400">مثال: "لاہور سے کراچی کا مال تلاش کرو"</p>
+                </div>
+
+                {/* One-Tap Quick Voice Queries for Drivers */}
+                <div className="w-full pt-1">
+                  <span className="text-[10px] text-emerald-400 font-bold block text-center mb-1.5">ایک کلک پر فوری سوال کریں:</span>
+                  <div className="flex flex-wrap justify-center gap-1.5">
+                    {[
+                      'لاہور کا مال تلاش کرو',
+                      'ملتان کا مال',
+                      'دستیاب گاڑیاں',
+                      'نئی سلپ بناؤ'
+                    ].map((preset, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => handleQuickPresetQuery(preset)}
+                        className="bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/40 px-3 py-1.5 rounded-full text-[11px] font-bold cursor-pointer transition active:scale-95 flex items-center gap-1"
+                      >
+                        <Sparkles className="w-3 h-3 text-amber-300" />
+                        <span>{preset}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Text Fallback Query Input */}

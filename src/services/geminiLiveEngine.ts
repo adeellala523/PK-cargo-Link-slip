@@ -101,12 +101,16 @@ export class GeminiLiveEngine {
         }
       };
 
-      this.ws.onerror = () => {
-        this.setState('listening', '💬 لکھ کر تلاش کریں');
+      this.ws.onerror = (e) => {
+        console.warn('[Gemini Live WS] Connection error or reverse proxy blocked WS. Using HTTP REST failover mode.', e);
+        this.setState('listening', '🔴 اردو میں بولیں یا سوال منتخب کریں');
       };
 
       this.ws.onclose = () => {
-        this.stopSession();
+        // Do not force stop session if user is in HTTP REST mode
+        if (this.state === 'connecting') {
+          this.setState('listening', '🔴 اردو میں بولیں یا سوال منتخب کریں');
+        }
       };
     } catch (err: any) {
       console.error('Failed to establish WebSocket session', err);
