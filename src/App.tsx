@@ -45,6 +45,62 @@ export default function App() {
   const [loginInitialRole, setLoginInitialRole] = useState<'adda_manager' | 'driver'>('adda_manager');
   const [loginNoticeMessage, setLoginNoticeMessage] = useState<string>('');
 
+  // Admin Security & Permission Diagnostic Errors State
+  const [adminDebugErrors, setAdminDebugErrors] = useState<Array<{ timestamp: string; message: string; details?: string }>>([]);
+
+  // Capture console.error, unhandled rejections, and window errors for admin diagnostic debugging
+  useEffect(() => {
+    const originalConsoleError = console.error;
+
+    const logCapturedError = (msg: string, details?: string) => {
+      const lower = (msg + ' ' + (details || '')).toLowerCase();
+      const isSecurityOrPermission = 
+        lower.includes('notallowederror') || 
+        lower.includes('securityerror') || 
+        lower.includes('permission denied') || 
+        lower.includes('permissions-policy') || 
+        lower.includes('getusermedia') || 
+        lower.includes('websocket') || 
+        lower.includes('microphone');
+
+      if (isSecurityOrPermission) {
+        setAdminDebugErrors((prev) => [
+          {
+            timestamp: new Date().toLocaleTimeString(),
+            message: msg,
+            details: details || '',
+          },
+          ...prev.slice(0, 9),
+        ]);
+      }
+    };
+
+    console.error = (...args: any[]) => {
+      originalConsoleError.apply(console, args);
+      const strMsg = args.map((a) => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' ');
+      logCapturedError('Console Error: ' + strMsg);
+    };
+
+    const handleWindowError = (event: ErrorEvent) => {
+      logCapturedError(event.message || 'Window Error', event.filename ? `${event.filename}:${event.lineno}` : '');
+    };
+
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      const reason = event.reason;
+      const strReason = typeof reason === 'object' ? (reason?.message || JSON.stringify(reason)) : String(reason);
+      logCapturedError('Unhandled Promise Rejection: ' + strReason);
+    };
+
+    window.addEventListener('error', handleWindowError);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
+    return () => {
+      console.error = originalConsoleError;
+      window.removeEventListener('error', handleWindowError);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
+  }, []);
+
   const handleOpenDriverLogin = (mode: 'login' | 'register' = 'login') => {
     setLoginInitialRole('driver');
     setLoginInitialMode(mode);
@@ -369,6 +425,38 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-5xl w-full mx-auto px-3 sm:px-4 py-6 sm:py-8">
+        
+        {/* 🛠️ Admin Security & Permission Diagnostics Banner */}
+        {adminDebugErrors.length > 0 && (
+          <div className="mb-6 p-4 bg-amber-950/95 text-amber-100 rounded-2xl border-2 border-amber-500/60 shadow-xl font-sans text-xs">
+            <div className="flex items-center justify-between gap-2 border-b border-amber-800/80 pb-2.5 mb-2.5">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-red-500 animate-ping" />
+                <h4 className="font-bold text-amber-300 text-sm">
+                  🛡️ Admin Security & Permission Debug Log ({adminDebugErrors.length})
+                </h4>
+              </div>
+              <button
+                onClick={() => setAdminDebugErrors([])}
+                className="bg-amber-800 hover:bg-amber-700 text-white px-2.5 py-1 rounded-lg text-[11px] font-semibold cursor-pointer transition"
+              >
+                Clear Log
+              </button>
+            </div>
+            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+              {adminDebugErrors.map((err, idx) => (
+                <div key={idx} className="bg-black/40 p-2.5 rounded-xl border border-amber-800/40 text-left font-mono text-[11px] break-all leading-relaxed">
+                  <div className="text-amber-400 font-bold text-[10px] flex justify-between">
+                    <span>{err.timestamp}</span>
+                    <span className="text-red-400">Security / Permission Alert</span>
+                  </div>
+                  <div className="text-amber-200 mt-1">{err.message}</div>
+                  {err.details && <div className="text-slate-400 text-[10px] mt-0.5">{err.details}</div>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         
         {/* Breadcrumb / Back button when in deep views */}
         {currentTab !== 'home' && currentTab !== 'dashboard' && (

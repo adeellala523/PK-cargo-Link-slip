@@ -1,0 +1,39 @@
+{
+  "hosting": {
+    "public": "dist",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "headers": [
+      {
+        "source": "**",
+        "headers": [
+          {
+            "key": "Permissions-Policy",
+            "value": "microphone=(self \"*\"), camera=(), geolocation=()"
+          },
+          {
+            "key": "Feature-Policy",
+            "value": "microphone *"
+          },
+          {
+            "key": "Content-Security-Policy",
+            "value": "default-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob: data:; connect-src 'self' https: wss: ws: https://*.googleapis.com https://*.run.app; media-src 'self' blob: data: https:; img-src 'self' data: blob: https:;"
+          },
+          {
+            "key": "Access-Control-Allow-Origin",
+            "value": "*"
+          }
+        ]
+      }
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}

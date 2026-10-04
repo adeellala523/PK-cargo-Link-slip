@@ -20,6 +20,16 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const isProd = process.env.NODE_ENV === 'production';
 
+// Global Security & Permissions Headers Middleware (Explicitly Allow Microphone & WebSockets in Production)
+app.use((_req: Request, res: Response, next) => {
+  res.setHeader('Permissions-Policy', 'microphone=(self "*"), camera=(), geolocation=()');
+  res.setHeader('Feature-Policy', 'microphone *');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Admin-Pin');
+  next();
+});
+
 app.use(express.json({ limit: '10mb' }));
 
 const DATA_DIR = path.resolve(process.cwd(), 'data');

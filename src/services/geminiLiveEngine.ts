@@ -46,8 +46,14 @@ export class GeminiLiveEngine {
           micAvailable = true;
         }
       }
-    } catch (e) {
-      console.warn('[Gemini Live] Microphone permission denied or unavailable in browser. Falling back to Text/Speech mode.', e);
+    } catch (e: any) {
+      if (e?.name === 'NotAllowedError' || e?.name === 'PermissionDeniedError') {
+        console.warn('[Gemini Live] NotAllowedError: Microphone permission denied by user or iframe policy. Fallback active.', e);
+      } else if (e?.name === 'SecurityError') {
+        console.warn('[Gemini Live] SecurityError: Origin not HTTPS or iframe missing allow="microphone". Fallback active.', e);
+      } else {
+        console.warn('[Gemini Live] Microphone access unavailable:', e);
+      }
     }
 
     try {
