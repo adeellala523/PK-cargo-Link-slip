@@ -135,6 +135,8 @@ export const GeminiLiveVoiceWidget: React.FC<GeminiLiveVoiceWidgetProps> = ({
             const transcript = e.results && e.results[0] && e.results[0][0] ? e.results[0][0].transcript : '';
             if (transcript && transcript.trim()) {
               setUserTranscript(transcript);
+              setStatusText(`"۔${transcript}۔" — AI جواب دے رہا ہے...`);
+              setVoiceState('connecting');
               engineRef.current?.sendTextMessage(transcript);
             }
           };

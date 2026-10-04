@@ -816,6 +816,86 @@ async function startServer() {
   wss.on('connection', (ws, req) => {
     console.log('[Gemini Live WS] Client connected to live WebSocket proxy');
 
+    let pcmChunksBuffer: string[] = [];
+    let audioTimer: NodeJS.Timeout | null = null;
+
+    const processAudioBuffer = async () => {
+      if (pcmChunksBuffer.length === 0) return;
+      const combinedPcmBase64 = pcmChunksBuffer.join('');
+      pcmChunksBuffer = [];
+
+      const allSlips = getStoredSlips().filter((s: any) => s.status === 'active');
+      const activeSlipsSummary = allSlips.slice(0, 10).map((s: any, idx: number) => 
+        `${idx + 1}. ID: ${s.id} | اڈا: ${s.addaName} | روٹ: ${s.loadingCity} تا ${s.destinationCity} | مال: ${s.goods} (${s.weight || ''}) | فون: ${s.primaryPhone}`
+      ).join('\n');
+
+      const systemInstruction = `
+آپ PK Cargo Live AI Voice Assistant ہیں۔ آپ کا کام پاکستانی ڈرائیورز اور اڈا منیجرز کی آواز سن کر باادب، سچی اور مختصر اردو میں جواب دینا ہے۔
+سسٹم میں موجود فعال لوڈز (${allSlips.length}):
+${activeSlipsSummary || 'کوئی فعال لوڈ نہیں ہے'}
+`;
+
+      try {
+        if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim().length > 10) {
+          const responseStream = await ai.models.generateContentStream({
+            model: 'gemini-2.5-flash',
+            contents: [
+              {
+                role: 'user',
+                parts: [
+                  {
+                    inlineData: {
+                      mimeType: 'audio/pcm;rate=16000',
+                      data: combinedPcmBase64
+                    }
+                  }
+                ]
+              }
+            ],
+            config: { systemInstruction, temperature: 0.1 }
+          });
+
+          let fullAiText = '';
+          for await (const chunk of responseStream) {
+            const chunkText = chunk.text || '';
+            if (chunkText) {
+              fullAiText += chunkText;
+              ws.send(JSON.stringify({
+                type: 'transcript_chunk',
+                user: '🎤 وائس انپٹ (آواز)',
+                text: fullAiText
+              }));
+            }
+          }
+
+          if (fullAiText.trim()) {
+            ws.send(JSON.stringify({
+              type: 'transcript',
+              user: '🎤 وائس انپٹ (آواز)',
+              ai: fullAiText.trim()
+            }));
+            ws.send(JSON.stringify({
+              type: 'action',
+              action: { type: 'search_loads', params: { count: allSlips.length } }
+            }));
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('[Gemini Live WS] Audio stream processing fallback:', err);
+      }
+
+      const replyText = allSlips.length > 0 
+        ? `جی استاد جی! ${allSlips.length} اصلی لوڈز دستیاب ہیں، سامنے سکرین پر دکھا دیے ہیں۔`
+        : `معذرت استاد جی! اس وقت کوئی بھی دستیاب لوڈ نہیں ہے۔`;
+
+      ws.send(JSON.stringify({
+        type: 'transcript',
+        user: '🎤 وائس انپٹ (آواز)',
+        ai: replyText
+      }));
+    };
+
     ws.on('message', async (message) => {
       try {
         const data = JSON.parse(message.toString());
@@ -824,7 +904,6 @@ async function startServer() {
           const queryText = data.query.trim();
           const allSlips = getStoredSlips().filter((s: any) => s.status === 'active');
 
-          let replyText = '';
           if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim().length > 10) {
             try {
               const activeSlipsSummary = allSlips.slice(0, 10).map((s: any, idx: number) => 
@@ -837,43 +916,62 @@ async function startServer() {
 ${activeSlipsSummary || 'کوئی فعال لوڈ نہیں ہے'}
 `;
 
-              const aiRes = await ai.models.generateContent({
+              const responseStream = await ai.models.generateContentStream({
                 model: 'gemini-2.5-flash',
                 contents: [{ role: 'user', parts: [{ text: queryText }] }],
                 config: { systemInstruction, temperature: 0.1 }
               });
 
-              replyText = aiRes.text || '';
+              let fullText = '';
+              for await (const chunk of responseStream) {
+                const chunkText = chunk.text || '';
+                if (chunkText) {
+                  fullText += chunkText;
+                  ws.send(JSON.stringify({
+                    type: 'transcript_chunk',
+                    user: queryText,
+                    text: fullText
+                  }));
+                }
+              }
+
+              if (fullText.trim()) {
+                ws.send(JSON.stringify({
+                  type: 'transcript',
+                  user: queryText,
+                  ai: fullText.trim()
+                }));
+                ws.send(JSON.stringify({
+                  type: 'action',
+                  action: { type: 'search_loads', params: { count: allSlips.length } }
+                }));
+                return;
+              }
             } catch (err) {
-              console.warn('[Gemini Live WS] Gemini API call exception:', err);
+              console.warn('[Gemini Live WS] Gemini text stream exception:', err);
             }
           }
 
-          if (!replyText) {
-            const count = allSlips.length;
-            replyText = count > 0 
-              ? `جی استاد جی! ${count} اصلی لوڈز دستیاب ہیں، سامنے سکرین پر دکھا دیے ہیں۔`
-              : `معذرت استاد جی! اس وقت کوئی بھی دستیاب لوڈ نہیں ہے۔`;
-          }
+          const fallbackText = allSlips.length > 0 
+            ? `جی استاد جی! ${allSlips.length} اصلی لوڈز دستیاب ہیں، سامنے سکرین پر دکھا دیے ہیں۔`
+            : `معذرت استاد جی! اس وقت کوئی بھی دستیاب لوڈ نہیں ہے۔`;
 
           ws.send(JSON.stringify({
             type: 'transcript',
             user: queryText,
-            ai: replyText
-          }));
-
-          ws.send(JSON.stringify({
-            type: 'action',
-            action: { type: 'search_loads', params: { count: allSlips.length } }
+            ai: fallbackText
           }));
 
         } else if (data.type === 'audio' && data.pcmBase64) {
-          ws.send(JSON.stringify({
-            type: 'transcript',
-            user: 'صوت موصولہ (آواز)',
-            ai: 'جی استاد جی، میں آپ کا حکم سن رہا ہوں۔ کس شہر کا مال چاہیے؟'
-          }));
+          pcmChunksBuffer.push(data.pcmBase64);
+          if (audioTimer) clearTimeout(audioTimer);
+          audioTimer = setTimeout(() => {
+            processAudioBuffer();
+          }, 800);
+
         } else if (data.type === 'interrupt') {
+          pcmChunksBuffer = [];
+          if (audioTimer) clearTimeout(audioTimer);
           console.log('[Gemini Live WS] User interrupted AI speech');
         }
       } catch (err) {
@@ -882,6 +980,8 @@ ${activeSlipsSummary || 'کوئی فعال لوڈ نہیں ہے'}
     });
 
     ws.on('close', () => {
+      if (audioTimer) clearTimeout(audioTimer);
+      pcmChunksBuffer = [];
       console.log('[Gemini Live WS] Client disconnected');
     });
   });

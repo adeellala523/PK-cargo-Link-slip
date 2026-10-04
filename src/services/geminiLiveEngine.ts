@@ -83,8 +83,34 @@ export class GeminiLiveEngine {
         try {
           const data = JSON.parse(event.data);
 
-          if (data.type === 'transcript') {
+          if (data.type === 'transcript_chunk') {
+            this.setState('speaking', 'PK Cargo Assistant بول رہا ہے...');
+            this.callbacks.onTranscriptUpdate(data.user || '', data.text || '');
+          } else if (data.type === 'transcript') {
             this.callbacks.onTranscriptUpdate(data.user || '', data.ai || '');
+            if (data.ai && 'speechSynthesis' in window) {
+              try {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(data.ai);
+                utterance.lang = 'ur-PK';
+                utterance.rate = 0.95;
+                utterance.onstart = () => {
+                  this.setState('speaking', 'PK Cargo Assistant بول رہا ہے...');
+                };
+                utterance.onend = () => {
+                  this.setState('listening', '🔴 میں سن رہا ہوں... بولیں');
+                };
+                utterance.onerror = () => {
+                  this.setState('listening', '🔴 میں سن رہا ہوں... بولیں');
+                };
+                window.speechSynthesis.speak(utterance);
+              } catch (err) {
+                console.warn('SpeechSynthesis error:', err);
+                this.setState('listening', '🔴 میں سن رہا ہوں... بولیں');
+              }
+            } else {
+              this.setState('listening', '🔴 میں سن رہا ہوں... بولیں');
+            }
           } else if (data.type === 'audio') {
             this.setState('speaking', 'PK Cargo Assistant بول رہا ہے...');
             this.playAudioChunk(data.pcmBase64);
@@ -220,21 +246,26 @@ export class GeminiLiveEngine {
           body: JSON.stringify({ userSpeech: text }),
         });
         const data = await response.json();
-        if (data.replyText) {
-          this.callbacks.onTranscriptUpdate(text, data.replyText);
+        const replyText = data.spokenUrdu || data.replyText || data.text || '';
+        if (replyText) {
+          this.callbacks.onTranscriptUpdate(text, replyText);
           this.setState('speaking', 'PK Cargo Assistant بول رہا ہے...');
 
           // Speak using Web Speech API Utterance
           if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(data.replyText);
+            const utterance = new SpeechSynthesisUtterance(replyText);
             utterance.lang = 'ur-PK';
+            utterance.rate = 0.95;
             utterance.onend = () => {
-              this.setState('listening', '💬 اپنا کام لکھیں یا مائیک استعمال کریں');
+              this.setState('listening', '🔴 میں سن رہا ہوں... بولیں');
+            };
+            utterance.onerror = () => {
+              this.setState('listening', '🔴 میں سن رہا ہوں... بولیں');
             };
             window.speechSynthesis.speak(utterance);
           } else {
-            this.setState('listening', '💬 اپنا کام لکھیں یا مائیک استعمال کریں');
+            this.setState('listening', '🔴 میں سن رہا ہوں... بولیں');
           }
 
           if (data.action && this.callbacks.onActionTriggered) {
