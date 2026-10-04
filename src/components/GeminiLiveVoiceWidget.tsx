@@ -9,28 +9,24 @@ import {
   Truck, 
   FilePlus, 
   CheckCircle2, 
-  AlertCircle,
-  MessageSquare,
-  Phone,
-  Send,
-  Lock
+  Lock,
+  RefreshCw,
+  MessageSquare
 } from 'lucide-react';
-import { LoadSlip, AvailableTruck } from '../types';
+import { LoadSlip } from '../types';
 import { StorageService } from '../services/storage';
-import { AiVoiceEngine, VoiceState, VoiceActionResult } from '../services/aiVoiceEngine';
-import { getWhatsAppShareUrl } from '../utils/formatters';
+import { GeminiLiveEngine, LiveVoiceState } from '../services/geminiLiveEngine';
 
-interface AiVoiceSupportWidgetProps {
+interface GeminiLiveVoiceWidgetProps {
   slips: LoadSlip[];
   onNavigateToSearchWithQuery?: (from: string, to: string) => void;
   onOpenCreateSlip?: () => void;
   onNavigateToTrucks?: () => void;
   onNavigateToDriverPortal?: () => void;
-  onOpenPaymentSettings?: () => void;
   onViewSlip?: (slip: LoadSlip) => void;
 }
 
-export const AiVoiceSupportWidget: React.FC<AiVoiceSupportWidgetProps> = ({
+export const GeminiLiveVoiceWidget: React.FC<GeminiLiveVoiceWidgetProps> = ({
   slips,
   onNavigateToSearchWithQuery,
   onOpenCreateSlip,
@@ -39,93 +35,88 @@ export const AiVoiceSupportWidget: React.FC<AiVoiceSupportWidgetProps> = ({
   onViewSlip,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [voiceState, setVoiceState] = useState<VoiceState>('idle');
+  const [voiceState, setVoiceState] = useState<LiveVoiceState>('idle');
   const [statusText, setStatusText] = useState('مائیک دبائیں اور اپنا کام بتائیں');
   const [userTranscript, setUserTranscript] = useState('');
   const [aiTranscript, setAiTranscript] = useState('السلام علیکم استاد جی! میں PK Cargo Voice Assistant ہوں۔ بتائیں آپ کو کس شہر کا مال چاہیے یا اپنی گاڑی لسٹ کروانی ہے؟');
   const [audioLevel, setAudioLevel] = useState(0);
   const [matchedResults, setMatchedResults] = useState<LoadSlip[]>([]);
-  const [pendingConfirmation, setPendingConfirmation] = useState<VoiceActionResult | null>(null);
 
-  const engineRef = useRef<AiVoiceEngine | null>(null);
+  const engineRef = useRef<GeminiLiveEngine | null>(null);
 
   useEffect(() => {
-    engineRef.current = new AiVoiceEngine({
-      onStateChange: (state, text) => {
+    engineRef.current = new GeminiLiveEngine({
+      onStateChange: (state, msg) => {
         setVoiceState(state);
-        if (text) setStatusText(text);
+        if (msg) setStatusText(msg);
       },
       onTranscriptUpdate: (userText, aiText) => {
         if (userText) setUserTranscript(userText);
         if (aiText) setAiTranscript(aiText);
       },
-      onAudioLevelChange: (level) => {
+      onAudioLevel: (level) => {
         setAudioLevel(level);
       },
       onActionTriggered: (action) => {
-        handleActionExecution(action);
+        if (action.type === 'search_loads') {
+          const from = action.params?.loadingCity || '';
+          const to = action.params?.destinationCity || '';
+          const filtered = slips.filter((s) => {
+            const matchFrom = !from || s.loadingCity.includes(from);
+            const matchTo = !to || s.destinationCity.includes(to);
+            return matchFrom && matchTo && s.status === 'active';
+          });
+          setMatchedResults(filtered);
+          if (onNavigateToSearchWithQuery && (from || to)) {
+            onNavigateToSearchWithQuery(from, to);
+          }
+        } else if (action.type === 'register_driver' && onNavigateToDriverPortal) {
+          onNavigateToDriverPortal();
+        } else if (action.type === 'register_truck' && onNavigateToTrucks) {
+          onNavigateToTrucks();
+        } else if (action.type === 'create_slip' && onOpenCreateSlip) {
+          onOpenCreateSlip();
+        }
       },
-      onError: (errMsg) => {
-        setStatusText(errMsg);
-      }
+      onError: (err) => {
+        setStatusText(err);
+      },
     });
 
     return () => {
-      if (engineRef.current) {
-        engineRef.current.stopListening();
-      }
+      engineRef.current?.stopSession();
     };
-  }, []);
-
-  const handleActionExecution = (action: VoiceActionResult) => {
-    if (action.type === 'search_loads') {
-      const from = action.params?.loadingCity || '';
-      const to = action.params?.destinationCity || '';
-      const filtered = slips.filter(s => {
-        const matchFrom = !from || s.loadingCity.includes(from);
-        const matchTo = !to || s.destinationCity.includes(to);
-        return matchFrom && matchTo && s.status === 'active';
-      });
-      setMatchedResults(filtered);
-      if (onNavigateToSearchWithQuery && (from || to)) {
-        onNavigateToSearchWithQuery(from, to);
-      }
-    } else if (action.type === 'register_driver') {
-      if (onNavigateToDriverPortal) onNavigateToDriverPortal();
-    } else if (action.type === 'register_truck') {
-      if (onNavigateToTrucks) onNavigateToTrucks();
-    } else if (action.type === 'create_slip') {
-      if (onOpenCreateSlip) onOpenCreateSlip();
-    }
-  };
+  }, [slips]);
 
   const toggleVoiceAssistant = () => {
     if (!isOpen) {
       setIsOpen(true);
-      engineRef.current?.speakUrdu(aiTranscript);
+      const userPhone = StorageService.getCurrentUserPhone();
+      engineRef.current?.startSession(userPhone);
     } else {
-      engineRef.current?.stopListening();
+      engineRef.current?.stopSession();
       setIsOpen(false);
     }
   };
 
-  const handleMicClick = () => {
-    if (voiceState === 'listening') {
-      engineRef.current?.stopListening();
+  const handleMicToggle = () => {
+    if (voiceState === 'listening' || voiceState === 'speaking') {
+      engineRef.current?.stopSession();
     } else {
-      engineRef.current?.startListening();
+      const userPhone = StorageService.getCurrentUserPhone();
+      engineRef.current?.startSession(userPhone);
     }
   };
 
   return (
     <>
-      {/* 🎙️ Primary Driver Voice Assistant Floating Trigger Button */}
+      {/* 🎙️ Primary Gemini Live Driver Voice Trigger Button */}
       {!isOpen && (
         <div className="no-print fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 animate-bounce-subtle font-nafees">
           <button
             onClick={toggleVoiceAssistant}
             className="group flex items-center gap-2.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-800 text-white p-3.5 sm:px-5 sm:py-3.5 rounded-full shadow-2xl border-2 border-emerald-400/50 cursor-pointer transition active:scale-95"
-            aria-label="PK Cargo Voice Assistant"
+            aria-label="PK Cargo Live Voice Assistant"
           >
             <div className="relative flex items-center justify-center w-8 h-8 rounded-full bg-white/20 text-amber-300">
               <Mic className="w-5 h-5 animate-pulse" />
@@ -143,7 +134,7 @@ export const AiVoiceSupportWidget: React.FC<AiVoiceSupportWidgetProps> = ({
         </div>
       )}
 
-      {/* Full Modal UI for PK Cargo Voice Assistant */}
+      {/* Gemini Live Voice Modal */}
       {isOpen && (
         <div className="no-print fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 font-nafees animate-in fade-in duration-200">
           <div className="bg-slate-900 text-white w-full max-w-lg rounded-3xl border-2 border-emerald-500/40 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
@@ -157,9 +148,9 @@ export const AiVoiceSupportWidget: React.FC<AiVoiceSupportWidgetProps> = ({
                 <div>
                   <h3 className="font-extrabold text-base text-white flex items-center gap-1.5">
                     <span>PK Cargo Voice Assistant</span>
-                    <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] px-2 py-0.5 rounded-full font-sans">AI Live</span>
+                    <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] px-2 py-0.5 rounded-full font-sans">Gemini Live API</span>
                   </h3>
-                  <p className="text-xs text-slate-300">اردو اور پنجابی بول کر لوڈ تلاش اور سلپیں بنائیں</p>
+                  <p className="text-xs text-slate-300">برائے راست بول کر لوڈ تلاش، سلپیں اور گاڑی لسٹنگ</p>
                 </div>
               </div>
               <button
@@ -170,7 +161,7 @@ export const AiVoiceSupportWidget: React.FC<AiVoiceSupportWidgetProps> = ({
               </button>
             </div>
 
-            {/* Content Body */}
+            {/* Body */}
             <div className="p-5 overflow-y-auto space-y-6 flex-1 text-right">
               
               {/* Status Badge */}
@@ -181,26 +172,26 @@ export const AiVoiceSupportWidget: React.FC<AiVoiceSupportWidgetProps> = ({
                     <span>🔴 میں سن رہا ہوں...</span>
                   </div>
                 )}
-                {voiceState === 'processing' && (
+                {voiceState === 'connecting' && (
                   <div className="inline-flex items-center gap-2 bg-amber-500/20 text-amber-300 border border-amber-500/40 px-4 py-1.5 rounded-full text-xs font-bold">
-                    <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-spin"></span>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin text-amber-400" />
                     <span>سمجھ رہا ہوں...</span>
                   </div>
                 )}
                 {voiceState === 'speaking' && (
-                  <div className="inline-flex items-center gap-2 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-4 py-1.5 rounded-full text-xs font-bold">
+                  <div className="inline-flex items-center gap-2 bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 px-4 py-1.5 rounded-full text-xs font-bold">
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
                     <span>PK Cargo Assistant بول رہا ہے...</span>
                   </div>
                 )}
-                {voiceState === 'idle' && (
+                {(voiceState === 'idle' || voiceState === 'error') && (
                   <div className="inline-flex items-center gap-2 bg-slate-800 text-slate-300 border border-slate-700 px-4 py-1.5 rounded-full text-xs font-bold">
                     <span>{statusText}</span>
                   </div>
                 )}
               </div>
 
-              {/* Central Large Microphone Action Button */}
+              {/* Central Mic Button */}
               <div className="flex flex-col items-center justify-center py-4 space-y-3">
                 <div className="relative">
                   {voiceState === 'listening' && (
@@ -210,7 +201,7 @@ export const AiVoiceSupportWidget: React.FC<AiVoiceSupportWidgetProps> = ({
                     />
                   )}
                   <button
-                    onClick={handleMicClick}
+                    onClick={handleMicToggle}
                     className={`relative w-24 h-24 rounded-full flex items-center justify-center shadow-2xl transition-all transform active:scale-95 cursor-pointer border-4 ${
                       voiceState === 'listening'
                         ? 'bg-red-600 border-red-300 text-white shadow-red-500/50'
@@ -234,11 +225,11 @@ export const AiVoiceSupportWidget: React.FC<AiVoiceSupportWidgetProps> = ({
                 </div>
               </div>
 
-              {/* Live Transcript Displays */}
+              {/* Live Transcript View */}
               <div className="space-y-3 bg-slate-950 p-4 rounded-2xl border border-slate-800 text-xs sm:text-sm">
                 {userTranscript && (
                   <div className="space-y-1 text-right">
-                    <span className="text-[10px] text-amber-400 font-bold block">آپ نے فرمایا:</span>
+                    <span className="text-[10px] text-amber-400 font-bold block">آپ کی بات:</span>
                     <p className="text-slate-200 bg-slate-900 p-2.5 rounded-xl border border-slate-800 font-medium">{userTranscript}</p>
                   </div>
                 )}
@@ -251,7 +242,7 @@ export const AiVoiceSupportWidget: React.FC<AiVoiceSupportWidgetProps> = ({
                 </div>
               </div>
 
-              {/* Results Preview Card Grid */}
+              {/* Results Cards */}
               {matchedResults.length > 0 && (
                 <div className="space-y-2 pt-2">
                   <div className="flex items-center justify-between border-b border-slate-800 pb-2">
@@ -293,48 +284,13 @@ export const AiVoiceSupportWidget: React.FC<AiVoiceSupportWidgetProps> = ({
                 </div>
               )}
 
-              {/* Quick Action Chips */}
-              <div className="pt-2">
-                <span className="text-[11px] text-slate-400 font-bold block mb-2">فوری کمانڈز منتخب کریں:</span>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <button
-                    onClick={() => engineRef.current?.processQuery('لاہور سے کراچی کا لوڈ تلاش کرو', slips)}
-                    className="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2.5 rounded-xl border border-slate-700 text-right transition cursor-pointer flex items-center gap-2"
-                  >
-                    <Search className="w-4 h-4 text-emerald-400 shrink-0" />
-                    <span>لاہور سے کراچی لوڈ</span>
-                  </button>
-                  <button
-                    onClick={() => engineRef.current?.processQuery('خالی گاڑی لسٹ کرو', slips)}
-                    className="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2.5 rounded-xl border border-slate-700 text-right transition cursor-pointer flex items-center gap-2"
-                  >
-                    <Truck className="w-4 h-4 text-amber-400 shrink-0" />
-                    <span>خالی گاڑی لسٹ کریں</span>
-                  </button>
-                  <button
-                    onClick={() => engineRef.current?.processQuery('میرا اکاؤنٹ بنا دو', slips)}
-                    className="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2.5 rounded-xl border border-slate-700 text-right transition cursor-pointer flex items-center gap-2"
-                  >
-                    <CheckCircle2 className="w-4 h-4 text-teal-400 shrink-0" />
-                    <span>میرا اکاؤنٹ بنائیں</span>
-                  </button>
-                  <button
-                    onClick={() => engineRef.current?.processQuery('نئی لوڈ سلپ بنا دو', slips)}
-                    className="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2.5 rounded-xl border border-slate-700 text-right transition cursor-pointer flex items-center gap-2"
-                  >
-                    <FilePlus className="w-4 h-4 text-blue-400 shrink-0" />
-                    <span>نئی لوڈ سلپ بنائیں</span>
-                  </button>
-                </div>
-              </div>
-
             </div>
 
-            {/* Bottom Stop Bar */}
+            {/* Stop Bar */}
             <div className="bg-slate-950 p-4 border-t border-slate-800 flex items-center justify-between">
               <button
                 onClick={() => {
-                  engineRef.current?.stopListening();
+                  engineRef.current?.stopSession();
                   setIsOpen(false);
                 }}
                 className="w-full bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs py-3 px-4 rounded-xl shadow-md transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer"

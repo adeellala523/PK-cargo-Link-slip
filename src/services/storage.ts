@@ -46,16 +46,16 @@ export const INITIAL_SLIPS: LoadSlip[] = [];
 export const DEFAULT_PAYMENT_SETTINGS: PaymentSettings = {
   isPaymentRequired: false,
   monthlyFee: 500,
-  jazzcashNumber: '0300-1234567',
-  jazzcashTitle: 'PK Cargo Link Business',
+  jazzcashNumber: '0329-8111391',
+  jazzcashTitle: 'PK Cargo Link Official',
   jazzcashTillId: '031294',
   jazzcashQrImage: 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=JazzCashTill031294-PKCargoLink',
-  easypaisaNumber: '0300-1234567',
-  easypaisaTitle: 'PK Cargo Link Business',
+  easypaisaNumber: '0329-8111391',
+  easypaisaTitle: 'PK Cargo Link Official',
   bankName: 'حبیب بینک لمیٹڈ (HBL)',
   bankAccountNumber: '0010023456789012',
   bankAccountTitle: 'PK Cargo Link',
-  instructions: 'براہ کرم جاز کیش بزنس کیو آر کوڈ اسکین کر کے یا 500 روپے کا مینوئل ٹرانسفر کر کے ٹرانزیکشن ID (TID) درج کریں۔',
+  instructions: 'براہ کرم 500 روپے ادا کر کے ٹرانزیکشن ID اور سکرین شاٹ واٹس ایپ نمبر 03298111391 پر بھیجیں۔ تصدیق کے بعد سروس فعال ہو جائے گی۔',
 };
 
 export const StorageService = {
@@ -1334,53 +1334,17 @@ export const StorageService = {
       if (hData) history = JSON.parse(hData);
     } catch {}
 
-    try {
-      const data = localStorage.getItem('pkcargolink_ai_voice_sub_v1');
-      if (data) {
-        const sub = JSON.parse(data);
-        if (sub && sub.expiresAt) {
-          const expiresMs = new Date(sub.expiresAt).getTime();
-          const nowMs = Date.now();
-          const diffMs = expiresMs - nowMs;
-          const daysRemaining = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
-
-          if (diffMs > 0) {
-            return {
-              isSubscribed: true,
-              isTrial: !!sub.isTrial,
-              status: sub.isTrial ? 'trial' : 'paid',
-              expiresAt: sub.expiresAt,
-              subscribedAt: sub.subscribedAt,
-              paymentMethod: sub.paymentMethod || 'jazzcash',
-              transactionId: sub.transactionId || 'TID-1001',
-              planFee: 500,
-              daysRemaining,
-              history,
-            };
-          } else {
-            return {
-              isSubscribed: false,
-              isTrial: false,
-              status: 'expired',
-              expiresAt: sub.expiresAt,
-              subscribedAt: sub.subscribedAt,
-              paymentMethod: sub.paymentMethod,
-              transactionId: sub.transactionId,
-              planFee: 500,
-              daysRemaining: 0,
-              history,
-            };
-          }
-        }
-      }
-    } catch {}
-
+    // Complete Unlimited Access Enabled
     return {
-      isSubscribed: false,
+      isSubscribed: true,
       isTrial: false,
-      status: 'none',
-      planFee: 500,
-      daysRemaining: 0,
+      status: 'paid',
+      expiresAt: new Date(Date.now() + 365 * 24 * 3600 * 1000).toISOString(),
+      subscribedAt: new Date().toISOString(),
+      paymentMethod: 'full_access',
+      transactionId: 'PKCL-UNLIMITED-ACCESS',
+      planFee: 0,
+      daysRemaining: 365,
       history,
     };
   },

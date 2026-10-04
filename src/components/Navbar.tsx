@@ -353,15 +353,23 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
-            {canInstall && (
+            {/* App Download Option in Menu */}
+            <div className="pt-2 border-t border-white/10 mt-2">
               <button
-                onClick={() => { handleInstallClick(); setMenuOpen(false); }}
-                className="w-full flex items-center justify-center gap-2 bg-white/10 text-white px-3 py-2.5 rounded-xl text-sm font-bold mt-2 min-h-[44px]"
+                onClick={() => {
+                  if (canInstall && deferredPrompt) {
+                    handleInstallClick();
+                  } else {
+                    alert('اینڈرائیڈ یا آئی فون پر ایپ انسٹال کرنے کے لیے کروم / سفاری براؤزر کے مینیو (Option/Share) پر کلک کر کے "Add to Home screen" یا "Install App" پر کلک کریں۔');
+                  }
+                  setMenuOpen(false);
+                }}
+                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white px-3.5 py-3 rounded-xl text-sm font-bold shadow-md border border-emerald-400/40 cursor-pointer active:scale-95 transition"
               >
-                <Download className="w-4 h-4" />
-                <span>ہوم اسکرین پر شامل کریں (ایپ انسٹال کریں)</span>
+                <Download className="w-4 h-4 text-amber-300" />
+                <span>📲 ایپ ڈاؤن لوڈ کریں (Install App)</span>
               </button>
-            )}
+            </div>
           </div>
         )}
       </div>

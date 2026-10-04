@@ -23,6 +23,7 @@ import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { NotificationCenterModal } from './components/NotificationCenterModal';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { AiVoiceSupportWidget } from './components/AiVoiceSupportWidget';
+import { GeminiLiveVoiceWidget } from './components/GeminiLiveVoiceWidget';
 import { PaymentSettings } from './components/PaymentSettings';
 import { StorageService } from './services/storage';
 import { LoadSlip, AddaProfile, WhatsAppGroup } from './types';
@@ -634,8 +635,8 @@ export default function App() {
       {/* PWA Install Banner */}
       <PWAInstallBanner />
 
-      {/* AI Live Voice Call & Customer Support Widget (500 PKR/month with 1-Day Free Trial) */}
-      <AiVoiceSupportWidget
+      {/* Primary Gemini Live Voice Assistant */}
+      <GeminiLiveVoiceWidget
         slips={slips}
         onNavigateToSearchWithQuery={(from, to) => {
           setSearchInitialFilter({ from, to });
@@ -644,7 +645,7 @@ export default function App() {
         onOpenCreateSlip={() => handleOpenCreateModal()}
         onNavigateToTrucks={() => navigateTo('trucks')}
         onNavigateToDriverPortal={() => navigateTo('driver')}
-        onOpenPaymentSettings={() => navigateTo('payment-settings')}
+        onViewSlip={(slip) => viewSlipDetail(slip)}
       />
 
       {/* General Site Footer */}

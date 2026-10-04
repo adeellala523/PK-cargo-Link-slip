@@ -10,8 +10,8 @@ export const ContactUsView: React.FC = () => {
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
-  const officialPhone = '03001234567';
-  const officialWhatsApp = '03001234567';
+  const officialPhone = '03298111391';
+  const officialWhatsApp = '03298111391';
   const officialEmail = 'support@pkcargolink.com';
 
   const handleSubmit = (e: React.FormEvent) => {

@@ -45,15 +45,54 @@ export const PaymentSettings: React.FC<PaymentSettingsProps> = ({
   
   // Payment Gateway Form states
   const [selectedMethod, setSelectedMethod] = useState<'qr' | 'jazzcash' | 'easypaisa' | 'card' | 'manual'>('qr');
-  const [accountNumber, setAccountNumber] = useState('03001234567');
+  const [accountNumber, setAccountNumber] = useState('03298111391');
   const [manualTid, setManualTid] = useState('');
   const [mpinInput, setMpinInput] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [copiedAccount, setCopiedAccount] = useState<string | null>(null);
+  const [showMpinModal, setShowMpinModal] = useState(false);
+  const [successReceipt, setSuccessReceipt] = useState<{ tid: string; method: string; date: string; amount: number } | null>(null);
+
+  const refreshSubscription = () => {
+    const sub = StorageService.getAiVoiceSubscription();
+    setSubscription(sub);
+    if (onSubscriptionUpdated) {
+      onSubscriptionUpdated();
+    }
+  };
+
+  useEffect(() => {
+    refreshSubscription();
+  }, []);
+
+  const handleActivateTrial = () => {
+    setStatusMessage('500 روپے کی ادائیگی کا کلیم جمع کرائیں اور واٹس ایپ (03298111391) پر بھیجیں۔');
+  };
+
+  const handleInitiateWalletPayment = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleManualTidSubmit(e);
+  };
+
+  const handleConfirmMpinPayment = () => {
+    setShowMpinModal(false);
+  };
+
+  const handleRunClientSideScanAndVerify = () => {
+    setShowQrScanner(false);
+  };
+
+  const handleSaveTillDetails = (e: React.FormEvent) => {
+    e.preventDefault();
+    setShowTillEditor(false);
+  };
 
   // Till & QR Code Editor States
   const [showTillEditor, setShowTillEditor] = useState(false);
   const [editTillId, setEditTillId] = useState(paymentConfig.jazzcashTillId || '031294');
-  const [editTillTitle, setEditTillTitle] = useState(paymentConfig.jazzcashTitle || 'PK Cargo Link Business');
-  const [editTillNumber, setEditTillNumber] = useState(paymentConfig.jazzcashNumber || '0300-1234567');
+  const [editTillTitle, setEditTillTitle] = useState(paymentConfig.jazzcashTitle || 'PK Cargo Link Official');
+  const [editTillNumber, setEditTillNumber] = useState(paymentConfig.jazzcashNumber || '0329-8111391');
   const [editQrImage, setEditQrImage] = useState(paymentConfig.jazzcashQrImage || '');
 
   // QR Scanner & Verification Modal States
@@ -79,122 +118,8 @@ export const PaymentSettings: React.FC<PaymentSettingsProps> = ({
     }
   };
 
-  // Client-Side Scan & Payment Verification Execution
-  const handleRunClientSideScanAndVerify = () => {
-    setIsScanning(true);
-    setScanStatus('کیو آر کوڈ اور جاز کیش ڈیجیٹل رسید کی تصدیق کی جا رہی ہے...');
-
-    setTimeout(() => {
-      setIsScanning(false);
-      const generatedTid = `JC-SCAN-${Math.floor(10000000 + Math.random() * 90000000)}`;
-      StorageService.activateAiVoiceSubscription(30, 'jazzcash', generatedTid);
-      
-      setSuccessReceipt({
-        tid: generatedTid,
-        method: 'JazzCash Business QR Scan Verified',
-        date: new Date().toLocaleDateString('ur-PK', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
-        amount: 500,
-      });
-
-      setShowQrScanner(false);
-      setStatusMessage('🎉 ادائیگی کی تصدیق ہو گئی! AI وائس اسسٹنٹ کی مکمل سہولت 30 دن کے لیے فعال کر دی گئی ہے۔');
-      refreshSubscription();
-    }, 2000);
-  };
-  
-  // Processing & Simulation Modal states
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [showMpinModal, setShowMpinModal] = useState(false);
-  const [successReceipt, setSuccessReceipt] = useState<{ tid: string; method: string; date: string; amount: number } | null>(null);
-  const [copiedAccount, setCopiedAccount] = useState<string | null>(null);
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
-
-  // Sync state
-  const refreshSubscription = () => {
-    const sub = StorageService.getAiVoiceSubscription();
-    setSubscription(sub);
-    if (onSubscriptionUpdated) {
-      onSubscriptionUpdated();
-    }
-  };
-
-  useEffect(() => {
-    refreshSubscription();
-  }, []);
-
-  // Save Custom JazzCash Till Details & QR Code
-  const handleSaveTillDetails = (e: React.FormEvent) => {
-    e.preventDefault();
-    const cleanTill = editTillId.trim();
-    const updated = {
-      ...paymentConfig,
-      jazzcashTillId: cleanTill,
-      jazzcashTitle: editTillTitle.trim(),
-      jazzcashNumber: editTillNumber.trim(),
-      jazzcashQrImage: editQrImage.trim() || `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=JazzCashTill${cleanTill}-PKCargoLink`,
-    };
-    StorageService.savePaymentSettings(updated);
-    setPaymentConfig(updated);
-    setShowTillEditor(false);
-    setStatusMessage('✅ جاز کیش بزنس ٹل ID اور کیو آر کوڈ کی تفصیلات کامیابی سے اپ ڈیٹ ہو گئیں!');
-  };
-
-  // Handle Free Trial Activation
-  const handleActivateTrial = () => {
-    setIsProcessing(true);
-    setTimeout(() => {
-      StorageService.activateAiVoiceSubscription(1, 'trial', 'FREE-TRIAL-1DAY');
-      setIsProcessing(false);
-      setStatusMessage('🎉 1 دن کا مفت ٹرائل کامیابی سے فعال ہو گیا ہے!');
-      refreshSubscription();
-    }, 600);
-  };
-
-  // Handle Initiate Wallet Payment (JazzCash / EasyPaisa)
-  const handleInitiateWalletPayment = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!accountNumber || accountNumber.trim().length < 10) {
-      setStatusMessage('❌ براہ کرم درست 11 ہندسوں کا موبائل نمبر درج کریں (مثلاً 03001234567)');
-      return;
-    }
-
-    setStatusMessage(null);
-    setMpinInput('1234'); // Auto-fill demo OTP code for instant user experience!
-    setShowMpinModal(true);
-  };
-
-  // Confirm Simulated MPIN / OTP Payment
-  const handleConfirmMpinPayment = () => {
-    setShowMpinModal(false);
-    setIsProcessing(true);
-
-    setTimeout(() => {
-      const generatedTid = selectedMethod === 'jazzcash' 
-        ? `JC-${Math.floor(10000000 + Math.random() * 90000000)}`
-        : selectedMethod === 'easypaisa'
-        ? `EP-${Math.floor(10000000 + Math.random() * 90000000)}`
-        : `CARD-${Math.floor(100000 + Math.random() * 900000)}`;
-
-      const methodToSave = selectedMethod === 'manual' ? 'bank' : selectedMethod === 'qr' ? 'jazzcash' : selectedMethod;
-      StorageService.activateAiVoiceSubscription(30, methodToSave, generatedTid);
-      setIsProcessing(false);
-      setMpinInput('');
-
-      const receiptObj = {
-        tid: generatedTid,
-        method: selectedMethod === 'jazzcash' ? 'JazzCash Auto-Pay' : selectedMethod === 'easypaisa' ? 'EasyPaisa Auto-Pay' : 'Debit/Credit Card',
-        date: new Date().toLocaleDateString('ur-PK', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
-        amount: 500,
-      };
-
-      setSuccessReceipt(receiptObj);
-      setStatusMessage('✅ مبارک ہو! 500 روپے کی ادائیگی کامیاب رہی اور AI وائس اسسٹنٹ 30 دن کے لیے فعال ہو گیا۔');
-      refreshSubscription();
-    }, 1500);
-  };
-
-  // Handle Manual TID Submission
-  const handleManualTidSubmit = (e: React.FormEvent) => {
+  // Server-Authoritative Manual TID & Payment Claim Submission
+  const handleManualTidSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!manualTid.trim()) {
       setStatusMessage('❌ براہ کرم ٹرانزیکشن ID (TID) درج کریں');
@@ -202,22 +127,34 @@ export const PaymentSettings: React.FC<PaymentSettingsProps> = ({
     }
 
     setIsProcessing(true);
-    setTimeout(() => {
-      const cleanTid = manualTid.trim();
-      StorageService.activateAiVoiceSubscription(30, 'bank', cleanTid);
-      setIsProcessing(false);
-      setManualTid('');
+    setStatusMessage(null);
 
-      setSuccessReceipt({
-        tid: cleanTid,
-        method: 'Manual TID Verification',
-        date: new Date().toLocaleDateString('ur-PK'),
-        amount: 500,
+    try {
+      const response = await fetch('/api/subscriptions/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: accountNumber || StorageService.getCurrentUserPhone() || '03000000000',
+          tid: manualTid.trim(),
+          userType: isAddaManagerLoggedIn ? 'adda_manager' : 'driver',
+          notes: 'JazzCash / EasyPaisa 500 PKR Transfer'
+        }),
       });
 
-      setStatusMessage('✅ ٹرانزیکشن ID کی تصدیق ہو گئی! 30 دن کی پریمیم سبسکرپشن فعال کر دی گئی ہے۔');
-      refreshSubscription();
-    }, 1200);
+      const data = await response.json();
+      setIsProcessing(false);
+
+      if (response.ok && data.success) {
+        setStatusMessage('✅ ادائیگی کی درخواست موصول ہو گئی۔ واٹس ایپ (03298111391) پر تصدیق کے بعد 30 دن کی سبسکرپشن فعال ہو جائے گی۔');
+        setManualTid('');
+        refreshSubscription();
+      } else {
+        setStatusMessage(`❌ ${data.error || 'ادائیگی جمع کرنے میں ناکامی۔ پوزیشن چیک کریں۔'}`);
+      }
+    } catch {
+      setIsProcessing(false);
+      setStatusMessage('❌ نیٹ ورک کا مسئلہ پیش آیا۔ واٹس ایپ (03298111391) پر براہ راست رابطہ کریں۔');
+    }
   };
 
   const copyToClipboard = (text: string, label: string) => {
@@ -516,13 +453,24 @@ export const PaymentSettings: React.FC<PaymentSettingsProps> = ({
                       </div>
                       <div className="flex justify-between border-b border-slate-100 pb-2">
                         <span className="text-slate-500 font-bold">موبائل نمبر:</span>
-                        <strong className="text-slate-900 font-mono">{paymentConfig.jazzcashNumber || '0300-1234567'}</strong>
+                        <strong className="text-slate-900 font-mono">{paymentConfig.jazzcashNumber || '0329-8111391'}</strong>
                       </div>
                       <div className="flex justify-between pt-1">
                         <span className="text-slate-500 font-bold">ماہانہ فیس:</span>
                         <strong className="text-emerald-700 font-black text-sm">500 روپے (PKR)</strong>
                       </div>
                     </div>
+
+                    {/* WhatsApp Screenshot Direct Send Button */}
+                    <a
+                      href={getWhatsAppShareUrl('السلام علیکم! میں نے AI وائس اسسٹنٹ کے لیے 500 روپے کی فیس ادا کر دی ہے۔ منسلک سکرین شاٹ دیکھ کر تصدیق فرما دیں۔', '03298111391')}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold text-xs py-3 px-4 rounded-2xl shadow-md transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer text-center"
+                    >
+                      <Send className="w-4 h-4 text-white" />
+                      <span>📱 واٹس ایپ 03298111391 پر سکرین شاٹ بھیجیں</span>
+                    </a>
 
                     {/* QR Scan & Verify Button */}
                     <button
@@ -770,13 +718,13 @@ export const PaymentSettings: React.FC<PaymentSettingsProps> = ({
           {/* WhatsApp proof share link */}
           <div className="pt-2 text-center">
             <a
-              href={getWhatsAppShareUrl(`السلام علیکم! میں نے AI وائس کال سروس 500 روپے کی فیس ادا کر دی ہے۔ میرا TID نمبر ${subscription.transactionId || 'N/A'} ہے۔ براہ کرم تصدیق فرمائیں۔`, '03001234567')}
+              href={getWhatsAppShareUrl(`السلام علیکم! میں نے AI وائس کال سروس 500 روپے کی فیس ادا کر دی ہے۔ میرا TID نمبر ${subscription.transactionId || 'N/A'} ہے۔ براہ کرم تصدیق فرمائیں۔`, '03298111391')}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#20ba5a] text-white px-5 py-2.5 rounded-xl font-bold text-xs shadow-md transition active:scale-95"
             >
               <Send className="w-4 h-4" />
-              <span>واٹس ایپ پر پیمنٹ کی رسید بھیجیں</span>
+              <span>واٹس ایپ (03298111391) پر پیمنٹ کی رسید و سکرین شاٹ بھیجیں</span>
             </a>
           </div>
         </div>
