@@ -11,7 +11,8 @@ import {
   CheckCircle2, 
   Lock,
   RefreshCw,
-  MessageSquare
+  MessageSquare,
+  Volume2
 } from 'lucide-react';
 import { LoadSlip } from '../types';
 import { StorageService } from '../services/storage';
@@ -163,8 +164,31 @@ export const GeminiLiveVoiceWidget: React.FC<GeminiLiveVoiceWidgetProps> = ({
   };
 
   const handleQuickPresetQuery = (queryText: string) => {
+    if ('speechSynthesis' in window) {
+      try { window.speechSynthesis.resume(); } catch {}
+    }
     setUserTranscript(queryText);
+    setStatusText(`"۔${queryText}۔" — AI جواب دے رہا ہے...`);
+    setVoiceState('connecting');
     engineRef.current?.sendTextMessage(queryText);
+  };
+
+  const handleSpeakText = (text: string) => {
+    if ('speechSynthesis' in window && text) {
+      try {
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.resume();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'ur-PK';
+        utterance.rate = 0.95;
+        utterance.onstart = () => setVoiceState('speaking');
+        utterance.onend = () => setVoiceState('listening');
+        utterance.onerror = () => setVoiceState('listening');
+        window.speechSynthesis.speak(utterance);
+      } catch (err) {
+        console.warn('SpeechSynthesis play error:', err);
+      }
+    }
   };
 
   return (
@@ -321,11 +345,17 @@ export const GeminiLiveVoiceWidget: React.FC<GeminiLiveVoiceWidgetProps> = ({
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
+                    if ('speechSynthesis' in window) {
+                      try { window.speechSynthesis.resume(); } catch {}
+                    }
                     const form = e.currentTarget;
                     const input = form.elements.namedItem('textQuery') as HTMLInputElement;
                     if (input && input.value.trim()) {
-                      engineRef.current?.sendTextMessage(input.value.trim());
-                      setUserTranscript(input.value.trim());
+                      const q = input.value.trim();
+                      setStatusText(`"۔${q}۔" — AI جواب دے رہا ہے...`);
+                      setVoiceState('connecting');
+                      engineRef.current?.sendTextMessage(q);
+                      setUserTranscript(q);
                       input.value = '';
                     }
                   }}
@@ -356,7 +386,17 @@ export const GeminiLiveVoiceWidget: React.FC<GeminiLiveVoiceWidgetProps> = ({
                 )}
 
                 <div className="space-y-1 text-right">
-                  <span className="text-[10px] text-emerald-400 font-bold block">PK Cargo Assistant:</span>
+                  <div className="flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => handleSpeakText(aiTranscript)}
+                      className="text-[11px] bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 border border-emerald-500/40 px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 cursor-pointer transition active:scale-95"
+                    >
+                      <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>🔊 آواز میں سنیں</span>
+                    </button>
+                    <span className="text-[10px] text-emerald-400 font-bold">PK Cargo Assistant:</span>
+                  </div>
                   <p className="text-emerald-100 bg-emerald-950/60 p-2.5 rounded-xl border border-emerald-800/40 leading-relaxed font-medium">
                     {aiTranscript}
                   </p>
