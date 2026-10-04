@@ -20,6 +20,8 @@ import { sanitizePhoneForCall, getWhatsAppShareUrl, OFFICIAL_WEBSITE_URL } from 
 interface DriverSearchViewProps {
   slips: LoadSlip[];
   onViewSlip: (slip: LoadSlip) => void;
+  initialLoadingCity?: string;
+  initialDestinationCity?: string;
 }
 
 const POPULAR_CITIES = [
@@ -34,10 +36,12 @@ const VEHICLE_CHIPS = [
 export const DriverSearchView: React.FC<DriverSearchViewProps> = ({
   slips,
   onViewSlip,
+  initialLoadingCity = '',
+  initialDestinationCity = '',
 }) => {
   // Free text search states (ZERO DROPDOWNS)
-  const [loadingCity, setLoadingCity] = useState('');
-  const [destinationCity, setDestinationCity] = useState('');
+  const [loadingCity, setLoadingCity] = useState(initialLoadingCity);
+  const [destinationCity, setDestinationCity] = useState(initialDestinationCity);
   const [vehicleType, setVehicleType] = useState('');
   const [selectedCityChip, setSelectedCityChip] = useState('تمام پاکستان');
   const [selectedVehicleChip, setSelectedVehicleChip] = useState('تمام گاڑیاں');

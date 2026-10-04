@@ -28,7 +28,8 @@ import {
   Building2,
   User,
   Info,
-  Lock
+  Lock,
+  Eye
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { toPng } from 'html-to-image';
@@ -254,13 +255,50 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
     return getWhatsAppShareUrl(text, currentSlip.whatsappNumber || currentSlip.primaryPhone);
   };
 
-  const isExpired = currentSlip.status === 'expired' || currentSlip.status === 'booked';
+  const isBooked = currentSlip.status === 'booked';
+  const isExpired = currentSlip.status === 'expired' || isBooked;
   const currentStepNum = getStepIndex(currentSlip.driverTripStatus);
+
+  // If slip is booked and viewer is NOT the Adda Manager, do NOT open the slip preview
+  if (isBooked && !isManagerView) {
+    return (
+      <div className="max-w-lg mx-auto py-8 px-4 font-nafees animate-in fade-in zoom-in-95 duration-200">
+        <div className="bg-white rounded-3xl p-6 sm:p-8 text-center border border-slate-200 shadow-sm space-y-5">
+          <div className="w-16 h-16 rounded-3xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto border-2 border-amber-200 shadow-xs">
+            <Lock className="w-8 h-8 text-amber-600" />
+          </div>
+
+          <div className="space-y-2">
+            <span className="inline-block bg-amber-100 text-amber-900 text-xs font-bold px-3 py-1 rounded-full border border-amber-300">
+              🔒 بکڈ (Booked)
+            </span>
+            <h2 className="text-xl sm:text-2xl font-black text-[#08284F]">
+              یہ گاڑی / لوڈ بک ہو چکا ہے
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-sm mx-auto">
+              اڈا منیجر کی طرف سے یہ لوڈ بک مارک کر دیا گیا ہے۔ ڈرائیور حضرات دیگر دستیاب لوڈز تلاش کرنے کے لیے نیچے بٹن دبائیں۔
+            </p>
+          </div>
+
+          <div className="pt-2 space-y-2.5">
+            <button
+              type="button"
+              onClick={onSearchLoads}
+              className="w-full bg-[#19A974] hover:bg-[#169163] text-white py-3.5 px-4 rounded-xl font-bold text-sm shadow-md transition active:scale-95 flex items-center justify-center gap-2"
+            >
+              <Truck className="w-4 h-4" />
+              <span>دیگر دستیاب لوڈز تلاش کریں</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-5 font-nafees">
       
-      {/* Expired / Booked Notice */}
+      {/* Expired / Booked Notice for Manager */}
       {isExpired && (
         <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 text-amber-900 flex items-center justify-between gap-3 shadow-sm">
           <div className="flex items-center gap-3">
@@ -272,7 +310,7 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
                   : 'یہ لوڈ اب دستیاب نہیں ہے'}
               </p>
               <p className="text-xs text-amber-700">
-                ڈرائیور حضرات دیگر دستیاب لوڈز تلاش کرنے کے لیے ہوم پیج چیک کریں۔
+                یہ لوڈ سلپ اس وقت بکڈ حالت میں ہے۔ صرف اڈا منیجر اسے دیکھ اور تبدیل کر سکتا ہے۔
               </p>
             </div>
           </div>
@@ -288,9 +326,10 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
       )}
 
       {/* ============================================================== */}
-      {/* REAL-TIME DRIVER LIVE TRIP TRACKING & STATUS CARD */}
+      {/* REAL-TIME DRIVER LIVE TRIP TRACKING - ONLY FOR ADDA MANAGER */}
       {/* ============================================================== */}
-      <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-200 space-y-4 no-print">
+      {isManagerView && (
+        <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-200 space-y-4 no-print">
         
         {/* Header Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
@@ -305,7 +344,7 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
                 </h3>
                 <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2 py-0.5 rounded-full border border-emerald-300">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                  <span>ریئل ٹائم</span>
+                  <span>صرف اڈا منیجر</span>
                 </span>
               </div>
               <p className="text-xs text-slate-500">
@@ -486,6 +525,7 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
 
         </div>
       </div>
+      )}
 
       {/* ============================================================== */}
       {/* SECTION 11: THE PROFESSIONAL DIGITAL LOAD SLIP */}
@@ -524,10 +564,16 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
               </div>
             </div>
 
-            {/* Verification Badge */}
-            <div className="inline-flex items-center gap-1.5 bg-emerald-600/90 text-white text-[11px] font-bold px-3 py-1 rounded-full border border-emerald-300/40 shadow-xs">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-200" />
-              <span>تصدیق شدہ سلپ</span>
+            {/* Verification & Views Badge */}
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 bg-white/15 text-white text-[11px] font-bold px-3 py-1 rounded-full border border-white/20">
+                <Eye className="w-3.5 h-3.5 text-emerald-300" />
+                <span>{currentSlip.viewsCount || 0} ڈرائیورز نے دیکھی</span>
+              </span>
+              <div className="inline-flex items-center gap-1.5 bg-emerald-600/90 text-white text-[11px] font-bold px-3 py-1 rounded-full border border-emerald-300/40 shadow-xs">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-200" />
+                <span>تصدیق شدہ سلپ</span>
+              </div>
             </div>
           </div>
 

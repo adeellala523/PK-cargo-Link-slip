@@ -2,7 +2,17 @@ import express, { Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
+import { GoogleGenAI } from '@google/genai';
 import { getDbSlips, saveDbSlip, deleteDbSlip } from './src/db/slips.ts';
+
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY,
+  httpOptions: {
+    headers: {
+      'User-Agent': 'aistudio-build',
+    }
+  }
+});
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -275,6 +285,174 @@ app.post('/api/payment-settings', (req: Request, res: Response) => {
   } catch {}
   res.json({ success: true });
 });
+
+// -------------------------------------------------------------
+// AI Live Voice Call & Assistant API (Real Database Slips & Trucks)
+// -------------------------------------------------------------
+app.post('/api/ai-voice-call', async (req: Request, res: Response) => {
+  const { userSpeech, activeSlips = [], availableTrucks = [] } = req.body;
+
+  if (!userSpeech || typeof userSpeech !== 'string' || !userSpeech.trim()) {
+    res.status(400).json({ error: 'User speech query is required' });
+    return;
+  }
+
+  const promptText = userSpeech.trim();
+  const lower = promptText.toLowerCase();
+
+  // Known Pakistani Cities
+  const PAK_CITIES = [
+    'لاہور', 'کراچی', 'ملتان', 'فیصل آباد', 'راولپنڈی', 'اسلام آباد', 
+    'پشاور', 'کوئٹہ', 'گوجرانوالہ', 'سیالکوٹ', 'رحیم یار خان', 'سکھر', 
+    'حیدرآباد', 'صادق آباد', 'بہاولپور', 'سرگودھا', 'گجرات', 'مردان',
+    'lahore', 'karachi', 'multan', 'faisalabad', 'rawalpindi', 'islamabad', 'peshawar', 'quetta'
+  ];
+
+  // Detect query intent and cities
+  const detectedCities = PAK_CITIES.filter(c => lower.includes(c.toLowerCase()) || promptText.includes(c));
+  const fromCity = detectedCities[0] || '';
+  const toCity = detectedCities[1] || '';
+
+  // Check Real Slips in memory/database
+  const realSlips = Array.isArray(activeSlips) ? activeSlips : [];
+  let matchedSlips: any[] = [];
+
+  if (fromCity || toCity) {
+    matchedSlips = realSlips.filter((s: any) => {
+      const matchFrom = !fromCity || (s.loadingCity && (s.loadingCity.includes(fromCity) || fromCity.includes(s.loadingCity)));
+      const matchTo = !toCity || (s.destinationCity && (s.destinationCity.includes(toCity) || toCity.includes(s.destinationCity)));
+      return matchFrom && matchTo;
+    });
+  } else if (lower.includes('لوڈ') || lower.includes('مال') || lower.includes('load')) {
+    matchedSlips = realSlips;
+  }
+
+  // Check Available Trucks if requested
+  const isTruckQuery = lower.includes('گاڑی') || lower.includes('خالی') || lower.includes('ٹرک') || lower.includes('truck');
+  const realTrucks = Array.isArray(availableTrucks) ? availableTrucks : [];
+  let matchedTrucks: any[] = [];
+  if (isTruckQuery) {
+    matchedTrucks = realTrucks.filter((t: any) => {
+      if (!fromCity) return true;
+      return t.currentCity && (t.currentCity.includes(fromCity) || fromCity.includes(t.currentCity));
+    });
+  }
+
+  // 1. If a valid Gemini API Key exists, prompt Gemini strictly with real database context
+  if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim().length > 10) {
+    try {
+      const slipsText = realSlips.slice(0, 15).map((s: any, idx: number) => 
+        `${idx + 1}. اڈا: ${s.addaName} (${s.addaCity}) | روٹ: ${s.loadingCity} تا ${s.destinationCity} | مال: ${s.goods} (${s.weight || ''}) | گاڑی: ${s.vehicleType} | فون: ${s.primaryPhone}`
+      ).join('\n');
+
+      const systemInstruction = `
+آپ PK Cargo Link کے لائیو AI اسسٹنٹ ہیں۔ آپ صرف اور صرف سسٹم کے اصلی (Real) ڈیٹا سے جواب دیتے ہیں۔
+کوئی بھی فرضی (Dummy / Fake) لوڈ یا اڈا کبھی خود سے نہ بنائیں۔
+
+سسٹم میں اس وقت موجود اصلی لوڈز (${realSlips.length}):
+${slipsText || 'اس وقت سسٹم میں کوئی لوڈ نہیں ہے۔'}
+
+قواعد:
+1. اگر ڈرائیور کسی ایسے شہر یا روٹ کا مال پوچھے جو سسٹم میں موجود نہیں ہے، تو صاف اور سچ بتائیں کہ: "استاد جی! اس وقت سسٹم میں اس روٹ کا کوئی لوڈ دستیاب نہیں ہے۔ جیسے ہی کوئی اڈا لگائے گا آپ کو مل جائے گا۔"
+2. اگر لوڈ موجود ہے، تو اصلی اڈے کا نام (${realSlips[0]?.addaName || ''})، مال اور فون نمبر بتائیں۔
+3. مختصر، باادب اور آسان اردو میں جواب دیں۔
+
+JSON فارمیٹ:
+{
+  "spokenUrdu": "ڈرائیور کے لیے سچ پر مبنی اردو جواب",
+  "action": {
+    "type": "search_loads" | "register_truck" | "register_driver" | "create_slip" | "info",
+    "params": {
+      "loadingCity": "${fromCity}",
+      "destinationCity": "${toCity}",
+      "found": true/false,
+      "count": 0
+    },
+    "summaryUrdu": "خلاصہ"
+  }
+}
+`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.8-flash',
+        contents: [{ role: 'user', parts: [{ text: promptText }] }],
+        config: { systemInstruction, responseMimeType: 'application/json', temperature: 0.1 }
+      });
+
+      const parsed = JSON.parse(response.text || '{}');
+      if (parsed.spokenUrdu) {
+        res.json({
+          success: true,
+          spokenUrdu: parsed.spokenUrdu,
+          action: parsed.action || { type: 'info' },
+          matchedSlips
+        });
+        return;
+      }
+    } catch {
+      // Gracefully fall back to deterministic real database matching
+    }
+  }
+
+  // 2. Deterministic Real Data Response Engine (Zero Fake Data)
+  let spokenUrdu = '';
+  let action: any = { type: 'info', params: {} };
+
+  if (lower.includes('اکاؤنٹ') || lower.includes('رجسٹر')) {
+    spokenUrdu = 'استاد جی! آپ کا ڈرائیور اکاؤنٹ بنانے کا فارم کھول دیا گیا ہے۔';
+    action = { type: 'register_driver', summaryUrdu: 'ڈرائیور اکاؤنٹ رجسٹریشن' };
+  } else if (lower.includes('سلپ') || lower.includes('slip')) {
+    spokenUrdu = 'جی اڈا منیجر صاحب! نئی لوڈ سلپ بنانے کا فارم کھول دیا گیا ہے۔';
+    action = { type: 'create_slip', summaryUrdu: 'نئی لوڈ سلپ' };
+  } else if (isTruckQuery && !lower.includes('لوڈ') && !lower.includes('مال')) {
+    if (lower.includes('لسٹ') || lower.includes('ایڈ')) {
+      spokenUrdu = 'استاد جی! اپنی گاڑی لسٹ کرنے کا فارم کھول دیا گیا ہے، شہر اور گاڑی درج کریں۔';
+      action = { type: 'register_truck', summaryUrdu: 'خالی گاڑی لسٹنگ' };
+    } else {
+      if (matchedTrucks.length === 0) {
+        spokenUrdu = fromCity 
+          ? `استاد جی! اس وقت ${fromCity} میں کوئی خالی گاڑی دستیاب نہیں ہے۔ آپ اپنی گاڑی لسٹ کر سکتے ہیں۔`
+          : `استاد جی! اس وقت سسٹم میں کوئی خالی گاڑی لسٹ نہیں ہے۔`;
+        action = { type: 'view_trucks', params: { found: false, count: 0, city: fromCity }, summaryUrdu: 'گاڑی دستیاب نہیں' };
+      } else {
+        const first = matchedTrucks[0];
+        spokenUrdu = `استاد جی! ${matchedTrucks.length} خالی گاڑیاں دستیاب ہیں: پہلی گاڑی ${first.driverOrOwnerName} (${first.vehicleType}) بمقام ${first.currentCity}، رابطہ: ${first.phone}۔`;
+        action = { type: 'view_trucks', params: { found: true, count: matchedTrucks.length, city: fromCity }, summaryUrdu: `${matchedTrucks.length} خالی گاڑیاں دستیاب` };
+      }
+    }
+  } else if (lower.includes('لوڈ') || lower.includes('مال') || fromCity || toCity) {
+    if (matchedSlips.length === 0) {
+      const routeStr = fromCity && toCity ? `${fromCity} سے ${toCity}` : fromCity ? `${fromCity}` : 'مطلوبہ روٹ';
+      spokenUrdu = `استاد جی! معذرت، اس وقت سسٹم میں ${routeStr} کے لیے کوئی تصدیق شدہ لوڈ دستیاب نہیں ہے۔ جیسے ہی کوئی اڈا لوڈ پوسٹ کرے گا آپ کو مل جائے گا۔ آپ اپنی گاڑی خالی لسٹ کر سکتے ہیں۔`;
+      action = { 
+        type: 'search_loads', 
+        params: { loadingCity: fromCity, destinationCity: toCity, found: false, count: 0 }, 
+        summaryUrdu: `${routeStr}: کوئی لوڈ دستیاب نہیں` 
+      };
+    } else {
+      const first = matchedSlips[0];
+      const routeStr = `${first.loadingCity} تا ${first.destinationCity}`;
+      spokenUrdu = `استاد جی! ${routeStr} کے لیے ${matchedSlips.length} اصلی لوڈ دستیاب ہیں: ${first.addaName} (${first.addaCity}) پر ${first.goods} کا مال ہے، مطلوبہ گاڑی ${first.vehicleType}، رابطہ نمبر: ${first.primaryPhone}۔ لوڈ اسکرین پر کھول دیا گیا ہے۔`;
+      action = { 
+        type: 'search_loads', 
+        params: { loadingCity: fromCity || first.loadingCity, destinationCity: toCity || first.destinationCity, found: true, count: matchedSlips.length, matchedSlipIds: [first.id] }, 
+        summaryUrdu: `${matchedSlips.length} لوڈ دستیاب: ${routeStr}` 
+      };
+    }
+  } else {
+    spokenUrdu = `السلام علیکم استاد جی! میں PK Cargo Link کا AI اسسٹنٹ ہوں۔ اس وقت سسٹم میں ${realSlips.length} اصلی لوڈز موجود ہیں۔ آپ بولیں کہ آپ کو کس شہر کا مال چاہیے یا اپنی گاڑی لسٹ کروانی ہے؟`;
+    action = { type: 'info', summaryUrdu: 'عام معلومات' };
+  }
+
+  res.json({
+    success: true,
+    spokenUrdu,
+    action,
+    matchedSlips
+  });
+});
+
+
 
 /**
  * Dynamic Preview Image Generator for WhatsApp Link Previews

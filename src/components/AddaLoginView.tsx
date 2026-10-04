@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { AddaProfile, DriverAccount } from '../types';
 import { StorageService } from '../services/storage';
+import { getWhatsAppShareUrl } from '../utils/formatters';
 
 interface AddaLoginViewProps {
   onLoginSuccess: (phone: string, role?: 'adda_manager' | 'driver') => void;
@@ -403,9 +404,22 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
 
               {/* Password Input */}
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1.5">
-                  پاس ورڈ (Password) <span className="text-red-500">*</span>
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-bold text-slate-700">
+                    پاس ورڈ (Password) <span className="text-red-500">*</span>
+                  </label>
+                  <a
+                    href={getWhatsAppShareUrl(
+                      `السلام علیکم! میں PK Cargo Link پر اپنے (${activeRole === 'driver' ? 'ڈرائیور' : 'اڈا منیجر'}) اکاؤنٹ کا پاس ورڈ ری سیٹ کروانا چاہتا ہوں۔ میرا موبائل نمبر: ${loginPhone || ''}`,
+                      '03001234567'
+                    )}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[11px] text-[#123A6D] hover:underline font-bold"
+                  >
+                    پاس ورڈ بھول گئے؟
+                  </a>
+                </div>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}

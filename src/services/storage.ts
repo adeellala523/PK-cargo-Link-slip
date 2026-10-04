@@ -1,4 +1,4 @@
-import { AddaProfile, LoadSlip, WhatsAppGroup, AdminStats, UserAccount, PaymentSettings, AvailableTruck, DriverAccount, NamedContact } from '../types';
+import { AddaProfile, LoadSlip, WhatsAppGroup, AdminStats, UserAccount, PaymentSettings, AvailableTruck, DriverAccount, DriverRating, NamedContact } from '../types';
 
 const STORAGE_KEYS = {
   ADDA_PROFILE: 'pkcargolink_adda_profile_v3',
@@ -16,6 +16,7 @@ const STORAGE_KEYS = {
   CURRENT_DRIVER: 'pkcargolink_current_driver_v3',
   IS_DRIVER_LOGGED_IN: 'pkcargolink_is_driver_logged_in_v3',
   REGISTERED_DRIVERS: 'pkcargolink_registered_drivers_v3',
+  DRIVER_RATINGS: 'pkcargolink_driver_ratings_v3',
 };
 
 // Default empty Adda template (clean state, no fake demo data)
@@ -733,8 +734,16 @@ export const StorageService = {
               validSlips.push({
                 ...s,
                 addaLogo: (s.addaLogo && !s.addaLogo.includes('adda-logo.png')) ? s.addaLogo : '',
+                viewsCount: typeof s.viewsCount === 'number' ? s.viewsCount : 0,
               });
             }
+          });
+
+          // Sort latest slips on top always (Newest created first)
+          validSlips.sort((a, b) => {
+            const timeA = new Date(a.createdAt || a.id).getTime() || 0;
+            const timeB = new Date(b.createdAt || b.id).getTime() || 0;
+            return timeB - timeA;
           });
 
           // If any slips expired past 7 days, trigger background cleanup
@@ -750,6 +759,87 @@ export const StorageService = {
       console.error('[StorageService] Failed reading local slips', e);
     }
     return [];
+  },
+
+  recordSlipView(slipId: string): void {
+    if (!slipId) return;
+    try {
+      const slips = this.getAllSlips();
+      const cleanId = slipId.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+      const index = slips.findIndex((s) => s.id.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() === cleanId);
+      if (index !== -1) {
+        const currentCount = slips[index].viewsCount || 0;
+        const updatedSlip: LoadSlip = {
+          ...slips[index],
+          viewsCount: currentCount + 1,
+        };
+        slips[index] = updatedSlip;
+        localStorage.setItem(STORAGE_KEYS.SLIPS, JSON.stringify(slips));
+        
+        // Sync with server in background
+        if (typeof fetch !== 'undefined') {
+          fetch('/api/slips', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedSlip),
+          }).catch(() => {});
+        }
+      }
+    } catch (e) {
+      console.error('[StorageService] Failed recording view', e);
+    }
+  },
+
+  getDriverRatings(driverPhone?: string): DriverRating[] {
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.DRIVER_RATINGS);
+      if (data) {
+        const parsed: DriverRating[] = JSON.parse(data);
+        if (Array.isArray(parsed)) {
+          if (!driverPhone) return parsed;
+          const clean = driverPhone.replace(/[^0-9]/g, '');
+          return parsed.filter((r) => r.driverPhone.replace(/[^0-9]/g, '') === clean);
+        }
+      }
+    } catch {}
+    return [];
+  },
+
+  saveDriverRating(rating: DriverRating): void {
+    try {
+      const ratings = this.getDriverRatings();
+      const updated = [rating, ...ratings];
+      localStorage.setItem(STORAGE_KEYS.DRIVER_RATINGS, JSON.stringify(updated));
+
+      // Also update DriverAccount average rating
+      const drivers = this.getDrivers();
+      const cleanPhone = rating.driverPhone.replace(/[^0-9]/g, '');
+      const driverIdx = drivers.findIndex((d) => d.phone.replace(/[^0-9]/g, '') === cleanPhone);
+      if (driverIdx !== -1) {
+        const driverRatings = updated.filter((r) => r.driverPhone.replace(/[^0-9]/g, '') === cleanPhone);
+        const total = driverRatings.reduce((sum, r) => sum + r.rating, 0);
+        const avg = driverRatings.length > 0 ? Number((total / driverRatings.length).toFixed(1)) : 5.0;
+        
+        drivers[driverIdx] = {
+          ...drivers[driverIdx],
+          totalRatingsCount: driverRatings.length,
+          averageRating: avg,
+        };
+        localStorage.setItem(STORAGE_KEYS.REGISTERED_DRIVERS, JSON.stringify(drivers));
+      }
+    } catch (e) {
+      console.error('[StorageService] Failed saving driver rating', e);
+    }
+  },
+
+  getDriverAverageRating(driverPhone: string): { average: number; count: number } {
+    const ratings = this.getDriverRatings(driverPhone);
+    if (ratings.length === 0) return { average: 5.0, count: 0 };
+    const total = ratings.reduce((sum, r) => sum + r.rating, 0);
+    return {
+      average: Number((total / ratings.length).toFixed(1)),
+      count: ratings.length,
+    };
   },
 
   updateSlipStatus(id: string, newStatus: 'active' | 'booked'): LoadSlip | null {
@@ -1220,4 +1310,59 @@ export const StorageService = {
       localStorage.setItem(STORAGE_KEYS.AVAILABLE_TRUCKS, JSON.stringify(filtered));
     } catch {}
   },
+
+  // -------------------------------------------------------------
+  // AI Voice Call 500 PKR Monthly Subscription
+  // -------------------------------------------------------------
+  getAiVoiceSubscription(): { isSubscribed: boolean; isTrial: boolean; expiresAt?: string; planFee: number } {
+    try {
+      const data = localStorage.getItem('pkcargolink_ai_voice_sub_v1');
+      if (data) {
+        const sub = JSON.parse(data);
+        if (sub && sub.expiresAt) {
+          const isExpired = new Date(sub.expiresAt).getTime() < Date.now();
+          if (!isExpired) {
+            return {
+              isSubscribed: true,
+              isTrial: !!sub.isTrial,
+              expiresAt: sub.expiresAt,
+              planFee: 500,
+            };
+          }
+        }
+      }
+    } catch {}
+    return {
+      isSubscribed: false,
+      isTrial: false,
+      planFee: 500,
+    };
+  },
+
+  activateAiVoiceSubscription(days: number = 30, paymentMethod: 'jazzcash' | 'easypaisa' | 'bank' | 'trial' = 'trial', transactionId?: string): boolean {
+    const now = new Date();
+    const expires = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+    const sub = {
+      isSubscribed: true,
+      isTrial: paymentMethod === 'trial',
+      planFee: 500,
+      subscribedAt: now.toISOString(),
+      expiresAt: expires.toISOString(),
+      paymentMethod,
+      transactionId: transactionId || (paymentMethod === 'trial' ? 'TRIAL-FREE-1DAY' : `TID-${Date.now().toString().slice(-6)}`),
+    };
+    try {
+      localStorage.setItem('pkcargolink_ai_voice_sub_v1', JSON.stringify(sub));
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  cancelAiVoiceSubscription(): void {
+    try {
+      localStorage.removeItem('pkcargolink_ai_voice_sub_v1');
+    } catch {}
+  },
 };
+

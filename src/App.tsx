@@ -22,6 +22,7 @@ import { AdPlaceholder } from './components/AdPlaceholder';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { NotificationCenterModal } from './components/NotificationCenterModal';
 import { MobileBottomNav } from './components/MobileBottomNav';
+import { AiVoiceSupportWidget } from './components/AiVoiceSupportWidget';
 import { StorageService } from './services/storage';
 import { LoadSlip, AddaProfile, WhatsAppGroup } from './types';
 import { updateOpenGraphMetaTags } from './utils/formatters';
@@ -58,6 +59,7 @@ export default function App() {
 
   // Notification Center state
   const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState<boolean>(false);
+  const [searchInitialFilter, setSearchInitialFilter] = useState<{ from: string; to: string }>({ from: '', to: '' });
 
   // Map each tab to its clean URL path
   const tabToPath = (tab: string, slipId?: string): string => {
@@ -489,6 +491,8 @@ export default function App() {
           <DriverSearchView
             slips={slips}
             onViewSlip={viewSlipDetail}
+            initialLoadingCity={searchInitialFilter.from}
+            initialDestinationCity={searchInitialFilter.to}
           />
         )}
 
@@ -618,6 +622,18 @@ export default function App() {
 
       {/* PWA Install Banner */}
       <PWAInstallBanner />
+
+      {/* AI Live Voice Call & Customer Support Widget (500 PKR/month with 1-Day Free Trial) */}
+      <AiVoiceSupportWidget
+        slips={slips}
+        onNavigateToSearchWithQuery={(from, to) => {
+          setSearchInitialFilter({ from, to });
+          navigateTo('search');
+        }}
+        onOpenCreateSlip={() => handleOpenCreateModal()}
+        onNavigateToTrucks={() => navigateTo('trucks')}
+        onNavigateToDriverPortal={() => navigateTo('driver')}
+      />
 
       {/* General Site Footer */}
       <Footer

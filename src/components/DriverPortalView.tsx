@@ -19,7 +19,8 @@ import {
   Navigation,
   ArrowRight,
   Sparkles,
-  Building2
+  Building2,
+  Star
 } from 'lucide-react';
 import { LoadSlip, DriverAccount } from '../types';
 import { 
@@ -284,6 +285,16 @@ export const DriverPortalView: React.FC<DriverPortalViewProps> = ({
                 <span className="bg-emerald-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-md">
                   تصدیق شدہ ڈرائیور
                 </span>
+                {(() => {
+                  const { average, count } = StorageService.getDriverAverageRating(currentDriver.phone);
+                  return (
+                    <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-900 border border-amber-300 text-[11px] font-bold px-2 py-0.5 rounded-md shadow-2xs">
+                      <Star className="w-3 h-3 text-amber-600 fill-amber-500" />
+                      <span>{average.toFixed(1)} / 5.0</span>
+                      {count > 0 && <span className="text-amber-800 text-[10px]">({count} ریٹنگز)</span>}
+                    </span>
+                  );
+                })()}
               </div>
               <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600 mt-1">
                 <span className="font-mono font-bold text-slate-800">{currentDriver.phone}</span>

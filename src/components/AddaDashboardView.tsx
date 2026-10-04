@@ -385,9 +385,15 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
                       </span>
                     )}
                   </div>
-                  <span className="text-xs text-slate-400 font-mono">
-                    {slip.createdAt ? new Date(slip.createdAt).toLocaleDateString('ur-PK') : ''}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 px-2 py-0.5 rounded-md flex items-center gap-1">
+                      <Eye className="w-3 h-3 text-[#123A6D]" />
+                      <span>{slip.viewsCount || 0} ڈرائیورز نے دیکھی</span>
+                    </span>
+                    <span className="text-xs text-slate-400 font-mono">
+                      {slip.createdAt ? new Date(slip.createdAt).toLocaleDateString('ur-PK') : ''}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="flex items-center justify-between text-sm">

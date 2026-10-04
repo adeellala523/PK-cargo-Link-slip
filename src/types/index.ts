@@ -177,6 +177,18 @@ export interface UserAccount {
   createdAt: string;
 }
 
+export interface DriverRating {
+  id: string;
+  driverPhone: string;
+  driverName?: string;
+  addaId?: string;
+  addaName?: string;
+  rating: number; // 1 to 5
+  feedback?: string;
+  slipId?: string;
+  createdAt: string;
+}
+
 export interface DriverAccount {
   id: string;
   driverName: string;
@@ -191,6 +203,8 @@ export interface DriverAccount {
   createdAt?: string;
   registeredAt?: string;
   isVerified?: boolean;
+  totalRatingsCount?: number;
+  averageRating?: number;
 }
 
 export interface PaymentSettings {
@@ -256,3 +270,30 @@ export interface AvailableTruck {
   createdByPhone?: string;
   userRole?: 'driver' | 'adda_manager';
 }
+
+export interface AiVoiceSubscription {
+  isSubscribed: boolean;
+  isTrial: boolean;
+  planFee: number; // 500 PKR
+  expiresAt: string; // ISO date
+  subscribedAt: string;
+  transactionId?: string;
+  paymentMethod?: 'jazzcash' | 'easypaisa' | 'bank' | 'trial';
+  userPhone?: string;
+}
+
+export interface AiVoiceCallAction {
+  type: 'search_loads' | 'create_slip' | 'register_truck' | 'register_driver' | 'navigate' | 'info';
+  params?: Record<string, any>;
+  summaryUrdu?: string;
+}
+
+export interface AiVoiceMessage {
+  id: string;
+  sender: 'driver' | 'ai';
+  text: string;
+  timestamp: string;
+  action?: AiVoiceCallAction;
+  audioGenerated?: boolean;
+}
+

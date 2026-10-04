@@ -273,7 +273,12 @@ export const SlipHistoryView: React.FC<SlipHistoryViewProps> = ({
                     </span>
                   )}
                 </div>
-                <div className="flex items-center gap-2 text-xs text-slate-500">
+                <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                  <span className="text-[11px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded flex items-center gap-1">
+                    <Eye className="w-3 h-3 text-[#123A6D]" />
+                    <span>{slip.viewsCount || 0} ڈرائیورز نے دیکھی</span>
+                  </span>
+                  <span>•</span>
                   <span>اڈا: <strong className="text-slate-800">{slip.addaName}</strong></span>
                   <span>•</span>
                   <span className="font-mono">{slip.createdAt ? new Date(slip.createdAt).toLocaleDateString('ur-PK') : ''}</span>
