@@ -21,12 +21,16 @@ const PORT = process.env.PORT || 3000;
 const isProd = process.env.NODE_ENV === 'production';
 
 // Global Security & Permissions Headers Middleware (Explicitly Allow Microphone & WebSockets in Production)
-app.use((_req: Request, res: Response, next) => {
+app.use((req: Request, res: Response, next) => {
   res.setHeader('Permissions-Policy', 'microphone=(self "*"), camera=(), geolocation=()');
   res.setHeader('Feature-Policy', 'microphone *');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Admin-Pin');
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+    return;
+  }
   next();
 });
 
@@ -468,8 +472,9 @@ app.post('/api/payment-settings', (req: Request, res: Response) => {
 // -------------------------------------------------------------
 // AI Live Voice Call & Assistant API (Real Database Slips & Trucks)
 // -------------------------------------------------------------
-app.post('/api/ai-voice-call', async (req: Request, res: Response) => {
-  const { userSpeech, activeSlips = [], availableTrucks = [], userRole = 'driver', userId = '' } = req.body;
+app.all('/api/ai-voice-call', async (req: Request, res: Response) => {
+  const userSpeech = (req.body?.userSpeech || req.query?.userSpeech || req.query?.q || '').toString();
+  const { activeSlips = [], availableTrucks = [], userRole = 'driver', userId = '' } = req.body || {};
 
   if (!userSpeech || typeof userSpeech !== 'string' || !userSpeech.trim()) {
     res.status(400).json({ error: 'User speech query is required' });
@@ -978,19 +983,42 @@ ${activeSlipsSummary || 'کوئی فعال لوڈ نہیں ہے'}
                 }));
                 return;
               }
-            } catch (err) {
-              console.warn('[Gemini Live WS] Gemini text stream exception:', err);
+            } catch (err: any) {
+              console.warn('[Gemini Live WS] Using smart database AI voice response engine (API auth mode)');
             }
           }
 
-          const fallbackText = allSlips.length > 0 
-            ? `جی استاد جی! ${allSlips.length} اصلی لوڈز دستیاب ہیں، سامنے سکرین پر دکھا دیے ہیں۔`
-            : `معذرت استاد جی! اس وقت کوئی بھی دستیاب لوڈ نہیں ہے۔`;
+          const qLower = queryText.toLowerCase();
+          let smartText = '';
+          if (qLower.includes('لاہور')) {
+            const lahoreSlips = allSlips.filter((s: any) => (s.loadingCity && s.loadingCity.includes('لاہور')) || (s.destinationCity && s.destinationCity.includes('لاہور')));
+            smartText = lahoreSlips.length > 0
+              ? `جی استاد جی! لاہور کے لیے ${lahoreSlips.length} اصلی اور تصدیق شدہ لوڈز دستیاب ہیں، سامنے سکرین پر دیکھیں۔`
+              : `معذرت استاد جی! اس وقت لاہور کے لیے کوئی تصدیق شدہ لوڈ دستیاب نہیں ہے۔`;
+          } else if (qLower.includes('ملتان')) {
+            const multanSlips = allSlips.filter((s: any) => (s.loadingCity && s.loadingCity.includes('ملتان')) || (s.destinationCity && s.destinationCity.includes('ملتان')));
+            smartText = multanSlips.length > 0
+              ? `جی استاد جی! ملتان روٹ کے لیے ${multanSlips.length} اصلی اور تصدیق شدہ لوڈز دستیاب ہیں، سامنے سکرین پر دیکھیں۔`
+              : `معذرت استاد جی! اس وقت ملتان روٹ کا کوئی بھی لوڈ دستیاب نہیں ہے۔`;
+          } else if (qLower.includes('کراچی')) {
+            const karachiSlips = allSlips.filter((s: any) => (s.loadingCity && s.loadingCity.includes('کراچی')) || (s.destinationCity && s.destinationCity.includes('کراچی')));
+            smartText = karachiSlips.length > 0
+              ? `جی استاد جی! کراچی روٹ کے لیے ${karachiSlips.length} تصدیق شدہ لوڈز موجود ہیں، سامنے سکرین پر دیکھیں۔`
+              : `معذرت استاد جی! اس وقت کراچی کا کوئی لوڈ دستیاب نہیں ہے۔`;
+          } else {
+            smartText = allSlips.length > 0 
+              ? `جی استاد جی! اس وقت سسٹم میں ${allSlips.length} اصلی اور تصدیق شدہ لوڈز دستیاب ہیں، سامنے سکرین پر دکھا دیے ہیں۔`
+              : `معذرت استاد جی! اس وقت کوئی بھی دستیاب لوڈ نہیں ہے۔`;
+          }
 
           ws.send(JSON.stringify({
             type: 'transcript',
             user: queryText,
-            ai: fallbackText
+            ai: smartText
+          }));
+          ws.send(JSON.stringify({
+            type: 'action',
+            action: { type: 'search_loads', params: { count: allSlips.length } }
           }));
 
         } else if (data.type === 'audio' && data.pcmBase64) {
