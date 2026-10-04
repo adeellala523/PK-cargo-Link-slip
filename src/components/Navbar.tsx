@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Truck, Search, ShieldCheck, UserCheck, Menu, X, Download, Share2, Bell, MessageSquare, QrCode } from 'lucide-react';
 import { NotificationService } from '../services/notificationService';
+import { GEMINI_LIVE_ENABLED } from '../config/featureFlags';
 
 interface NavbarProps {
   currentTab: string;
@@ -142,6 +143,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               <span>🎙️ AI پیمنٹ</span>
+              {!GEMINI_LIVE_ENABLED && (
+                <span className="text-[10px] bg-amber-500/30 text-amber-200 px-1 py-0.2 rounded">معطل</span>
+              )}
             </button>
 
             <button
@@ -290,7 +294,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <span>🎙️ AI وائس پیمنٹ</span>
               <span className="bg-amber-500/30 text-amber-200 text-xs px-2 py-0.5 rounded-full font-nafees">
-                500/ماہ
+                {GEMINI_LIVE_ENABLED ? '500/ماہ' : 'عارضی معطل'}
               </span>
             </button>
             <button

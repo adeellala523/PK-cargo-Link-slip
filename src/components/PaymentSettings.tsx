@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { StorageService } from '../services/storage';
 import { getWhatsAppShareUrl } from '../utils/formatters';
+import { GEMINI_LIVE_ENABLED, VOICE_ASSISTANT_DISABLED_MESSAGE } from '../config/featureFlags';
 
 interface PaymentSettingsProps {
   onBack?: () => void;
@@ -202,6 +203,22 @@ export const PaymentSettings: React.FC<PaymentSettingsProps> = ({
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+
+        {!GEMINI_LIVE_ENABLED && (
+          <div className="bg-amber-50 border-2 border-amber-400 rounded-2xl p-4 sm:p-5 flex items-start gap-3.5 shadow-sm font-nafees text-right">
+            <div className="p-2 rounded-xl bg-amber-200 text-amber-900 flex-shrink-0 mt-0.5">
+              <AlertCircle className="w-5 h-5" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-extrabold text-base text-amber-950">
+                {VOICE_ASSISTANT_DISABLED_MESSAGE.title}
+              </h3>
+              <p className="text-xs sm:text-sm text-amber-900 leading-relaxed font-medium">
+                {VOICE_ASSISTANT_DISABLED_MESSAGE.subtitle} وائس اسسٹنٹ سسٹم فی الحال سرور اپڈیٹ کے تحت ہے۔ آپ کی تمام ادائیگی کی معلومات اور اکاؤنٹ پریمیم ہسٹری 100% محفوظ ہے۔
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* ============================================================= */}
         {/* SECTION 1: SUBSCRIPTION STATUS TRACKER CARD */}

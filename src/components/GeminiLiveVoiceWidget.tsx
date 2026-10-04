@@ -17,6 +17,7 @@ import {
 import { LoadSlip } from '../types';
 import { StorageService } from '../services/storage';
 import { GeminiLiveEngine, LiveVoiceState } from '../services/geminiLiveEngine';
+import { GEMINI_LIVE_ENABLED, VOICE_ASSISTANT_DISABLED_MESSAGE } from '../config/featureFlags';
 
 interface GeminiLiveVoiceWidgetProps {
   slips: LoadSlip[];
@@ -92,10 +93,14 @@ export const GeminiLiveVoiceWidget: React.FC<GeminiLiveVoiceWidgetProps> = ({
   const toggleVoiceAssistant = () => {
     if (!isOpen) {
       setIsOpen(true);
-      const userPhone = StorageService.getCurrentUserPhone();
-      engineRef.current?.startSession(userPhone);
+      if (GEMINI_LIVE_ENABLED) {
+        const userPhone = StorageService.getCurrentUserPhone();
+        engineRef.current?.startSession(userPhone);
+      }
     } else {
-      engineRef.current?.stopSession();
+      if (GEMINI_LIVE_ENABLED) {
+        engineRef.current?.stopSession();
+      }
       setIsOpen(false);
     }
   };
@@ -103,6 +108,9 @@ export const GeminiLiveVoiceWidget: React.FC<GeminiLiveVoiceWidgetProps> = ({
   const recognitionRef = useRef<any>(null);
 
   const handleMicToggle = () => {
+    if (!GEMINI_LIVE_ENABLED) {
+      return;
+    }
     if (voiceState === 'listening' || voiceState === 'speaking') {
       if (recognitionRef.current) {
         try { recognitionRef.current.stop(); } catch {}
@@ -274,22 +282,30 @@ export const GeminiLiveVoiceWidget: React.FC<GeminiLiveVoiceWidgetProps> = ({
     <>
       {/* 🎙️ Primary Gemini Live Driver Voice Trigger Button */}
       {!isOpen && (
-        <div className="no-print fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 animate-bounce-subtle font-nafees">
+        <div className="no-print fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 font-nafees">
           <button
             onClick={toggleVoiceAssistant}
-            className="group flex items-center gap-2.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-800 text-white p-3.5 sm:px-5 sm:py-3.5 rounded-full shadow-2xl border-2 border-emerald-400/50 cursor-pointer transition active:scale-95"
+            className={`group flex items-center gap-2.5 text-white p-3.5 sm:px-5 sm:py-3.5 rounded-full shadow-2xl border-2 cursor-pointer transition active:scale-95 ${
+              GEMINI_LIVE_ENABLED
+                ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-800 border-emerald-400/50 animate-bounce-subtle'
+                : 'bg-slate-800/90 hover:bg-slate-800 border-amber-500/50 text-slate-200'
+            }`}
             aria-label="PK Cargo Live Voice Assistant"
           >
-            <div className="relative flex items-center justify-center w-8 h-8 rounded-full bg-white/20 text-amber-300">
-              <Mic className="w-5 h-5 animate-pulse" />
+            <div className={`relative flex items-center justify-center w-8 h-8 rounded-full ${GEMINI_LIVE_ENABLED ? 'bg-white/20 text-amber-300' : 'bg-amber-500/20 text-amber-400'}`}>
+              {GEMINI_LIVE_ENABLED ? <Mic className="w-5 h-5 animate-pulse" /> : <MicOff className="w-5 h-5" />}
             </div>
             <div className="text-right hidden sm:block">
               <div className="text-sm font-extrabold text-white tracking-wide flex items-center gap-1">
-                <span>🎙️ بول کر کام کریں</span>
-                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                <span>🎙️ وائس اسسٹنٹ</span>
+                {!GEMINI_LIVE_ENABLED ? (
+                  <span className="text-[10px] bg-amber-500/30 text-amber-300 border border-amber-400/30 px-1.5 py-0.5 rounded-md">عارضی معطل</span>
+                ) : (
+                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                )}
               </div>
               <p className="text-[10px] text-emerald-100 font-medium">
-                مائیک دبائیں اور اپنا کام بتائیں
+                {GEMINI_LIVE_ENABLED ? 'مائیک دبائیں اور اپنا کام بتائیں' : 'فی الحال دستیاب نہیں - بعد میں کوشش کریں'}
               </p>
             </div>
           </button>
@@ -326,8 +342,25 @@ export const GeminiLiveVoiceWidget: React.FC<GeminiLiveVoiceWidgetProps> = ({
             {/* Body */}
             <div className="p-5 overflow-y-auto space-y-6 flex-1 text-right">
               
-              {/* Status Badge */}
-              <div className="flex justify-center">
+              {!GEMINI_LIVE_ENABLED ? (
+                <div className="bg-amber-500/10 border-2 border-amber-500/40 rounded-2xl p-6 text-center space-y-3 my-4 font-nafees">
+                  <div className="w-14 h-14 bg-amber-500/20 text-amber-300 rounded-full flex items-center justify-center mx-auto border border-amber-400/40">
+                    <MicOff className="w-7 h-7" />
+                  </div>
+                  <h4 className="text-lg font-extrabold text-amber-300">
+                    {VOICE_ASSISTANT_DISABLED_MESSAGE.title}
+                  </h4>
+                  <p className="text-sm text-slate-200 font-medium leading-relaxed">
+                    {VOICE_ASSISTANT_DISABLED_MESSAGE.subtitle}
+                  </p>
+                  <div className="pt-3 text-xs text-slate-400 border-t border-amber-500/20">
+                    سسٹم اپڈیٹ کے بعد وائس اسسٹنٹ دوبارہ آن کر دیا جائے گا۔ باقی تمام لوجسٹکس و سلپ سروسز آن لائن ہیں۔
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* Status Badge */}
+                  <div className="flex justify-center">
                 {voiceState === 'listening' && (
                   <div className="inline-flex items-center gap-2 bg-red-500/20 text-red-300 border border-red-500/40 px-4 py-1.5 rounded-full text-xs font-bold animate-pulse">
                     <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span>
@@ -518,20 +551,32 @@ export const GeminiLiveVoiceWidget: React.FC<GeminiLiveVoiceWidgetProps> = ({
                 </div>
               )}
 
+                </>
+              )}
+
             </div>
 
             {/* Stop Bar */}
             <div className="bg-slate-950 p-4 border-t border-slate-800 flex items-center justify-between">
-              <button
-                onClick={() => {
-                  engineRef.current?.stopSession();
-                  setIsOpen(false);
-                }}
-                className="w-full bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs py-3 px-4 rounded-xl shadow-md transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <PhoneOff className="w-4 h-4" />
-                <span>بات ختم کریں</span>
-              </button>
+              {GEMINI_LIVE_ENABLED ? (
+                <button
+                  onClick={() => {
+                    engineRef.current?.stopSession();
+                    setIsOpen(false);
+                  }}
+                  className="w-full bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs py-3 px-4 rounded-xl shadow-md transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <PhoneOff className="w-4 h-4" />
+                  <span>بات ختم کریں</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-extrabold text-xs py-3 px-4 rounded-xl transition cursor-pointer"
+                >
+                  بند کریں (Close)
+                </button>
+              )}
             </div>
 
           </div>
