@@ -35,8 +35,18 @@ export function formatWhatsAppMessage(slip: LoadSlip): string {
   if (slip.whatsappNumber && slip.whatsappNumber !== slip.primaryPhone) {
     contactLines += ` (WhatsApp: ${slip.whatsappNumber})`;
   }
-  if (slip.additionalContacts && slip.additionalContacts.length > 0) {
-    contactLines += ` / ${slip.additionalContacts.slice(0, 2).join(' / ')}`;
+  
+  // Format named contacts if available
+  if (slip.namedContacts && slip.namedContacts.length > 0) {
+    const extra = slip.namedContacts
+      .filter((c) => c && c.number)
+      .map((c) => c.name ? `${c.number} (${c.name})` : c.number)
+      .join(' / ');
+    if (extra) {
+      contactLines += ` / ${extra}`;
+    }
+  } else if (slip.additionalContacts && slip.additionalContacts.length > 0) {
+    contactLines += ` / ${slip.additionalContacts.slice(0, 3).join(' / ')}`;
   }
 
   const dateStr = slip.createdAt ? new Date(slip.createdAt).toLocaleDateString('ur-PK') : 'آج';

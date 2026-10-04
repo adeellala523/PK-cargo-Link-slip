@@ -64,14 +64,24 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               type="button"
               onClick={onOpenCreate}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 bg-white text-[#123A6D] hover:bg-slate-100 font-extrabold text-lg px-8 py-3.5 rounded-2xl shadow-lg active:scale-95 transition-all min-h-[48px]"
+              title="صرف اڈا منیجر کے لیے"
             >
               <FileText className="w-5 h-5 text-[#19A974]" />
-              <span>لوڈ سلپ بنائیں</span>
+              <span>لوڈ سلپ بنائیں (اڈا منیجر)</span>
             </button>
           </div>
 
           {/* Secondary Buttons */}
           <div className="flex flex-wrap items-center justify-center gap-2.5 pt-1">
+            <button
+              type="button"
+              onClick={onNavigateToTrucks ? onNavigateToTrucks : onNavigateToSearch}
+              className="inline-flex items-center justify-center gap-2 bg-[#FF9F43]/20 hover:bg-[#FF9F43]/30 text-amber-200 font-bold text-sm sm:text-base px-5 py-2.5 rounded-xl border border-amber-400/30 active:scale-95 transition-all min-h-[44px]"
+            >
+              <Truck className="w-4 h-4 text-[#FF9F43]" />
+              <span>دستیاب گاڑیاں</span>
+            </button>
+
             <button
               type="button"
               onClick={onNavigateToVerify}

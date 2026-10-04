@@ -13,7 +13,7 @@ import {
   Plus,
   Trash2
 } from 'lucide-react';
-import { AddaProfile } from '../types';
+import { AddaProfile, NamedContact } from '../types';
 
 interface AddaProfileViewProps {
   profile: AddaProfile;
@@ -36,12 +36,17 @@ export const AddaProfileView: React.FC<AddaProfileViewProps> = ({
   const [whatsappNumber, setWhatsappNumber] = useState(profile.whatsappNumber || '');
   const [logoUrl, setLogoUrl] = useState(profile.logoUrl || '');
 
-  // Up to 5 contact numbers
+  // 5 Additional contacts with Name & Number
   const [contact1, setContact1] = useState(profile.contact1 || '');
+  const [contact1Name, setContact1Name] = useState(profile.contact1Name || '');
   const [contact2, setContact2] = useState(profile.contact2 || '');
+  const [contact2Name, setContact2Name] = useState(profile.contact2Name || '');
   const [contact3, setContact3] = useState(profile.contact3 || '');
+  const [contact3Name, setContact3Name] = useState(profile.contact3Name || '');
   const [contact4, setContact4] = useState(profile.contact4 || '');
+  const [contact4Name, setContact4Name] = useState(profile.contact4Name || '');
   const [contact5, setContact5] = useState(profile.contact5 || '');
+  const [contact5Name, setContact5Name] = useState(profile.contact5Name || '');
 
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -58,7 +63,6 @@ export const AddaProfileView: React.FC<AddaProfileViewProps> = ({
         const base64 = reader.result as string;
         setLogoUrl(base64);
 
-        // Upload to server so WhatsApp gets a real public image URL
         try {
           const formData = new FormData();
           formData.append('image', file);
@@ -72,16 +76,13 @@ export const AddaProfileView: React.FC<AddaProfileViewProps> = ({
               setLogoUrl(data.url);
             }
           }
-        } catch {
-          // Fallback to base64 which will be converted by backend
-        }
+        } catch {}
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handlePresetLogo = (type: string) => {
-    // Generate clean SVG data URL for instant professional Pakistani transport badge
+  const handlePresetLogo = () => {
     const svg = `<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
       <rect width="200" height="200" rx="30" fill="#0B2545"/>
       <circle cx="100" cy="100" r="80" fill="none" stroke="#16A34A" stroke-width="6"/>
@@ -116,6 +117,14 @@ export const AddaProfileView: React.FC<AddaProfileViewProps> = ({
 
     setErrorMsg('');
 
+    const namedList: NamedContact[] = [
+      { name: contact1Name.trim(), number: contact1.trim() },
+      { name: contact2Name.trim(), number: contact2.trim() },
+      { name: contact3Name.trim(), number: contact3.trim() },
+      { name: contact4Name.trim(), number: contact4.trim() },
+      { name: contact5Name.trim(), number: contact5.trim() },
+    ].filter((c) => c.number.length > 0);
+
     const updated: AddaProfile = {
       ...profile,
       managerName: managerName.trim(),
@@ -126,10 +135,16 @@ export const AddaProfileView: React.FC<AddaProfileViewProps> = ({
       whatsappNumber: whatsappNumber.trim() || primaryPhone.trim(),
       logoUrl: logoUrl.trim() || undefined,
       contact1: contact1.trim() || undefined,
+      contact1Name: contact1Name.trim() || undefined,
       contact2: contact2.trim() || undefined,
+      contact2Name: contact2Name.trim() || undefined,
       contact3: contact3.trim() || undefined,
+      contact3Name: contact3Name.trim() || undefined,
       contact4: contact4.trim() || undefined,
+      contact4Name: contact4Name.trim() || undefined,
       contact5: contact5.trim() || undefined,
+      contact5Name: contact5Name.trim() || undefined,
+      namedContacts: namedList,
       updatedAt: new Date().toISOString(),
     };
 
@@ -138,47 +153,40 @@ export const AddaProfileView: React.FC<AddaProfileViewProps> = ({
     setTimeout(() => setSavedSuccess(false), 3000);
 
     if (onContinueToDashboard && isInitialRegistration) {
-      setTimeout(() => onContinueToDashboard(), 1200);
+      onContinueToDashboard();
     }
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 font-nafees">
+    <div className="max-w-3xl mx-auto space-y-6 font-nafees">
       
-      {/* Header Banner */}
-      <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200">
-        <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0">
-            <Building2 className="w-6 h-6" />
-          </div>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0B2545]">
-              {isInitialRegistration ? 'Adda Manager رجسٹریشن' : 'Adda پروفائل اور رابطہ نمبر'}
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-500">
-              یہ معلومات ایک بار محفوظ کریں، مستقبل کی تمام لوڈ سلپس پر خود بخود نظر آئیں گی۔
-            </p>
-          </div>
-        </div>
-
-        {savedSuccess && (
-          <div className="mt-4 p-4 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-800 flex items-center gap-2">
-            <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-emerald-600" />
-            <span className="font-bold">آپ کی اڈا معلومات کامیابی سے محفوظ کرلی گئی ہیں!</span>
-          </div>
-        )}
-
-        {errorMsg && (
-          <div className="mt-4 p-3 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-center gap-2">
-            <AlertCircle className="w-5 h-5 flex-shrink-0" />
-            <span>{errorMsg}</span>
-          </div>
-        )}
+      {/* Header */}
+      <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200 space-y-1">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0B2545]">
+          اڈا پروفائل و رابطہ نمبرز
+        </h1>
+        <p className="text-xs sm:text-sm text-slate-500">
+          اڈے کی تمام معلومات اور 5 اضافی رابطہ نمبرز بمع نام درج کریں۔ یہ معلومات لوڈ سلپ پر پرنٹ ہوں گی۔
+        </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      {savedSuccess && (
+        <div className="bg-emerald-50 border border-emerald-300 text-emerald-900 px-4 py-3 rounded-2xl text-sm font-bold flex items-center gap-2">
+          <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+          <span>اڈا پروفائل اور رابطہ نمبرز کامیابی سے محفوظ ہو گئے!</span>
+        </div>
+      )}
+
+      {errorMsg && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-2xl text-sm flex items-center gap-2">
+          <AlertCircle className="w-5 h-5 text-red-600" />
+          <span>{errorMsg}</span>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-6 text-right">
         
-        {/* Basic Adda Details */}
+        {/* Basic Info */}
         <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200 space-y-4">
           <h2 className="text-lg font-bold text-[#0B2545] border-b border-slate-100 pb-2">
             1. اڈا کی بنیادی معلومات
@@ -186,47 +194,47 @@ export const AddaProfileView: React.FC<AddaProfileViewProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             
-            {/* Manager Name */}
-            <div className="space-y-1.5">
-              <label className="text-sm font-bold text-slate-800 block">
-                منیجر کا نام <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={managerName}
-                onChange={(e) => setManagerName(e.target.value)}
-                placeholder="مثال: ملک عمران ظفر"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-base text-slate-900 focus:bg-white focus:border-emerald-600 outline-none transition"
-                required
-              />
-            </div>
-
             {/* Adda Name */}
             <div className="space-y-1.5">
               <label className="text-sm font-bold text-slate-800 block">
-                Adda کا نام <span className="text-red-500">*</span>
+                ٹرانسپورٹ اڈا / کمپنی کا نام <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={addaName}
                 onChange={(e) => setAddaName(e.target.value)}
-                placeholder="مثال: نیو پنجاب کارگو گڈز اڈا"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-base text-slate-900 focus:bg-white focus:border-emerald-600 outline-none transition"
+                placeholder="مثال: بسم اللہ گڈز ٹرانسپورٹ کمپنی"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#123A6D] outline-none"
                 required
               />
             </div>
 
-            {/* City */}
+            {/* Manager Name */}
             <div className="space-y-1.5">
               <label className="text-sm font-bold text-slate-800 block">
-                شہر <span className="text-red-500">*</span>
+                اڈا منیجر کا نام <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={managerName}
+                onChange={(e) => setManagerName(e.target.value)}
+                placeholder="مثال: ملک محمد اسلم"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#123A6D] outline-none"
+                required
+              />
+            </div>
+
+            {/* City (FREE TEXT INPUT - ZERO DROPDOWNS) */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-bold text-slate-800 block">
+                شہر (شہر کا نام خود ٹائپ کریں) <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                placeholder="مثال: ملتان"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-base text-slate-900 focus:bg-white focus:border-emerald-600 outline-none transition"
+                placeholder="مثال: لاہور، کراچی، ملتان، وغیرہ"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#123A6D] outline-none"
                 required
               />
             </div>
@@ -234,48 +242,43 @@ export const AddaProfileView: React.FC<AddaProfileViewProps> = ({
             {/* Address */}
             <div className="space-y-1.5">
               <label className="text-sm font-bold text-slate-800 block">
-                Adda کا مکمل پتہ
+                اڈے کا مکمل پتہ / لوکیشن
               </label>
               <input
                 type="text"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                placeholder="مثال: وہاڑی چوک، نزد نیو سبزی منڈی"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-base text-slate-900 focus:bg-white focus:border-emerald-600 outline-none transition"
+                placeholder="مثال: شیر شاہ روڈ، نزد پرانا غلہ منڈی"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#123A6D] outline-none"
               />
             </div>
 
           </div>
 
-          {/* Logo / Photo */}
-          <div className="pt-2 border-t border-slate-100">
-            <label className="text-sm font-bold text-slate-800 block mb-2">
-              Adda کی تصویر / Logo
-            </label>
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-slate-100 border border-slate-300 flex items-center justify-center overflow-hidden flex-shrink-0">
-                {logoUrl ? (
-                  <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
-                ) : (
-                  <Truck className="w-8 h-8 text-slate-400" />
-                )}
-              </div>
-              <div className="space-y-2">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleLogoUpload}
-                  className="text-xs text-slate-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
-                />
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => handlePresetLogo('default')}
-                    className="text-xs text-emerald-700 hover:underline"
-                  >
-                    یا معیاری پاکستانی ٹرانسپورٹ لوگو منتخب کریں
-                  </button>
-                </div>
+          {/* Logo */}
+          <div className="pt-2 border-t border-slate-100 flex items-center gap-4">
+            <div className="w-16 h-16 rounded-2xl bg-slate-100 border border-slate-300 flex items-center justify-center overflow-hidden flex-shrink-0">
+              {logoUrl ? (
+                <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
+              ) : (
+                <Truck className="w-8 h-8 text-slate-400" />
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleLogoUpload}
+                className="text-xs text-slate-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700"
+              />
+              <div>
+                <button
+                  type="button"
+                  onClick={handlePresetLogo}
+                  className="text-xs text-emerald-700 hover:underline font-bold"
+                >
+                  معیاری پاکستانی ٹرانسپورٹ لوگو منتخب کریں
+                </button>
               </div>
             </div>
           </div>
@@ -288,123 +291,185 @@ export const AddaProfileView: React.FC<AddaProfileViewProps> = ({
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            
-            {/* Primary Phone */}
             <div className="space-y-1.5">
               <label className="text-sm font-bold text-slate-800 block">
-                موبائل نمبر (کال کے لیے) <span className="text-red-500">*</span>
+                بنیادی موبائل نمبر (کال کے لیے) <span className="text-red-500">*</span>
               </label>
               <input
-                type="text"
+                type="tel"
                 value={primaryPhone}
                 onChange={(e) => setPrimaryPhone(e.target.value)}
-                placeholder="0300-1234567"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-base text-slate-900 focus:bg-white focus:border-emerald-600 outline-none transition font-mono ltr-content"
+                placeholder="03001234567"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm font-mono ltr-content focus:bg-white focus:border-[#123A6D] outline-none"
                 required
               />
             </div>
 
-            {/* WhatsApp Number */}
             <div className="space-y-1.5">
               <label className="text-sm font-bold text-slate-800 block">
                 WhatsApp نمبر <span className="text-red-500">*</span>
               </label>
               <input
-                type="text"
+                type="tel"
                 value={whatsappNumber}
                 onChange={(e) => setWhatsappNumber(e.target.value)}
-                placeholder="0300-1234567"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-base text-slate-900 focus:bg-white focus:border-emerald-600 outline-none transition font-mono ltr-content"
+                placeholder="03001234567"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm font-mono ltr-content focus:bg-white focus:border-[#123A6D] outline-none"
                 required
               />
             </div>
-
           </div>
         </div>
 
-        {/* 5 Contact Numbers (MANDATORY REQUIREMENT SECTION 6) */}
+        {/* 5 Additional Contact Numbers with Name */}
         <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200 space-y-4">
           <div className="border-b border-slate-100 pb-2">
             <h2 className="text-lg font-bold text-[#0B2545]">
-              3. اضافی رابطہ نمبرز (5 فون نمبرز تک)
+              3. اضافی 5 رابطہ نمبرز بمع نام (Contact Name & Phone)
             </h2>
             <p className="text-xs text-slate-500">
-              یہ تمام نمبر لوڈ سلپ کے نیچے نظر آئیں گے تاکہ ڈرائیور کسی بھی دستیاب نمبر پر کال کر سکے۔
+              ہر نمبر کے ساتھ نام درج کریں (مثال: حاجی طارق، منشی اسلم، اڈا پارٹنر وغیرہ)۔
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-3">
             
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 block">رابطہ نمبر 1</label>
-              <input
-                type="text"
-                value={contact1}
-                onChange={(e) => setContact1(e.target.value)}
-                placeholder="0301-8654321"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-mono ltr-content focus:bg-white focus:border-emerald-600 outline-none"
-              />
+            {/* Contact 1 */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50 p-3 rounded-2xl border border-slate-200">
+              <div>
+                <label className="text-xs font-bold text-slate-600 block mb-1">رابطہ کار 1 کا نام</label>
+                <input
+                  type="text"
+                  value={contact1Name}
+                  onChange={(e) => setContact1Name(e.target.value)}
+                  placeholder="مثال: حاجی طارق (منیجر 2)"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-600 block mb-1">موبائل نمبر 1</label>
+                <input
+                  type="tel"
+                  value={contact1}
+                  onChange={(e) => setContact1(e.target.value)}
+                  placeholder="03001234567"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 font-mono ltr-content outline-none"
+                />
+              </div>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 block">رابطہ نمبر 2</label>
-              <input
-                type="text"
-                value={contact2}
-                onChange={(e) => setContact2(e.target.value)}
-                placeholder="0321-9876543"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-mono ltr-content focus:bg-white focus:border-emerald-600 outline-none"
-              />
+            {/* Contact 2 */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50 p-3 rounded-2xl border border-slate-200">
+              <div>
+                <label className="text-xs font-bold text-slate-600 block mb-1">رابطہ کار 2 کا نام</label>
+                <input
+                  type="text"
+                  value={contact2Name}
+                  onChange={(e) => setContact2Name(e.target.value)}
+                  placeholder="مثال: منشی اسلم"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-600 block mb-1">موبائل نمبر 2</label>
+                <input
+                  type="tel"
+                  value={contact2}
+                  onChange={(e) => setContact2(e.target.value)}
+                  placeholder="03011234567"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 font-mono ltr-content outline-none"
+                />
+              </div>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 block">رابطہ نمبر 3</label>
-              <input
-                type="text"
-                value={contact3}
-                onChange={(e) => setContact3(e.target.value)}
-                placeholder="0333-6123456"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-mono ltr-content focus:bg-white focus:border-emerald-600 outline-none"
-              />
+            {/* Contact 3 */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50 p-3 rounded-2xl border border-slate-200">
+              <div>
+                <label className="text-xs font-bold text-slate-600 block mb-1">رابطہ کار 3 کا نام</label>
+                <input
+                  type="text"
+                  value={contact3Name}
+                  onChange={(e) => setContact3Name(e.target.value)}
+                  placeholder="مثال: رانا صاحب"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-600 block mb-1">موبائل نمبر 3</label>
+                <input
+                  type="tel"
+                  value={contact3}
+                  onChange={(e) => setContact3(e.target.value)}
+                  placeholder="03021234567"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 font-mono ltr-content outline-none"
+                />
+              </div>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 block">رابطہ نمبر 4</label>
-              <input
-                type="text"
-                value={contact4}
-                onChange={(e) => setContact4(e.target.value)}
-                placeholder="0345-0000000"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-mono ltr-content focus:bg-white focus:border-emerald-600 outline-none"
-              />
+            {/* Contact 4 */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50 p-3 rounded-2xl border border-slate-200">
+              <div>
+                <label className="text-xs font-bold text-slate-600 block mb-1">رابطہ کار 4 کا نام</label>
+                <input
+                  type="text"
+                  value={contact4Name}
+                  onChange={(e) => setContact4Name(e.target.value)}
+                  placeholder="مثال: بکنگ آفس 2"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-600 block mb-1">موبائل نمبر 4</label>
+                <input
+                  type="tel"
+                  value={contact4}
+                  onChange={(e) => setContact4(e.target.value)}
+                  placeholder="03031234567"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 font-mono ltr-content outline-none"
+                />
+              </div>
             </div>
 
-            <div className="space-y-1 sm:col-span-2">
-              <label className="text-xs font-bold text-slate-700 block">رابطہ نمبر 5</label>
-              <input
-                type="text"
-                value={contact5}
-                onChange={(e) => setContact5(e.target.value)}
-                placeholder="0312-0000000"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-mono ltr-content focus:bg-white focus:border-emerald-600 outline-none"
-              />
+            {/* Contact 5 */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50 p-3 rounded-2xl border border-slate-200">
+              <div>
+                <label className="text-xs font-bold text-slate-600 block mb-1">رابطہ کار 5 کا نام</label>
+                <input
+                  type="text"
+                  value={contact5Name}
+                  onChange={(e) => setContact5Name(e.target.value)}
+                  placeholder="مثال: ہیڈ آفس"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-600 block mb-1">موبائل نمبر 5</label>
+                <input
+                  type="tel"
+                  value={contact5}
+                  onChange={(e) => setContact5(e.target.value)}
+                  placeholder="03041234567"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 font-mono ltr-content outline-none"
+                />
+              </div>
             </div>
 
           </div>
         </div>
 
-        {/* Submit Button */}
+        {/* Save Button */}
         <div className="pt-2">
           <button
             type="submit"
-            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-bold text-lg py-3.5 px-6 rounded-2xl shadow-lg transition active:scale-95"
+            className="w-full bg-[#123A6D] hover:bg-[#0D2D57] text-white py-4 px-6 rounded-2xl font-bold text-base shadow-md active:scale-95 transition flex items-center justify-center gap-2"
           >
-            <Save className="w-5 h-5" />
-            <span>معلومات محفوظ کریں</span>
+            <Save className="w-5 h-5 text-emerald-300" />
+            <span>اڈا پروفائل و رابطہ نمبرز محفوظ کریں</span>
           </button>
         </div>
 
       </form>
+
     </div>
   );
 };

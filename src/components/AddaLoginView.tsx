@@ -4,21 +4,25 @@ import {
   Phone, 
   Truck, 
   CheckCircle2, 
-  AlertCircle,
-  KeyRound,
-  ArrowRight,
-  User,
-  CreditCard,
-  RotateCcw
+  AlertCircle, 
+  KeyRound, 
+  ArrowRight, 
+  User, 
+  MapPin, 
+  ShieldCheck, 
+  Lock,
+  Eye,
+  EyeOff
 } from 'lucide-react';
-import { AddaProfile } from '../types';
+import { AddaProfile, DriverAccount } from '../types';
 import { StorageService } from '../services/storage';
 
 interface AddaLoginViewProps {
-  onLoginSuccess: (phone: string) => void;
+  onLoginSuccess: (phone: string, role?: 'adda_manager' | 'driver') => void;
   onNavigateToHome: () => void;
   currentProfile: AddaProfile;
   initialMode?: 'login' | 'register';
+  initialRole?: 'adda_manager' | 'driver';
   noticeMessage?: string;
 }
 
@@ -26,465 +30,685 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
   onLoginSuccess,
   onNavigateToHome,
   initialMode = 'login',
+  initialRole = 'adda_manager',
   noticeMessage,
 }) => {
+  const [activeRole, setActiveRole] = useState<'adda_manager' | 'driver'>(initialRole);
   const [activeMode, setActiveMode] = useState<'login' | 'register'>(initialMode);
 
-  // Sync mode if initialMode prop changes
+  // Sync mode if props change
   React.useEffect(() => {
-    if (initialMode) {
-      setActiveMode(initialMode);
-    }
-  }, [initialMode]);
+    if (initialMode) setActiveMode(initialMode);
+    if (initialRole) setActiveRole(initialRole);
+  }, [initialMode, initialRole]);
 
-  // Login Form States (Section 7)
+  // Login Form States (Password-based - NO OTP)
   const [loginPhone, setLoginPhone] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpCode, setOtpCode] = useState('');
-  const [generatedOtp, setGeneratedOtp] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState('');
-  const [otpNotice, setOtpNotice] = useState('');
+  const [loginSuccess, setLoginSuccess] = useState('');
 
-  // Register Form States (Section 8)
-  const [regName, setRegName] = useState('');
-  const [regPhone, setRegPhone] = useState('');
-  const [regCnic, setRegCnic] = useState('');
-  const [regRole, setRegRole] = useState<'adda_manager' | 'driver' | 'vehicle_owner'>('adda_manager');
+  // Register Adda Manager Form States
+  const [managerName, setManagerName] = useState('');
+  const [addaName, setAddaName] = useState('');
+  const [addaCity, setAddaCity] = useState('');
+  const [addaAddress, setAddaAddress] = useState('');
+  const [addaPhone, setAddaPhone] = useState('');
+  const [addaPassword, setAddaPassword] = useState('');
+  const [addaWhatsapp, setAddaWhatsapp] = useState('');
+
+  // Register Driver Form States
+  const [driverName, setDriverName] = useState('');
+  const [driverPhone, setDriverPhone] = useState('');
+  const [driverPassword, setDriverPassword] = useState('');
+  const [driverCity, setDriverCity] = useState('');
+  const [driverVehicleType, setDriverVehicleType] = useState('');
+  const [driverVehicleNumber, setDriverVehicleNumber] = useState('');
+  const [driverPreferredRoute, setDriverPreferredRoute] = useState('');
+
   const [regError, setRegError] = useState('');
   const [regSuccess, setRegSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Sync users from server
-  React.useEffect(() => {
-    StorageService.syncUsersWithServer();
-  }, []);
-
-  // Step 1 of Login: "OTP حاصل کریں" (Section 7)
-  const handleRequestOtp = (e: React.FormEvent) => {
+  // Handle Login Submit (Password-based)
+  const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
+    setLoginSuccess('');
 
     const clean = loginPhone.trim().replace(/[^0-9]/g, '');
     if (clean.length < 10) {
       setLoginError('براہ کرم 11 ہندسوں کا درست موبائل نمبر درج کریں۔');
       return;
     }
-
-    // Generate 6-digit OTP code (Section 7)
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    setGeneratedOtp(code);
-    setOtpSent(true);
-    setOtpNotice(`آپ کا 6 ہندسوں کا تصدیقی OTP کوڈ ہے: ${code}`);
-  };
-
-  // Step 2 of Login: "تصدیق کریں" (Section 7)
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoginError('');
-
-    if (otpCode.trim() !== generatedOtp.trim()) {
-      setLoginError('OTP کوڈ درست نہیں ہے۔ دوبارہ چیک کریں۔');
+    if (!loginPassword.trim()) {
+      setLoginError('براہ کرم اپنا پاس ورڈ درج کریں۔');
       return;
     }
 
-    // Login successful
-    const users = StorageService.getUsers();
-    let user = users.find((u) => u.phone === loginPhone.trim());
-    if (!user) {
-      // Auto-register or initiate session for this phone
-      const reg = await StorageService.registerUser({
-        phone: loginPhone.trim(),
-        addaName: 'گڈز ٹرانسپورٹ اڈا',
-        managerName: 'اڈا منیجر',
-        city: 'لاہور',
-        address: '',
-        whatsappNumber: loginPhone.trim(),
-        password: 'otp_verified_user',
-      });
-      user = reg.user;
+    if (activeRole === 'driver') {
+      const res = StorageService.loginDriver(clean, loginPassword);
+      if (res.success) {
+        setLoginSuccess('ڈرائیور لاگ ان کامیاب!');
+        setTimeout(() => {
+          onLoginSuccess(clean, 'driver');
+        }, 800);
+      } else {
+        setLoginError(res.message);
+      }
+    } else {
+      const res = StorageService.loginAddaManager(clean, loginPassword);
+      if (res.success) {
+        setLoginSuccess('اڈا منیجر لاگ ان کامیاب!');
+        setTimeout(() => {
+          onLoginSuccess(clean, 'adda_manager');
+        }, 800);
+      } else {
+        setLoginError(res.message);
+      }
     }
-
-    onLoginSuccess(loginPhone.trim());
   };
 
-  // Resend OTP (Section 7)
-  const handleResendOtp = () => {
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    setGeneratedOtp(code);
-    setOtpNotice(`نیا 6 ہندسوں کا OTP کوڈ بھیجا گیا: ${code}`);
-  };
-
-  // Registration Submit (Section 8)
-  const handleRegisterSubmit = async (e: React.FormEvent) => {
+  // Adda Manager Registration (Password-based)
+  const handleRegisterAddaSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setRegError('');
     setRegSuccess('');
 
-    if (!regName.trim()) {
-      setRegError('براہ کرم اپنا نام درج کریں۔');
+    if (!managerName.trim()) {
+      setRegError('براہ کرم منیجر کا نام درج کریں۔');
       return;
     }
-    const cleanPhone = regPhone.trim().replace(/[^0-9]/g, '');
+    if (!addaName.trim()) {
+      setRegError('براہ کرم اڈا کا نام درج کریں۔');
+      return;
+    }
+    if (!addaCity.trim()) {
+      setRegError('براہ کرم شہر کا نام درج کریں۔');
+      return;
+    }
+    const cleanPhone = addaPhone.trim().replace(/[^0-9]/g, '');
     if (cleanPhone.length < 10) {
       setRegError('براہ کرم 11 ہندسوں کا درست موبائل نمبر درج کریں۔');
       return;
     }
-    if (!regCnic.trim()) {
-      setRegError('براہ کرم شناختی کارڈ نمبر (CNIC) درج کریں۔');
+    if (!addaPassword.trim() || addaPassword.length < 4) {
+      setRegError('پاس ورڈ کم از کم 4 ہندسوں یا حروف پر مشتمل ہونا چاہیے۔');
       return;
     }
 
     setIsLoading(true);
     try {
       const regResult = await StorageService.registerUser({
-        phone: regPhone.trim(),
-        addaName: regRole === 'adda_manager' ? `${regName.trim()} گڈز ٹرانسپورٹ` : `${regName.trim()}`,
-        managerName: regName.trim(),
-        city: 'لاہور',
-        address: '',
-        whatsappNumber: regPhone.trim(),
-        password: 'default_otp_login',
+        phone: addaPhone.trim(),
+        password: addaPassword.trim(),
+        addaName: addaName.trim(),
+        managerName: managerName.trim(),
+        city: addaCity.trim(),
+        address: addaAddress.trim(),
+        whatsappNumber: addaWhatsapp.trim() || addaPhone.trim(),
+        role: 'adda_manager',
       });
 
-      if (regResult.user) {
-        setRegSuccess('اکاؤنٹ کامیابی سے رجسٹر ہو گیا!');
-        setTimeout(() => {
-          onLoginSuccess(regResult.user!.phone);
-        }, 1000);
-      } else {
-        setRegError(regResult.message || 'رجسٹریشن مکمل نہ ہو سکی۔');
+      if (!regResult.success) {
+        setRegError(regResult.error || regResult.message || 'رجسٹریشن میں خرابی واقع ہوئی۔');
+        setIsLoading(false);
+        return;
       }
+
+      setRegSuccess('اڈا اکاؤنٹ کامیابی سے رجسٹر ہو گیا!');
+      setTimeout(() => {
+        onLoginSuccess(addaPhone.trim(), 'adda_manager');
+      }, 1000);
     } catch {
-      setRegError('رجسٹریشن میں مسئلہ آیا، دوبارہ کوشش کریں۔');
+      setRegError('نیٹ ورک کا مسئلہ ہے۔ براہ کرم دوبارہ کوشش کریں۔');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Driver Registration (Password-based)
+  const handleRegisterDriverSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRegError('');
+    setRegSuccess('');
+
+    if (!driverName.trim()) {
+      setRegError('براہ کرم ڈرائیور کا نام درج کریں۔');
+      return;
+    }
+    const cleanPhone = driverPhone.trim().replace(/[^0-9]/g, '');
+    if (cleanPhone.length < 10) {
+      setRegError('براہ کرم 11 ہندسوں کا درست موبائل نمبر درج کریں۔');
+      return;
+    }
+    if (!driverCity.trim()) {
+      setRegError('براہ کرم اپنا موجودہ شہر درج کریں۔');
+      return;
+    }
+    if (!driverPassword.trim() || driverPassword.length < 4) {
+      setRegError('پاس ورڈ کم از کم 4 ہندسوں یا حروف پر مشتمل ہونا چاہیے۔');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const newDriver: DriverAccount = {
+        id: `driver_${Date.now()}`,
+        driverName: driverName.trim(),
+        phone: driverPhone.trim(),
+        password: driverPassword.trim(),
+        whatsappNumber: driverPhone.trim(),
+        vehicleType: driverVehicleType.trim() || '22 Wheeler / ٹرالہ',
+        bodyType: 'فل باڈی',
+        vehicleNumber: driverVehicleNumber.trim() || undefined,
+        currentCity: driverCity.trim(),
+        preferredRoute: driverPreferredRoute.trim() || undefined,
+        createdAt: new Date().toISOString(),
+      };
+
+      StorageService.saveDriverAccount(newDriver);
+      
+      // Also register into available trucks so Addas can find them
+      StorageService.saveAvailableTruck({
+        id: `truck_${Date.now()}`,
+        driverOrOwnerName: driverName.trim(),
+        phone: driverPhone.trim(),
+        whatsappNumber: driverPhone.trim(),
+        vehicleType: driverVehicleType.trim() || '22 Wheeler / ٹرالہ',
+        bodyType: 'فل باڈی',
+        vehicleNumber: driverVehicleNumber.trim() || undefined,
+        currentCity: driverCity.trim(),
+        preferredRoute: driverPreferredRoute.trim() || undefined,
+        createdAt: new Date().toISOString(),
+        userRole: 'driver',
+      });
+
+      setRegSuccess('ڈرائیور پروفائل کامیابی سے بن گئی!');
+      setTimeout(() => {
+        onLoginSuccess(driverPhone.trim(), 'driver');
+      }, 1000);
+    } catch {
+      setRegError('رجسٹریشن محفوظ کرنے میں مسئلہ آیا۔');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="max-w-lg mx-auto space-y-6 font-nafees">
+    <div className="max-w-xl mx-auto space-y-6 font-nafees py-4">
       
-      {/* Tab Switcher: لاگ ان | رجسٹریشن */}
-      <div className="bg-white rounded-2xl p-1.5 border border-slate-200 shadow-sm flex items-center gap-1">
-        <button
-          type="button"
-          onClick={() => { setActiveMode('login'); setOtpSent(false); setLoginError(''); }}
-          className={`flex-1 py-2.5 rounded-xl font-extrabold text-sm sm:text-base transition min-h-[44px] ${
-            activeMode === 'login'
-              ? 'bg-[#123A6D] text-white shadow-xs'
-              : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          لاگ ان کریں
-        </button>
-        <button
-          type="button"
-          onClick={() => { setActiveMode('register'); setRegError(''); }}
-          className={`flex-1 py-2.5 rounded-xl font-extrabold text-sm sm:text-base transition min-h-[44px] ${
-            activeMode === 'register'
-              ? 'bg-[#123A6D] text-white shadow-xs'
-              : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          نیا اکاؤنٹ بنائیں
-        </button>
-      </div>
+      {/* Back to Home Button */}
+      <button
+        type="button"
+        onClick={onNavigateToHome}
+        className="inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-slate-900 bg-white px-3.5 py-2 rounded-xl border border-slate-200 shadow-2xs font-bold transition min-h-[40px]"
+      >
+        <ArrowRight className="w-4 h-4 text-[#123A6D]" />
+        <span>واپس ہوم پیج</span>
+      </button>
 
+      {/* Notice Message if any */}
       {noticeMessage && (
-        <div className="bg-amber-50 border border-amber-300 rounded-2xl p-4 text-xs sm:text-sm text-amber-900 flex items-center gap-2">
+        <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 text-amber-900 flex items-center gap-3 shadow-xs">
           <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
-          <span>{noticeMessage}</span>
+          <p className="text-xs sm:text-sm font-bold">{noticeMessage}</p>
         </div>
       )}
 
-      {/* ============================================================== */}
-      {/* SECTION 7: LOGIN SCREEN */}
-      {/* ============================================================== */}
-      {activeMode === 'login' && (
-        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-5">
-          
-          {!otpSent ? (
-            /* Screen 1: موبائل نمبر */
-            <form onSubmit={handleRequestOtp} className="space-y-4">
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#08284F]">
-                  لاگ ان کریں
-                </h1>
-                <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                  اپنا موبائل نمبر درج کریں، آپ کو فوری OTP بھیجا جائے گا۔
-                </p>
+      {/* Main Auth Card */}
+      <div className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
+        
+        {/* Top Header */}
+        <div className="bg-[#123A6D] text-white p-6 text-center space-y-2 border-b-4 border-[#19A974]">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white">
+            PK Cargo Link پورٹل
+          </h1>
+          <p className="text-xs sm:text-sm text-emerald-200">
+            پاکستان ڈیجیٹل گڈز ٹرانسپورٹ نیٹ ورک میں خوش آمدید
+          </p>
+        </div>
+
+        {/* 1. ROLE TABS: اڈا منیجر VS ڈرائیور */}
+        <div className="p-5 pb-0">
+          <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
+            <button
+              type="button"
+              onClick={() => {
+                setActiveRole('adda_manager');
+                setLoginError('');
+                setRegError('');
+              }}
+              className={`flex items-center justify-center gap-2 py-3 px-3 rounded-xl font-bold text-xs sm:text-sm transition ${
+                activeRole === 'adda_manager'
+                  ? 'bg-[#123A6D] text-white shadow-md'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Building2 className="w-4 h-4" />
+              <span>اڈا منیجر پورٹل</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setActiveRole('driver');
+                setLoginError('');
+                setRegError('');
+              }}
+              className={`flex items-center justify-center gap-2 py-3 px-3 rounded-xl font-bold text-xs sm:text-sm transition ${
+                activeRole === 'driver'
+                  ? 'bg-[#19A974] text-white shadow-md'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Truck className="w-4 h-4" />
+              <span>ڈرائیور پورٹل</span>
+            </button>
+          </div>
+        </div>
+
+        {/* 2. MODE TABS: لاگ ان VS نیا اکاؤنٹ بنائیں */}
+        <div className="p-5 pt-3 pb-0">
+          <div className="flex border-b border-slate-200">
+            <button
+              type="button"
+              onClick={() => {
+                setActiveMode('login');
+                setLoginError('');
+                setRegError('');
+              }}
+              className={`flex-1 py-3 text-center text-sm font-bold border-b-2 transition ${
+                activeMode === 'login'
+                  ? 'border-[#123A6D] text-[#123A6D]'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              لاگ ان کریں (موبائل نمبر و پاس ورڈ)
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setActiveMode('register');
+                setLoginError('');
+                setRegError('');
+              }}
+              className={`flex-1 py-3 text-center text-sm font-bold border-b-2 transition ${
+                activeMode === 'register'
+                  ? 'border-[#19A974] text-[#19A974]'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              نیا اکاؤنٹ بنائیں
+            </button>
+          </div>
+        </div>
+
+        {/* Content Body */}
+        <div className="p-5 sm:p-7 space-y-4">
+
+          {/* ========================================================= */}
+          {/* MODE: LOGIN (PHONE + PASSWORD) */}
+          {/* ========================================================= */}
+          {activeMode === 'login' && (
+            <form onSubmit={handleLoginSubmit} className="space-y-4 text-right">
+              
+              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 text-xs text-slate-600">
+                {activeRole === 'adda_manager' ? (
+                  <p>اڈا منیجر حضرات اپنے رجسٹرڈ موبائل نمبر اور پاس ورڈ کے ذریعے لاگ ان کریں۔</p>
+                ) : (
+                  <p>ڈرائیور حضرات اپنے موبائل فون نمبر اور پاس ورڈ کے ذریعے لاگ ان کریں۔</p>
+                )}
               </div>
 
               {loginError && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-2xl text-xs sm:text-sm flex items-center gap-2">
-                  <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-xl text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
                   <span>{loginError}</span>
                 </div>
               )}
 
-              {/* Field: 📱 موبائل نمبر (Section 7) */}
-              <div className="space-y-1.5">
-                <label className="text-sm font-bold text-slate-800 block">
-                  📱 موبائل نمبر
+              {loginSuccess && (
+                <div className="bg-emerald-50 border border-emerald-300 text-emerald-900 p-3 rounded-xl text-xs font-bold flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  <span>{loginSuccess}</span>
+                </div>
+              )}
+
+              {/* Mobile Phone Input */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1.5">
+                  موبائل نمبر (Mobile Phone) <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="tel"
-                  value={loginPhone}
-                  onChange={(e) => setLoginPhone(e.target.value)}
-                  placeholder="مثال: 03001234567"
-                  className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-4 py-3 text-base text-slate-900 focus:bg-white focus:border-[#19A974] outline-none font-mono ltr-content min-h-[48px]"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type="tel"
+                    required
+                    value={loginPhone}
+                    onChange={(e) => setLoginPhone(e.target.value)}
+                    placeholder="03001234567"
+                    className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-900 focus:bg-white focus:border-[#123A6D] outline-none min-h-[48px] font-mono ltr-content"
+                  />
+                  <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
               </div>
 
-              {/* Button: "OTP حاصل کریں" (Section 7) */}
+              {/* Password Input */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1.5">
+                  پاس ورڈ (Password) <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    placeholder="پاس ورڈ درج کریں"
+                    className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-900 focus:bg-white focus:border-[#123A6D] outline-none min-h-[48px]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
               <button
                 type="submit"
-                className="w-full flex items-center justify-center gap-2 bg-[#19A974] hover:bg-[#169163] text-white font-extrabold text-lg py-3.5 px-4 rounded-xl shadow-md active:scale-95 transition min-h-[48px]"
+                className={`w-full text-white py-3.5 px-4 rounded-xl font-bold text-sm shadow-md active:scale-95 transition min-h-[48px] flex items-center justify-center gap-2 ${
+                  activeRole === 'driver' ? 'bg-[#19A974] hover:bg-[#169163]' : 'bg-[#123A6D] hover:bg-[#0D2D57]'
+                }`}
               >
-                <span>OTP حاصل کریں</span>
+                <Lock className="w-4 h-4 text-emerald-300" />
+                <span>{activeRole === 'driver' ? 'ڈرائیور لاگ ان کریں' : 'اڈا منیجر لاگ ان کریں'}</span>
               </button>
+
             </form>
-          ) : (
-            /* Screen 2: OTP screen (Section 7) */
-            <form onSubmit={handleVerifyOtp} className="space-y-4">
+          )}
+
+          {/* ========================================================= */}
+          {/* MODE: REGISTER ADDA MANAGER */}
+          {/* ========================================================= */}
+          {activeMode === 'register' && activeRole === 'adda_manager' && (
+            <form onSubmit={handleRegisterAddaSubmit} className="space-y-3.5 text-right">
+              
+              {regError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-xl text-xs">
+                  {regError}
+                </div>
+              )}
+              {regSuccess && (
+                <div className="bg-emerald-50 border border-emerald-300 text-emerald-900 p-3 rounded-xl text-xs font-bold">
+                  {regSuccess}
+                </div>
+              )}
+
+              {/* Manager Name */}
               <div>
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#08284F]">
-                  OTP درج کریں
-                </h1>
-                <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                  آپ کے موبائل نمبر (<span className="font-mono font-bold text-slate-800">{loginPhone}</span>) پر تصدیقی کوڈ بھیجا گیا ہے۔
-                </p>
-              </div>
-
-              {otpNotice && (
-                <div className="bg-emerald-50 border border-emerald-300 text-emerald-900 px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-[#19A974] flex-shrink-0" />
-                  <span>{otpNotice}</span>
-                </div>
-              )}
-
-              {loginError && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-2xl text-xs sm:text-sm flex items-center gap-2">
-                  <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                  <span>{loginError}</span>
-                </div>
-              )}
-
-              {/* Field: 6 ہندسوں کا OTP (Section 7) */}
-              <div className="space-y-1.5">
-                <label className="text-sm font-bold text-slate-800 block">
-                  6 ہندسوں کا OTP
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  اڈا منیجر / مالک کا نام <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  maxLength={6}
-                  value={otpCode}
-                  onChange={(e) => setOtpCode(e.target.value)}
-                  placeholder="XXXXXX"
-                  className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-4 py-3 text-center text-2xl tracking-widest font-mono text-[#08284F] focus:bg-white focus:border-[#19A974] outline-none min-h-[48px]"
                   required
+                  value={managerName}
+                  onChange={(e) => setManagerName(e.target.value)}
+                  placeholder="مثال: ملک محمد اسلم"
+                  className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#123A6D] outline-none min-h-[44px]"
                 />
               </div>
 
-              {/* Buttons: تصدیق کریں & OTP دوبارہ بھیجیں (Section 7) */}
-              <div className="space-y-2.5 pt-1">
-                <button
-                  type="submit"
-                  className="w-full flex items-center justify-center gap-2 bg-[#19A974] hover:bg-[#169163] text-white font-extrabold text-lg py-3.5 px-4 rounded-xl shadow-md active:scale-95 transition min-h-[48px]"
-                >
-                  <span>تصدیق کریں</span>
-                </button>
+              {/* Adda Name */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  ٹرانسپورٹ اڈا / کمپنی کا نام <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={addaName}
+                  onChange={(e) => setAddaName(e.target.value)}
+                  placeholder="مثال: بسم اللہ گڈز ٹرانسپورٹ کمپنی"
+                  className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#123A6D] outline-none min-h-[44px]"
+                />
+              </div>
 
-                <div className="flex items-center justify-between text-xs pt-1">
-                  <button
-                    type="button"
-                    onClick={handleResendOtp}
-                    className="text-[#123A6D] hover:underline font-bold"
-                  >
-                    OTP دوبارہ بھیجیں
-                  </button>
+              {/* City (FREE TEXT INPUT - ZERO DROPDOWNS) */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  شہر (شہر کا نام خود ٹائپ کریں) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={addaCity}
+                  onChange={(e) => setAddaCity(e.target.value)}
+                  placeholder="مثال: لاہور، کراچی، ملتان، ساہیوال، وغیرہ"
+                  className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#123A6D] outline-none min-h-[44px]"
+                />
+              </div>
 
-                  {/* Link: نمبر تبدیل کریں (Section 7) */}
-                  <button
-                    type="button"
-                    onClick={() => { setOtpSent(false); setOtpCode(''); }}
-                    className="text-slate-500 hover:text-slate-800"
-                  >
-                    نمبر تبدیل کریں
-                  </button>
+              {/* Address */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  اڈے کا مکمل پتہ / لوکیشن
+                </label>
+                <input
+                  type="text"
+                  value={addaAddress}
+                  onChange={(e) => setAddaAddress(e.target.value)}
+                  placeholder="مثال: نزد پرانا غلہ منڈی، شیر شاہ روڈ"
+                  className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#123A6D] outline-none min-h-[44px]"
+                />
+              </div>
+
+              {/* Primary Phone & Password */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    موبائل نمبر (لاگ ان ID) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    value={addaPhone}
+                    onChange={(e) => setAddaPhone(e.target.value)}
+                    placeholder="03001234567"
+                    className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#123A6D] outline-none min-h-[44px] font-mono ltr-content"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    پاس ورڈ (Password) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    value={addaPassword}
+                    onChange={(e) => setAddaPassword(e.target.value)}
+                    placeholder="کم از کم 4 ہندسے یا حروف"
+                    className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#123A6D] outline-none min-h-[44px]"
+                  />
                 </div>
               </div>
+
+              {/* WhatsApp Number */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  واٹس ایپ نمبر (WhatsApp)
+                </label>
+                <input
+                  type="tel"
+                  value={addaWhatsapp}
+                  onChange={(e) => setAddaWhatsapp(e.target.value)}
+                  placeholder="03001234567"
+                  className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#123A6D] outline-none min-h-[44px] font-mono ltr-content"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-[#123A6D] hover:bg-[#0D2D57] text-white py-3.5 px-4 rounded-xl font-bold text-sm shadow-md active:scale-95 transition min-h-[48px] disabled:opacity-50"
+              >
+                {isLoading ? 'اکاؤنٹ بن رہا ہے...' : 'اڈا منیجر اکاؤنٹ رجسٹر کریں'}
+              </button>
+            </form>
+          )}
+
+          {/* ========================================================= */}
+          {/* MODE: REGISTER DRIVER */}
+          {/* ========================================================= */}
+          {activeMode === 'register' && activeRole === 'driver' && (
+            <form onSubmit={handleRegisterDriverSubmit} className="space-y-3.5 text-right">
+              
+              {regError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-xl text-xs">
+                  {regError}
+                </div>
+              )}
+              {regSuccess && (
+                <div className="bg-emerald-50 border border-emerald-300 text-emerald-900 p-3 rounded-xl text-xs font-bold">
+                  {regSuccess}
+                </div>
+              )}
+
+              {/* Driver Name */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  ڈرائیور کا نام <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={driverName}
+                  onChange={(e) => setDriverName(e.target.value)}
+                  placeholder="مثال: استاد فیاض بلوچ"
+                  className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
+                />
+              </div>
+
+              {/* Phone & Password */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    موبائل نمبر (لاگ ان ID) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    value={driverPhone}
+                    onChange={(e) => setDriverPhone(e.target.value)}
+                    placeholder="03001234567"
+                    className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px] font-mono ltr-content"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    پاس ورڈ (Password) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    value={driverPassword}
+                    onChange={(e) => setDriverPassword(e.target.value)}
+                    placeholder="کم از کم 4 ہندسے یا حروف"
+                    className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
+                  />
+                </div>
+              </div>
+
+              {/* Vehicle Type (FREE TYPING OR QUICK CHIPS) */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  گاڑی کی قسم (خود ٹائپ کریں یا سلیکٹ کریں)
+                </label>
+                <input
+                  type="text"
+                  value={driverVehicleType}
+                  onChange={(e) => setDriverVehicleType(e.target.value)}
+                  placeholder="مثال: 22 وہیلر، 10 وہیلر، شہزور، مزدہ 16 فٹ، وغیرہ"
+                  className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
+                />
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {['22 Wheeler', '10 Wheeler', 'Shahzor', 'Mazda', '40 Foot Container'].map((v) => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => setDriverVehicleType(v)}
+                      className="text-[11px] bg-slate-100 hover:bg-emerald-100 text-slate-700 px-2.5 py-1 rounded-lg border border-slate-200 transition"
+                    >
+                      + {v}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Vehicle Number & City (FREE TEXT) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    گاڑی نمبر (اختیاری)
+                  </label>
+                  <input
+                    type="text"
+                    value={driverVehicleNumber}
+                    onChange={(e) => setDriverVehicleNumber(e.target.value)}
+                    placeholder="TL-9821"
+                    className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px] font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    موجودہ شہر (ٹائپ کریں) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={driverCity}
+                    onChange={(e) => setDriverCity(e.target.value)}
+                    placeholder="مثال: لاہور، کراچی، ملتان"
+                    className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
+                  />
+                </div>
+              </div>
+
+              {/* Preferred Route */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  پسندیدہ روٹ (اختیاری)
+                </label>
+                <input
+                  type="text"
+                  value={driverPreferredRoute}
+                  onChange={(e) => setDriverPreferredRoute(e.target.value)}
+                  placeholder="مثال: لاہور تا کراچی / ملتان تا پشاور"
+                  className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-[#19A974] hover:bg-[#169163] text-white py-3.5 px-4 rounded-xl font-bold text-sm shadow-md active:scale-95 transition min-h-[48px] disabled:opacity-50"
+              >
+                {isLoading ? 'اکاؤنٹ بن رہا ہے...' : 'ڈرائیور اکاؤنٹ رجسٹر کریں'}
+              </button>
             </form>
           )}
 
         </div>
-      )}
 
-      {/* ============================================================== */}
-      {/* SECTION 8: REGISTER SCREEN */}
-      {/* ============================================================== */}
-      {activeMode === 'register' && (
-        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-5">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#08284F]">
-              نیا اکاؤنٹ بنائیں
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              اپنا کردار منتخب کریں اور PK Cargo Link نیٹ ورک میں شامل ہوں۔
-            </p>
-          </div>
-
-          {regSuccess && (
-            <div className="bg-emerald-50 border border-emerald-300 text-emerald-900 px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-[#19A974] flex-shrink-0" />
-              <span>{regSuccess}</span>
-            </div>
-          )}
-
-          {regError && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-2xl text-xs sm:text-sm flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 flex-shrink-0" />
-              <span>{regError}</span>
-            </div>
-          )}
-
-          <form onSubmit={handleRegisterSubmit} className="space-y-4">
-            
-            {/* Fields: نام, موبائل نمبر, CNIC (Section 8) */}
-            <div className="space-y-1.5">
-              <label className="text-sm font-bold text-slate-800 block">
-                نام <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={regName}
-                onChange={(e) => setRegName(e.target.value)}
-                placeholder="مثال: محمد عادل"
-                className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-4 py-2.5 text-base text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
-                required
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-sm font-bold text-slate-800 block">
-                موبائل نمبر <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="tel"
-                value={regPhone}
-                onChange={(e) => setRegPhone(e.target.value)}
-                placeholder="مثال: 03001234567"
-                className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-4 py-2.5 text-base text-slate-900 focus:bg-white focus:border-[#19A974] outline-none font-mono ltr-content min-h-[44px]"
-                required
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-sm font-bold text-slate-800 block">
-                CNIC (شناختی کارڈ نمبر) <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={regCnic}
-                onChange={(e) => setRegCnic(e.target.value)}
-                placeholder="مثال: 36302-1234567-1"
-                className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-4 py-2.5 text-base text-slate-900 focus:bg-white focus:border-[#19A974] outline-none font-mono ltr-content min-h-[44px]"
-                required
-              />
-            </div>
-
-            {/* Role Selection (3 cards only, NO Factory Owner) (Section 8) */}
-            <div className="space-y-2 pt-2">
-              <label className="text-sm font-bold text-slate-800 block">
-                اپنا کردار منتخب کریں:
-              </label>
-
-              <div className="space-y-2.5">
-                
-                {/* Role 1: اڈا مینیجر */}
-                <div
-                  onClick={() => setRegRole('adda_manager')}
-                  className={`p-3.5 rounded-2xl border-2 cursor-pointer transition flex items-start gap-3 ${
-                    regRole === 'adda_manager'
-                      ? 'bg-emerald-50/60 border-[#19A974] ring-1 ring-[#19A974]'
-                      : 'bg-white border-slate-200 hover:bg-slate-50'
-                  }`}
-                >
-                  <div className="w-10 h-10 rounded-xl bg-emerald-100 text-[#19A974] flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Building2 className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-extrabold text-base text-[#08284F]">
-                      اڈا مینیجر
-                    </h3>
-                    <p className="text-xs text-slate-600 mt-0.5">
-                      اپنے اڈے سے لوڈ پوسٹ کریں اور ڈیجیٹل سلپس بنائیں۔
-                    </p>
-                  </div>
-                </div>
-
-                {/* Role 2: ڈرائیور */}
-                <div
-                  onClick={() => setRegRole('driver')}
-                  className={`p-3.5 rounded-2xl border-2 cursor-pointer transition flex items-start gap-3 ${
-                    regRole === 'driver'
-                      ? 'bg-blue-50/60 border-[#123A6D] ring-1 ring-[#123A6D]'
-                      : 'bg-white border-slate-200 hover:bg-slate-50'
-                  }`}
-                >
-                  <div className="w-10 h-10 rounded-xl bg-blue-100 text-[#123A6D] flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Truck className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-extrabold text-base text-[#08284F]">
-                      ڈرائیور
-                    </h3>
-                    <p className="text-xs text-slate-600 mt-0.5">
-                      اپنے لیے دستیاب لوڈ تلاش کریں۔
-                    </p>
-                  </div>
-                </div>
-
-                {/* Role 3: گاڑی مالک */}
-                <div
-                  onClick={() => setRegRole('vehicle_owner')}
-                  className={`p-3.5 rounded-2xl border-2 cursor-pointer transition flex items-start gap-3 ${
-                    regRole === 'vehicle_owner'
-                      ? 'bg-amber-50/60 border-amber-500 ring-1 ring-amber-500'
-                      : 'bg-white border-slate-200 hover:bg-slate-50'
-                  }`}
-                >
-                  <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Truck className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-extrabold text-base text-[#08284F]">
-                      گاڑی مالک
-                    </h3>
-                    <p className="text-xs text-slate-600 mt-0.5">
-                      اپنی گاڑیوں کا ریکارڈ اور دستیابی manage کریں۔
-                    </p>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-
-            {/* Button: رجسٹریشن جاری رکھیں (Section 8) */}
-            <div className="pt-2">
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2 bg-[#123A6D] hover:bg-[#0D2D57] text-white font-extrabold text-lg py-3.5 px-4 rounded-xl shadow-md active:scale-95 transition min-h-[48px] disabled:opacity-50"
-              >
-                <span>{isLoading ? 'رجسٹریشن جاری ہے...' : 'رجسٹریشن جاری رکھیں'}</span>
-              </button>
-            </div>
-
-          </form>
-        </div>
-      )}
+      </div>
 
     </div>
   );

@@ -133,10 +133,33 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
         {/* Contacts: Call & WhatsApp */}
         <div className="space-y-2">
           <span className="text-xs text-slate-500 font-bold block">
-            رابطہ نمبرز (کال و واٹس ایپ کے لیے کلک کریں):
+            رابطہ نمبرز بمع نام (کال و واٹس ایپ کے لیے کلک کریں):
           </span>
           <div className="flex flex-wrap gap-2">
-            {contacts.length === 0 ? (
+            {profile.namedContacts && profile.namedContacts.length > 0 ? (
+              profile.namedContacts.map((c, idx) => (
+                <div key={idx} className="inline-flex items-center gap-1.5 bg-[#F4F7FB] border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-800">
+                  <a
+                    href={`tel:${sanitizePhoneForCall(c.number)}`}
+                    className="inline-flex items-center gap-1 hover:text-[#19A974] font-bold"
+                    title="کال کریں"
+                  >
+                    <Phone className="w-3.5 h-3.5 text-[#19A974]" />
+                    {c.name && <span className="text-slate-700">{c.name}:</span>}
+                    <span className="font-mono ltr-content">{c.number}</span>
+                  </a>
+                  <a
+                    href={getWhatsAppShareUrl('السلام علیکم! میں PK Cargo Link سے رابطہ کر رہا ہوں۔', c.number)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#25D366] hover:opacity-80 p-0.5"
+                    title="واٹس ایپ پر رابطہ کریں"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              ))
+            ) : contacts.length === 0 ? (
               <span className="text-xs text-slate-400">کوئی رابطہ نمبر درج نہیں۔ اڈا پروفائل میں شامل کریں۔</span>
             ) : (
               contacts.map((phone, idx) => (

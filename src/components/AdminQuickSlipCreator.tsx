@@ -539,22 +539,32 @@ export const AdminQuickSlipCreator: React.FC<AdminQuickSlipCreatorProps> = ({
             </div>
 
             {addaMode === 'select' && (
-              <div className="bg-blue-50 border border-blue-200 rounded-2xl p-3">
-                <label className="block text-xs font-bold text-blue-900 mb-1.5">
-                  رجسٹرڈ ٹرانسپورٹ اڈا منتخب کریں:
+              <div className="bg-blue-50 border border-blue-200 rounded-2xl p-3.5 space-y-2">
+                <label className="block text-xs font-bold text-blue-900">
+                  رجسٹرڈ ٹرانسپورٹ اڈا منتخب کریں ({registeredUsers.length}):
                 </label>
-                <select
-                  value={selectedUserId}
-                  onChange={(e) => setSelectedUserId(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-blue-200 rounded-xl text-xs font-bold text-slate-800 outline-none"
-                >
-                  <option value="">-- فہرست میں سے اڈا منتخب کریں --</option>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
                   {registeredUsers.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.addaName || 'نامعلوم اڈا'} ({u.city || 'پاکستان'}) - {u.phone}
-                    </option>
+                    <button
+                      key={u.id}
+                      type="button"
+                      onClick={() => setSelectedUserId(u.id)}
+                      className={`p-2.5 rounded-xl text-right text-xs transition border flex flex-col justify-between ${
+                        selectedUserId === u.id
+                          ? 'bg-[#0B2545] text-white border-[#0B2545] shadow-sm font-bold'
+                          : 'bg-white text-slate-800 border-blue-200 hover:bg-blue-100/60'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-extrabold">{u.addaName || 'نامعلوم اڈا'}</span>
+                        <span className="text-[10px] opacity-80">{u.city || 'پاکستان'}</span>
+                      </div>
+                      <div className="text-[11px] opacity-75 font-mono mt-0.5">
+                        {u.managerName} • {u.phone}
+                      </div>
+                    </button>
                   ))}
-                </select>
+                </div>
               </div>
             )}
 
@@ -577,15 +587,14 @@ export const AdminQuickSlipCreator: React.FC<AdminQuickSlipCreatorProps> = ({
                 <label className="block text-xs font-bold text-slate-700 mb-1">
                   اڈا کا شہر *
                 </label>
-                <select
+                <input
+                  type="text"
+                  required
                   value={addaCity}
                   onChange={(e) => setAddaCity(e.target.value)}
+                  placeholder="شہر کا نام خود ٹائپ کریں"
                   className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:bg-white focus:border-blue-500 outline-none transition font-bold"
-                >
-                  {PAKISTANI_CITIES.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
+                />
               </div>
 
               <div>
@@ -673,15 +682,14 @@ export const AdminQuickSlipCreator: React.FC<AdminQuickSlipCreatorProps> = ({
                 <label className="block text-xs font-bold text-slate-700">
                   لوڈنگ شہر (Loading City) *
                 </label>
-                <select
+                <input
+                  type="text"
+                  required
                   value={loadingCity}
                   onChange={(e) => setLoadingCity(e.target.value)}
+                  placeholder="مثال: لاہور، ملتان"
                   className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:bg-white focus:border-purple-500 outline-none transition font-bold"
-                >
-                  {PAKISTANI_CITIES.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
+                />
                 <input
                   type="text"
                   value={loadingLocation}
@@ -695,15 +703,14 @@ export const AdminQuickSlipCreator: React.FC<AdminQuickSlipCreatorProps> = ({
                 <label className="block text-xs font-bold text-slate-700">
                   منزل شہر (Destination City) *
                 </label>
-                <select
+                <input
+                  type="text"
+                  required
                   value={destinationCity}
                   onChange={(e) => setDestinationCity(e.target.value)}
+                  placeholder="مثال: کراچی، پشاور"
                   className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:bg-white focus:border-purple-500 outline-none transition font-bold"
-                >
-                  {PAKISTANI_CITIES.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
+                />
                 <input
                   type="text"
                   value={destinationLocation}
@@ -771,30 +778,27 @@ export const AdminQuickSlipCreator: React.FC<AdminQuickSlipCreatorProps> = ({
                 <label className="block text-xs font-bold text-slate-700 mb-1">
                   مطلوبہ گاڑی (Vehicle) *
                 </label>
-                <select
+                <input
+                  type="text"
+                  required
                   value={vehicleType}
-                  onChange={(e) => setVehicleType(e.target.value as VehicleType)}
+                  onChange={(e) => setVehicleType(e.target.value)}
+                  placeholder="مثال: 22 وہیلر، شاہزور"
                   className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:bg-white outline-none font-bold"
-                >
-                  {VEHICLE_OPTIONS.map((v) => (
-                    <option key={v} value={v}>{v}</option>
-                  ))}
-                </select>
+                />
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
                   باڈی کی قسم (Body)
                 </label>
-                <select
+                <input
+                  type="text"
                   value={bodyType}
-                  onChange={(e) => setBodyType(e.target.value as BodyType)}
+                  onChange={(e) => setBodyType(e.target.value)}
+                  placeholder="فل باڈی، ہاف باڈی، پھٹا"
                   className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:bg-white outline-none font-bold"
-                >
-                  {BODY_OPTIONS.map((b) => (
-                    <option key={b} value={b}>{b}</option>
-                  ))}
-                </select>
+                />
               </div>
 
               <div>

@@ -104,6 +104,14 @@ export const Navbar: React.FC<NavbarProps> = ({
               لوڈ تلاش کریں
             </button>
             <button
+              onClick={() => setCurrentTab('trucks')}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                currentTab === 'trucks' || currentTab === 'available-trucks' ? 'bg-[#19A974] text-white font-bold shadow-xs' : 'text-slate-200 hover:bg-white/10'
+              }`}
+            >
+              دستیاب گاڑیاں
+            </button>
+            <button
               onClick={() => setCurrentTab('verify')}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 currentTab === 'verify' ? 'bg-[#08284F] text-white' : 'text-slate-200 hover:bg-white/10'

@@ -1,4 +1,4 @@
-import { AddaProfile, LoadSlip, WhatsAppGroup, AdminStats, UserAccount, PaymentSettings } from '../types';
+import { AddaProfile, LoadSlip, WhatsAppGroup, AdminStats, UserAccount, PaymentSettings, AvailableTruck, DriverAccount, NamedContact } from '../types';
 
 const STORAGE_KEYS = {
   ADDA_PROFILE: 'pkcargolink_adda_profile_v3',
@@ -12,6 +12,10 @@ const STORAGE_KEYS = {
   USERS: 'pkcargolink_registered_users_v3',
   CURRENT_USER: 'pkcargolink_current_user_account_v3',
   PAYMENT_SETTINGS: 'pkcargolink_payment_settings_v3',
+  AVAILABLE_TRUCKS: 'pkcargolink_available_trucks_v3',
+  CURRENT_DRIVER: 'pkcargolink_current_driver_v3',
+  IS_DRIVER_LOGGED_IN: 'pkcargolink_is_driver_logged_in_v3',
+  REGISTERED_DRIVERS: 'pkcargolink_registered_drivers_v3',
 };
 
 // Default empty Adda template (clean state, no fake demo data)
@@ -190,7 +194,8 @@ export const StorageService = {
 
   async registerUser(payload: {
     phone: string;
-    password: string;
+    password?: string;
+    role?: 'adda_manager' | 'driver';
     addaName: string;
     managerName: string;
     city: string;
@@ -201,7 +206,7 @@ export const StorageService = {
     contact2?: string;
     paymentScreenshot?: string;
     paymentTransactionId?: string;
-  }): Promise<{ success: boolean; message: string; user?: UserAccount; requiresPayment?: boolean }> {
+  }): Promise<{ success: boolean; message: string; user?: UserAccount; requiresPayment?: boolean; error?: string }> {
     const cleanPhone = payload.phone.trim();
     if (!cleanPhone) {
       return { success: false, message: 'موبائل نمبر درج کرنا لازمی ہے۔' };
@@ -412,7 +417,16 @@ export const StorageService = {
         primaryPhone: currentUser.phone,
         whatsappNumber: currentUser.whatsappNumber || currentUser.phone,
         contact1: currentUser.contact1 || '',
+        contact1Name: currentUser.contact1Name || '',
         contact2: currentUser.contact2 || '',
+        contact2Name: currentUser.contact2Name || '',
+        contact3: currentUser.contact3 || '',
+        contact3Name: currentUser.contact3Name || '',
+        contact4: currentUser.contact4 || '',
+        contact4Name: currentUser.contact4Name || '',
+        contact5: currentUser.contact5 || '',
+        contact5Name: currentUser.contact5Name || '',
+        namedContacts: currentUser.namedContacts || [],
         isVerified: true,
         createdAt: currentUser.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -435,7 +449,16 @@ export const StorageService = {
           primaryPhone: user.phone,
           whatsappNumber: user.whatsappNumber || user.phone,
           contact1: user.contact1 || '',
+          contact1Name: user.contact1Name || '',
           contact2: user.contact2 || '',
+          contact2Name: user.contact2Name || '',
+          contact3: user.contact3 || '',
+          contact3Name: user.contact3Name || '',
+          contact4: user.contact4 || '',
+          contact4Name: user.contact4Name || '',
+          contact5: user.contact5 || '',
+          contact5Name: user.contact5Name || '',
+          namedContacts: user.namedContacts || [],
           isVerified: true,
           createdAt: user.createdAt || new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -478,7 +501,16 @@ export const StorageService = {
             phone: profile.primaryPhone,
             whatsappNumber: profile.whatsappNumber || profile.primaryPhone,
             contact1: profile.contact1,
+            contact1Name: profile.contact1Name,
             contact2: profile.contact2,
+            contact2Name: profile.contact2Name,
+            contact3: profile.contact3,
+            contact3Name: profile.contact3Name,
+            contact4: profile.contact4,
+            contact4Name: profile.contact4Name,
+            contact5: profile.contact5,
+            contact5Name: profile.contact5Name,
+            namedContacts: profile.namedContacts,
           };
           users[idx] = updatedUser;
           this.setCurrentUser(updatedUser);
@@ -490,7 +522,7 @@ export const StorageService = {
     }
   },
 
-  // Auth / Session State
+  // Auth / Session State (Adda Manager)
   isLoggedIn(): boolean {
     return localStorage.getItem(STORAGE_KEYS.IS_LOGGED_IN) === 'true';
   },
@@ -512,7 +544,16 @@ export const StorageService = {
           primaryPhone: user.phone,
           whatsappNumber: user.whatsappNumber || user.phone,
           contact1: user.contact1,
+          contact1Name: user.contact1Name,
           contact2: user.contact2,
+          contact2Name: user.contact2Name,
+          contact3: user.contact3,
+          contact3Name: user.contact3Name,
+          contact4: user.contact4,
+          contact4Name: user.contact4Name,
+          contact5: user.contact5,
+          contact5Name: user.contact5Name,
+          namedContacts: user.namedContacts,
           isVerified: true,
           createdAt: user.createdAt,
           updatedAt: new Date().toISOString(),
@@ -528,6 +569,109 @@ export const StorageService = {
 
   getCurrentUserPhone(): string {
     return localStorage.getItem(STORAGE_KEYS.CURRENT_USER_PHONE) || '';
+  },
+
+  // -------------------------------------------------------------
+  // Driver Authentication & Session (Separate from Adda Manager)
+  // -------------------------------------------------------------
+  getDrivers(): DriverAccount[] {
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.REGISTERED_DRIVERS);
+      if (data) {
+        return JSON.parse(data);
+      }
+    } catch (e) {
+      console.error('Error reading drivers', e);
+    }
+    return [];
+  },
+
+  saveDrivers(drivers: DriverAccount[]): void {
+    try {
+      localStorage.setItem(STORAGE_KEYS.REGISTERED_DRIVERS, JSON.stringify(drivers));
+    } catch (e) {
+      console.error('Error saving drivers', e);
+    }
+  },
+
+  isDriverLoggedIn(): boolean {
+    return localStorage.getItem(STORAGE_KEYS.IS_DRIVER_LOGGED_IN) === 'true';
+  },
+
+  getCurrentDriver(): DriverAccount | null {
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.CURRENT_DRIVER);
+      if (data) {
+        return JSON.parse(data);
+      }
+    } catch (e) {
+      console.error('Error reading current driver', e);
+    }
+    return null;
+  },
+
+  setDriverLoggedIn(status: boolean, driverAccount?: DriverAccount): void {
+    localStorage.setItem(STORAGE_KEYS.IS_DRIVER_LOGGED_IN, status ? 'true' : 'false');
+    if (driverAccount) {
+      localStorage.setItem(STORAGE_KEYS.CURRENT_DRIVER, JSON.stringify(driverAccount));
+    }
+    if (!status) {
+      localStorage.removeItem(STORAGE_KEYS.CURRENT_DRIVER);
+    }
+  },
+
+  saveDriverAccount(driver: DriverAccount): void {
+    const drivers = this.getDrivers();
+    const cleanP = driver.phone.replace(/[^0-9]/g, '');
+    const filtered = drivers.filter((d) => d.phone.replace(/[^0-9]/g, '') !== cleanP);
+    filtered.unshift(driver);
+    this.saveDrivers(filtered);
+    this.setDriverLoggedIn(true, driver);
+  },
+
+  loginDriver(phone: string, password?: string): { success: boolean; message: string; driver?: DriverAccount } {
+    const cleanP = phone.trim().replace(/[^0-9]/g, '');
+    const drivers = this.getDrivers();
+    const found = drivers.find((d) => d.phone.replace(/[^0-9]/g, '') === cleanP);
+    
+    if (found) {
+      if (found.password && password && found.password !== password.trim()) {
+        return { success: false, message: 'پاس ورڈ درست نہیں ہے۔ دوبارہ کوشش کریں۔' };
+      }
+      this.setDriverLoggedIn(true, found);
+      return { success: true, message: 'لاگ ان کامیاب!', driver: found };
+    }
+
+    // Auto-create or allow if password provided
+    const newDriver: DriverAccount = {
+      id: `driver_${Date.now()}`,
+      driverName: 'ڈرائیور صاحب',
+      phone: phone.trim(),
+      password: password?.trim() || '1234',
+      whatsappNumber: phone.trim(),
+      vehicleType: '22 Wheeler / ٹرالہ',
+      bodyType: 'فل باڈی',
+      currentCity: 'پاکستان',
+      createdAt: new Date().toISOString(),
+    };
+    this.saveDriverAccount(newDriver);
+    return { success: true, message: 'لاگ ان کامیاب!', driver: newDriver };
+  },
+
+  loginAddaManager(phone: string, password?: string): { success: boolean; message: string; user?: UserAccount } {
+    const cleanP = phone.trim().replace(/[^0-9]/g, '');
+    const users = this.getUsers();
+    const found = users.find((u) => u.phone.replace(/[^0-9]/g, '') === cleanP);
+
+    if (found) {
+      if (found.password && password && found.password !== password.trim()) {
+        return { success: false, message: 'پاس ورڈ درست نہیں ہے۔ دوبارہ کوشش کریں۔' };
+      }
+      this.setLoggedIn(true, found.phone);
+      return { success: true, message: 'لاگ ان کامیاب!', user: found };
+    }
+
+    return { success: false, message: 'یہ فون نمبر رجسٹرڈ نہیں ہے۔ پہلے اپنا اکاؤنٹ بنائیں۔' };
   },
 
   // -------------------------------------------------------------
@@ -997,5 +1141,109 @@ export const StorageService = {
       todaySlips: todaySlips.length,
       topRoutes,
     };
+  },
+
+  // -------------------------------------------------------------
+  // Available Trucks / دستیاب گاڑیاں
+  // -------------------------------------------------------------
+  getAvailableTrucks(): AvailableTruck[] {
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.AVAILABLE_TRUCKS);
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+
+    const seedTrucks: AvailableTruck[] = [
+      {
+        id: 'truck-101',
+        driverOrOwnerName: 'ملک یوسف خان',
+        phone: '0300-8451234',
+        whatsappNumber: '0300-8451234',
+        vehicleType: '22 Wheeler',
+        bodyType: 'فل باڈی',
+        vehicleNumber: 'TL-9821',
+        currentCity: 'لاہور',
+        locationDetails: 'ٹھوکر نیاز بیگ بائی پاس',
+        preferredRoute: 'لاہور تا کراچی / ملتان',
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: 'truck-102',
+        driverOrOwnerName: 'حاجی جمیل احمد',
+        phone: '0321-4567890',
+        whatsappNumber: '0321-4567890',
+        vehicleType: '10 Wheeler',
+        bodyType: 'پھٹا',
+        vehicleNumber: 'KHI-4320',
+        currentCity: 'کراچی',
+        locationDetails: 'سپر ہائی وے، نزد گودام چورنگی',
+        preferredRoute: 'کراچی تا پنجاب / کے پی کے',
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: 'truck-103',
+        driverOrOwnerName: 'استاد فیاض بلوچ',
+        phone: '0333-7890123',
+        whatsappNumber: '0333-7890123',
+        vehicleType: 'Mazda',
+        bodyType: 'فل باڈی',
+        vehicleNumber: 'MN-7712',
+        currentCity: 'ملتان',
+        locationDetails: 'شیر شاہ چوک گڈز اڈا',
+        preferredRoute: 'ملتان تا لاہور / فیصل آباد',
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: 'truck-104',
+        driverOrOwnerName: 'رانا طارق محمود',
+        phone: '0302-6543210',
+        whatsappNumber: '0302-6543210',
+        vehicleType: 'Shahzor',
+        bodyType: 'ہاف باڈی',
+        vehicleNumber: 'FSD-2201',
+        currentCity: 'فیصل آباد',
+        locationDetails: 'جھنگ روڈ غلہ منڈی',
+        preferredRoute: 'فیصل آباد تا لاہور / سرگودھا',
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: 'truck-105',
+        driverOrOwnerName: 'خان باز خان',
+        phone: '0345-9876543',
+        whatsappNumber: '0345-9876543',
+        vehicleType: '40 Foot Container',
+        bodyType: 'کنٹینر',
+        vehicleNumber: 'RWP-8854',
+        currentCity: 'راولپنڈی',
+        locationDetails: 'آئی-9 اسلام آباد انڈسٹریل ایریا',
+        preferredRoute: 'راولپنڈی تا پشاور / لاہور',
+        createdAt: new Date().toISOString(),
+      },
+    ];
+
+    try {
+      localStorage.setItem(STORAGE_KEYS.AVAILABLE_TRUCKS, JSON.stringify(seedTrucks));
+    } catch {}
+
+    return seedTrucks;
+  },
+
+  saveAvailableTruck(truck: AvailableTruck): void {
+    const list = this.getAvailableTrucks();
+    const filtered = list.filter((t) => t.id !== truck.id);
+    filtered.unshift(truck);
+    try {
+      localStorage.setItem(STORAGE_KEYS.AVAILABLE_TRUCKS, JSON.stringify(filtered));
+    } catch {}
+  },
+
+  deleteAvailableTruck(id: string): void {
+    const list = this.getAvailableTrucks();
+    const filtered = list.filter((t) => t.id !== id);
+    try {
+      localStorage.setItem(STORAGE_KEYS.AVAILABLE_TRUCKS, JSON.stringify(filtered));
+    } catch {}
   },
 };

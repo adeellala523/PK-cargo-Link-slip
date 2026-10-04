@@ -207,6 +207,8 @@ export const NotificationCenterModal: React.FC<NotificationCenterModalProps> = (
                       className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 ${
                         n.type === 'driver_match'
                           ? 'bg-emerald-100 text-emerald-800'
+                          : n.type === 'driver_status_update'
+                          ? 'bg-purple-100 text-purple-800'
                           : n.type === 'query_received'
                           ? 'bg-amber-100 text-amber-800'
                           : 'bg-blue-100 text-blue-800'

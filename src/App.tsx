@@ -14,6 +14,7 @@ import { WhatsAppGroupsView } from './components/WhatsAppGroupsView';
 import { AdminPanelView } from './components/AdminPanelView';
 import { AddaLoginView } from './components/AddaLoginView';
 import { DriverPortalView } from './components/DriverPortalView';
+import { AvailableTrucksView } from './components/AvailableTrucksView';
 import { AboutUsView } from './components/AboutUsView';
 import { ContactUsView } from './components/ContactUsView';
 import { PrivacyPolicyView } from './components/PrivacyPolicyView';
@@ -68,6 +69,9 @@ export default function App() {
         return '/whatsapp-groups';
       case 'driver':
         return '/driver';
+      case 'trucks':
+      case 'available-trucks':
+        return '/trucks';
       case 'admin':
         return '/admin';
       case 'about':
@@ -174,6 +178,8 @@ export default function App() {
         setCurrentTab('whatsapp-groups');
       } else if (path === '/driver' || queryTab === 'driver' || window.location.hash === '#driver') {
         setCurrentTab('driver');
+      } else if (path === '/trucks' || path === '/available-trucks' || queryTab === 'trucks' || queryTab === 'available-trucks') {
+        setCurrentTab('trucks');
       } else if (path === '/admin' || path === '/adil' || queryTab === 'admin' || window.location.hash === '#adil') {
         setCurrentTab('admin');
       } else if (path === '/about' || queryTab === 'about') {
@@ -242,6 +248,14 @@ export default function App() {
     navigateTo('slip-detail', { slip: result.slip });
   };
 
+  const handleSlipUpdated = (updated: LoadSlip) => {
+    StorageService.updateSlip(updated);
+    setSlips(StorageService.getAllSlips());
+    if (activeSlip && activeSlip.id === updated.id) {
+      setActiveSlip(updated);
+    }
+  };
+
   const handleToggleSlipStatus = (slip: LoadSlip) => {
     const updatedStatus = slip.status === 'active' ? 'booked' : 'active';
     const updated: LoadSlip = { ...slip, status: updatedStatus };
@@ -270,17 +284,22 @@ export default function App() {
     navigateTo('dashboard');
   };
 
-  const handleLoginSuccess = (phone: string) => {
-    setIsLoggedIn(true);
-    StorageService.setLoggedIn(true, phone);
-    const freshProfile = StorageService.getAddaProfile();
-    setProfile(freshProfile);
-    navigateTo('dashboard');
+  const handleLoginSuccess = (phone: string, role?: 'adda_manager' | 'driver') => {
+    if (role === 'driver') {
+      navigateTo('driver');
+    } else {
+      setIsLoggedIn(true);
+      StorageService.setLoggedIn(true, phone);
+      const freshProfile = StorageService.getAddaProfile();
+      setProfile(freshProfile);
+      navigateTo('dashboard');
+    }
   };
 
   const handleLogout = () => {
     setIsLoggedIn(false);
     StorageService.setLoggedIn(false);
+    StorageService.setDriverLoggedIn(false);
     setProfile(StorageService.getAddaProfile());
     navigateTo('home');
   };
@@ -378,6 +397,8 @@ export default function App() {
               isManagerView={isLoggedIn}
               onToggleStatus={() => handleToggleSlipStatus(activeSlip)}
               onSearchLoads={() => navigateTo('search')}
+              onUpdateSlip={handleSlipUpdated}
+              onNavigateToDriverLogin={() => navigateTo('login')}
             />
           </div>
         )}
@@ -485,11 +506,24 @@ export default function App() {
           />
         )}
 
-        {/* Dedicated Driver Portal */}
+        {/* Dedicated Driver Portal / Dashboard */}
         {currentTab === 'driver' && (
           <DriverPortalView
             slips={slips}
             onViewSlip={viewSlipDetail}
+            onNavigateToSearch={() => navigateTo('search')}
+            onNavigateToTrucks={() => navigateTo('trucks')}
+            onNavigateToVerify={() => navigateTo('verify')}
+            onLogoutDriver={handleLogout}
+          />
+        )}
+
+        {/* Available Trucks Network View */}
+        {(currentTab === 'trucks' || currentTab === 'available-trucks') && (
+          <AvailableTrucksView
+            slips={slips}
+            onViewSlip={viewSlipDetail}
+            onNavigateToDriverPortal={() => navigateTo('driver')}
           />
         )}
 
