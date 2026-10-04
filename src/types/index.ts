@@ -111,6 +111,7 @@ export interface LoadSlip {
   // Metadata
   status: SlipStatus;
   createdAt: string;
+  updatedAt?: string;
   expiresAt?: string;
   viewsCount: number;
   sharesCount: number;
@@ -183,11 +184,13 @@ export interface DriverAccount {
   password?: string;
   whatsappNumber?: string;
   vehicleType: string;
-  bodyType: string;
+  bodyType?: string;
   vehicleNumber?: string;
   currentCity: string;
   preferredRoute?: string;
-  createdAt: string;
+  createdAt?: string;
+  registeredAt?: string;
+  isVerified?: boolean;
 }
 
 export interface PaymentSettings {
@@ -250,5 +253,6 @@ export interface AvailableTruck {
   preferredRoute?: string;
   createdAt: string;
   userId?: string;
-  userRole?: 'driver';
+  createdByPhone?: string;
+  userRole?: 'driver' | 'adda_manager';
 }

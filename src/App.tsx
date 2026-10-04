@@ -39,7 +39,22 @@ export default function App() {
   const [shareModalSlip, setShareModalSlip] = useState<LoadSlip | null>(null);
   const [prefillSlip, setPrefillSlip] = useState<LoadSlip | null>(null);
   const [loginInitialMode, setLoginInitialMode] = useState<'login' | 'register'>('login');
+  const [loginInitialRole, setLoginInitialRole] = useState<'adda_manager' | 'driver'>('adda_manager');
   const [loginNoticeMessage, setLoginNoticeMessage] = useState<string>('');
+
+  const handleOpenDriverLogin = (mode: 'login' | 'register' = 'login') => {
+    setLoginInitialRole('driver');
+    setLoginInitialMode(mode);
+    setLoginNoticeMessage('');
+    navigateTo('login');
+  };
+
+  const handleOpenAddaLogin = (mode: 'login' | 'register' = 'login', notice?: string) => {
+    setLoginInitialRole('adda_manager');
+    setLoginInitialMode(mode);
+    setLoginNoticeMessage(notice || '');
+    navigateTo('login');
+  };
 
   // Notification Center state
   const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState<boolean>(false);
@@ -382,6 +397,8 @@ export default function App() {
             onOpenCreate={() => handleOpenCreateModal()}
             onNavigateToSearch={() => navigateTo('search')}
             onNavigateToVerify={() => navigateTo('verify')}
+            onNavigateToTrucks={() => navigateTo('trucks')}
+            onNavigateToDriver={() => navigateTo('driver')}
             onViewSlip={viewSlipDetail}
             recentSlips={slips}
           />
@@ -514,6 +531,9 @@ export default function App() {
             onNavigateToSearch={() => navigateTo('search')}
             onNavigateToTrucks={() => navigateTo('trucks')}
             onNavigateToVerify={() => navigateTo('verify')}
+            onNavigateToDriverLogin={() => handleOpenDriverLogin('login')}
+            onNavigateToDriverRegister={() => handleOpenDriverLogin('register')}
+            onNavigateToAddaLogin={() => handleOpenAddaLogin('login')}
             onLogoutDriver={handleLogout}
           />
         )}
@@ -523,7 +543,8 @@ export default function App() {
           <AvailableTrucksView
             slips={slips}
             onViewSlip={viewSlipDetail}
-            onNavigateToDriverPortal={() => navigateTo('driver')}
+            onNavigateToDriverPortal={() => handleOpenDriverLogin('login')}
+            onNavigateToAddaLogin={() => handleOpenAddaLogin('login')}
           />
         )}
 
@@ -534,6 +555,7 @@ export default function App() {
             onNavigateToHome={() => navigateTo('home')}
             currentProfile={profile}
             initialMode={loginInitialMode}
+            initialRole={loginInitialRole}
             noticeMessage={loginNoticeMessage}
           />
         )}

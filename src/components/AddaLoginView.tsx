@@ -183,6 +183,12 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
       setRegError('براہ کرم 11 ہندسوں کا درست موبائل نمبر درج کریں۔');
       return;
     }
+
+    const existingDrivers = StorageService.getDrivers();
+    if (existingDrivers.some((d) => d.phone.replace(/[^0-9]/g, '') === cleanPhone)) {
+      setRegError('یہ موبائل نمبر پہلے سے بطور ڈرائیور رجسٹرڈ ہے۔ براہ کرم "لاگ ان" کریں یا مختلف نمبر استعمال کریں۔');
+      return;
+    }
     if (!driverCity.trim()) {
       setRegError('براہ کرم اپنا موجودہ شہر درج کریں۔');
       return;

@@ -9,13 +9,17 @@ import {
   CheckCircle2, 
   RotateCcw,
   FileText,
-  ShieldCheck,
-  Package,
-  User,
-  Radio,
-  PlusCircle,
-  X,
-  ExternalLink
+  ShieldCheck, 
+  Package, 
+  User, 
+  Radio, 
+  PlusCircle, 
+  X, 
+  ExternalLink,
+  Navigation,
+  ArrowRight,
+  Sparkles,
+  Building2
 } from 'lucide-react';
 import { LoadSlip, DriverAccount } from '../types';
 import { 
@@ -31,6 +35,9 @@ interface DriverPortalViewProps {
   onNavigateToSearch?: () => void;
   onNavigateToTrucks?: () => void;
   onNavigateToVerify?: () => void;
+  onNavigateToDriverLogin?: () => void;
+  onNavigateToDriverRegister?: () => void;
+  onNavigateToAddaLogin?: () => void;
   onLogoutDriver?: () => void;
 }
 
@@ -45,13 +52,54 @@ export const DriverPortalView: React.FC<DriverPortalViewProps> = ({
   onNavigateToSearch,
   onNavigateToTrucks,
   onNavigateToVerify,
+  onNavigateToDriverLogin,
+  onNavigateToDriverRegister,
+  onNavigateToAddaLogin,
   onLogoutDriver,
 }) => {
+  const currentDriver: DriverAccount | null = StorageService.getCurrentDriver();
+  const isDriverLoggedIn = StorageService.isDriverLoggedIn() && Boolean(currentDriver);
+
+  // Search & Filter State
   const [selectedCity, setSelectedCity] = useState<string>('تمام پاکستان');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  
-  const currentDriver: DriverAccount | null = StorageService.getCurrentDriver();
-  const isDriverLoggedIn = StorageService.isDriverLoggedIn();
+
+  // Trip Status State for Logged-in Driver
+  const [tripStatus, setTripStatus] = useState<'available' | 'on_route' | 'loading'>('available');
+  const [currentCityInput, setCurrentCityInput] = useState<string>(currentDriver?.currentCity || 'لاہور');
+  const [isUpdatingTrip, setIsUpdatingTrip] = useState(false);
+  const [tripUpdateSuccess, setTripUpdateSuccess] = useState('');
+
+  // Handle live trip / location update
+  const handleSaveTripUpdate = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentDriver) return;
+    
+    const updated: DriverAccount = {
+      ...currentDriver,
+      currentCity: currentCityInput.trim() || currentDriver.currentCity,
+    };
+    StorageService.saveDriverAccount(updated);
+    
+    // Also sync with their available truck if present
+    const trucks = StorageService.getAvailableTrucks();
+    const cleanPhone = (currentDriver.phone || '').replace(/[^0-9]/g, '');
+    const myTruck = trucks.find(
+      (t) => (t.userId && t.userId === currentDriver.id) || t.phone.replace(/[^0-9]/g, '') === cleanPhone
+    );
+    if (myTruck) {
+      StorageService.saveAvailableTruck({
+        ...myTruck,
+        currentCity: currentCityInput.trim() || myTruck.currentCity,
+      });
+    }
+
+    setTripUpdateSuccess('آپ کی لوکیشن اور ٹرپ اسٹیٹس کامیابی سے اپ ڈیٹ ہو گیا!');
+    setTimeout(() => {
+      setIsUpdatingTrip(false);
+      setTripUpdateSuccess('');
+    }, 1500);
+  };
 
   // Only active loads
   const activeSlips = useMemo(() => {
@@ -86,28 +134,132 @@ export const DriverPortalView: React.FC<DriverPortalViewProps> = ({
     });
   }, [activeSlips, searchQuery, selectedCity]);
 
+  // =========================================================================
+  // VIEW 1: UN-AUTHENTICATED (DRIVER LOGIN / REGISTRATION REQUIRED)
+  // =========================================================================
+  if (!isDriverLoggedIn || !currentDriver) {
+    return (
+      <div className="max-w-3xl mx-auto space-y-6 font-nafees py-4">
+        
+        {/* Main Welcome & Login Prompt Hero Card */}
+        <div className="bg-white rounded-3xl p-6 sm:p-9 shadow-sm border border-slate-200 text-center space-y-6">
+          
+          <div className="w-20 h-20 rounded-3xl bg-emerald-50 text-[#19A974] flex items-center justify-center mx-auto border-2 border-emerald-200 shadow-xs">
+            <Truck className="w-10 h-10 text-[#19A974]" />
+          </div>
+
+          <div className="space-y-2 max-w-lg mx-auto">
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-emerald-50 text-[#19A974] rounded-full text-xs font-bold border border-emerald-200">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#19A974]" />
+              <span>ڈرائیور پورٹل و سروسز</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#08284F]">
+              ڈرائیور لاگ ان و رجسٹریشن لازمی ہے
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              براہ راست اڈا منیجرز سے رابطہ کرنے، لائیو کارگو لوڈز سرچ کرنے، اور اپنی خالی گاڑی لسٹ کرنے کے لیے پہلے اپنے ڈرائیور اکاؤنٹ میں لاگ ان کریں۔
+            </p>
+          </div>
+
+          {/* Features Grid for Drivers */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-right max-w-2xl mx-auto">
+            <div className="bg-[#F4F7FB] p-3.5 rounded-2xl border border-slate-200 space-y-1">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-900">
+                <Search className="w-4 h-4 text-[#123A6D]" />
+                <span>لائیو لوڈ سرچ</span>
+              </div>
+              <p className="text-[11px] text-slate-500">
+                پورے پاکستان سے فعال کارگو لوڈز شہر کے لحاظ سے تلاش کریں۔
+              </p>
+            </div>
+
+            <div className="bg-[#F4F7FB] p-3.5 rounded-2xl border border-slate-200 space-y-1">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-900">
+                <Truck className="w-4 h-4 text-[#19A974]" />
+                <span>خالی گاڑی لسٹنگ</span>
+              </div>
+              <p className="text-[11px] text-slate-500">
+                اپنی گاڑی لسٹ کریں تاکہ اڈا منیجرز آپ سے براہ راست رابطہ کریں۔
+              </p>
+            </div>
+
+            <div className="bg-[#F4F7FB] p-3.5 rounded-2xl border border-slate-200 space-y-1">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-900">
+                <Navigation className="w-4 h-4 text-amber-600" />
+                <span>ٹرپ اپ ڈیٹس</span>
+              </div>
+              <p className="text-[11px] text-slate-500">
+                اپنی موجودہ لوکیشن اور روٹ اسٹیٹس فوری اپ ڈیٹ کریں۔
+              </p>
+            </div>
+          </div>
+
+          {/* Driver Primary CTAs */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2 max-w-md mx-auto">
+            <button
+              type="button"
+              onClick={onNavigateToDriverLogin}
+              className="w-full sm:w-auto flex-1 bg-[#123A6D] hover:bg-[#0D2D57] text-white py-3.5 px-6 rounded-xl font-bold text-sm shadow-md transition active:scale-95 flex items-center justify-center gap-2"
+            >
+              <User className="w-4 h-4" />
+              <span>ڈرائیور لاگ ان کریں</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onNavigateToDriverRegister}
+              className="w-full sm:w-auto flex-1 bg-[#19A974] hover:bg-[#169163] text-white py-3.5 px-6 rounded-xl font-bold text-sm shadow-md transition active:scale-95 flex items-center justify-center gap-2"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              <span>نیا ڈرائیور رجسٹر کریں</span>
+            </button>
+          </div>
+
+          {/* Separate Workflow for Adda Managers */}
+          <div className="pt-4 border-t border-slate-100 flex items-center justify-center gap-2 text-xs text-slate-500">
+            <Building2 className="w-4 h-4 text-[#123A6D]" />
+            <span>کیا آپ گڈز اڈا منیجر ہیں؟</span>
+            <button
+              type="button"
+              onClick={onNavigateToAddaLogin}
+              className="text-[#123A6D] font-bold hover:underline"
+            >
+              اڈا منیجر لاگ ان و رجسٹریشن یہاں سے کریں ➔
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // VIEW 2: AUTHENTICATED DRIVER PORTAL (TRIP UPDATES & LOAD SEARCH)
+  // =========================================================================
   return (
     <div className="max-w-4xl mx-auto space-y-6 font-nafees">
       
-      {/* 1. Header (Driver Dashboard) */}
-      <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200 space-y-3">
+      {/* 1. Driver Profile Header & Status Card */}
+      <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200 space-y-4">
+        
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-[#19A974] rounded-full text-xs font-bold border border-emerald-200 mb-1">
               <Truck className="w-3.5 h-3.5 text-[#19A974]" />
-              <span>ڈرائیور ڈیش بورڈ (Driver Portal)</span>
+              <span>ڈرائیور ڈیش بورڈ (Driver Dashboard)</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-[#08284F]">
-              ڈرائیور ڈیش بورڈ
+              ڈرائیور پورٹل
             </h1>
           </div>
 
           <div className="flex items-center gap-2 self-start sm:self-auto">
-            {isDriverLoggedIn && onLogoutDriver && (
+            {onLogoutDriver && (
               <button
                 type="button"
                 onClick={onLogoutDriver}
-                className="text-xs text-slate-500 hover:text-red-600 bg-slate-100 px-3 py-1.5 rounded-xl font-bold transition"
+                className="text-xs text-slate-500 hover:text-red-600 bg-slate-100 hover:bg-red-50 px-3.5 py-2 rounded-xl font-bold transition border border-slate-200"
               >
                 لاگ آؤٹ
               </button>
@@ -118,50 +270,169 @@ export const DriverPortalView: React.FC<DriverPortalViewProps> = ({
           </div>
         </div>
 
-        {/* Logged in Driver Profile Card if active */}
-        {currentDriver && (
-          <div className="bg-[#F4F7FB] p-4 rounded-2xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#123A6D] text-white flex items-center justify-center font-bold">
-                <User className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="font-extrabold text-sm sm:text-base text-slate-900">
+        {/* DRIVER PROFILE CARD */}
+        <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-[#F4F7FB] p-4 sm:p-5 rounded-2xl border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-[#19A974] text-white flex items-center justify-center font-bold shadow-sm">
+              <Truck className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-extrabold text-base sm:text-lg text-slate-900">
                   {currentDriver.driverName}
                 </h3>
-                <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                  <span className="font-mono">{currentDriver.phone}</span>
-                  <span>•</span>
-                  <span>{currentDriver.vehicleType}</span>
-                  {currentDriver.vehicleNumber && (
-                    <span className="font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200">
-                      {currentDriver.vehicleNumber}
-                    </span>
-                  )}
-                  <span>•</span>
-                  <span>موجودہ شہر: {currentDriver.currentCity}</span>
-                </div>
+                <span className="bg-emerald-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-md">
+                  تصدیق شدہ ڈرائیور
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600 mt-1">
+                <span className="font-mono font-bold text-slate-800">{currentDriver.phone}</span>
+                <span>•</span>
+                <span>{currentDriver.vehicleType}</span>
+                {currentDriver.vehicleNumber && (
+                  <span className="font-mono bg-white px-2 py-0.5 rounded border border-slate-300 font-bold">
+                    {currentDriver.vehicleNumber}
+                  </span>
+                )}
+                {currentDriver.currentCity && (
+                  <span>• موجودہ شہر: <strong>{currentDriver.currentCity}</strong></span>
+                )}
               </div>
             </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+            <button
+              type="button"
+              onClick={() => setIsUpdatingTrip(!isUpdatingTrip)}
+              className="inline-flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-2xs min-h-[42px]"
+            >
+              <Navigation className="w-3.5 h-3.5 text-[#123A6D]" />
+              <span>لوکیشن اپ ڈیٹ کریں</span>
+            </button>
 
             {onNavigateToTrucks && (
               <button
                 type="button"
                 onClick={onNavigateToTrucks}
-                className="inline-flex items-center gap-1.5 bg-[#19A974] hover:bg-[#169163] text-white px-4 py-2 rounded-xl text-xs font-bold transition self-start sm:self-auto shadow-xs"
+                className="inline-flex items-center justify-center gap-2 bg-[#19A974] hover:bg-[#169163] text-white px-5 py-2.5 rounded-xl text-xs font-bold transition shadow-sm min-h-[42px] active:scale-95"
               >
                 <PlusCircle className="w-4 h-4" />
-                <span>دستیاب گاڑیاں نیٹ ورک</span>
+                <span>اپنی گاڑی لسٹ کریں</span>
               </button>
             )}
           </div>
+        </div>
+
+        {/* 2. TRIP & LOCATION LIVE UPDATE PANEL */}
+        {isUpdatingTrip && (
+          <form onSubmit={handleSaveTripUpdate} className="bg-white p-4 sm:p-5 rounded-2xl border-2 border-emerald-300 shadow-sm space-y-3 animate-in fade-in duration-200">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-[#123A6D]">
+                <Navigation className="w-4 h-4 text-emerald-600" />
+                <span>لائیو ٹرپ اور موجودہ لوکیشن اپ ڈیٹ</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsUpdatingTrip(false)}
+                className="text-slate-400 hover:text-slate-600 text-xs font-bold"
+              >
+                بند کریں ✕
+              </button>
+            </div>
+
+            {tripUpdateSuccess && (
+              <div className="bg-emerald-50 border border-emerald-300 text-emerald-900 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <span>{tripUpdateSuccess}</span>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  گاڑی کا موجودہ شہر <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={currentCityInput}
+                  onChange={(e) => setCurrentCityInput(e.target.value)}
+                  placeholder="مثال: لاہور، ملتان، کراچی"
+                  className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2 text-sm focus:bg-white focus:border-[#19A974] outline-none min-h-[42px]"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  ٹرپ اسٹیٹس
+                </label>
+                <div className="grid grid-cols-3 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setTripStatus('available')}
+                    className={`py-2 px-1 text-[11px] font-bold rounded-lg border transition ${
+                      tripStatus === 'available'
+                        ? 'bg-emerald-600 text-white border-emerald-600'
+                        : 'bg-slate-100 text-slate-700 border-slate-200'
+                    }`}
+                  >
+                    🟢 خالی و دستیاب
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTripStatus('loading')}
+                    className={`py-2 px-1 text-[11px] font-bold rounded-lg border transition ${
+                      tripStatus === 'loading'
+                        ? 'bg-amber-500 text-white border-amber-500'
+                        : 'bg-slate-100 text-slate-700 border-slate-200'
+                    }`}
+                  >
+                    🟡 لوڈنگ پر
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTripStatus('on_route')}
+                    className={`py-2 px-1 text-[11px] font-bold rounded-lg border transition ${
+                      tripStatus === 'on_route'
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-slate-100 text-slate-700 border-slate-200'
+                    }`}
+                  >
+                    🔵 روٹ پر سفر
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-1">
+              <button
+                type="submit"
+                className="bg-[#19A974] hover:bg-[#169163] text-white px-5 py-2 rounded-xl text-xs font-bold shadow-xs transition active:scale-95"
+              >
+                اپ ڈیٹ محفوظ کریں
+              </button>
+            </div>
+          </form>
         )}
 
       </div>
 
-      {/* 2. SEARCH & FILTER LOADS (ZERO DROPDOWNS - 100% FREE TEXT & CHIPS) */}
+      {/* 3. SEARCH & FILTER LOADS (ZERO DROPDOWNS - 100% FREE TEXT & CHIPS) */}
       <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-200 space-y-4">
         
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Search className="w-4 h-4 text-[#123A6D]" />
+            <h2 className="text-base sm:text-lg font-bold text-slate-900">
+              لائیو کارگو لوڈ تلاش کریں
+            </h2>
+          </div>
+          <span className="text-xs text-slate-500 font-bold">
+            کل فعال لوڈز: {activeSlips.length}
+          </span>
+        </div>
+
         {/* Search Input */}
         <div className="relative">
           <input
@@ -206,7 +477,7 @@ export const DriverPortalView: React.FC<DriverPortalViewProps> = ({
 
       </div>
 
-      {/* 3. AVAILABLE LOADS LIST */}
+      {/* 4. AVAILABLE LOADS LIST */}
       <div className="space-y-3.5">
         <div className="flex items-center justify-between px-1">
           <h2 className="text-base sm:text-lg font-extrabold text-[#08284F]">

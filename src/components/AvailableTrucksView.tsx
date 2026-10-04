@@ -24,6 +24,7 @@ interface AvailableTrucksViewProps {
   slips: LoadSlip[];
   onViewSlip?: (slip: LoadSlip) => void;
   onNavigateToDriverPortal?: () => void;
+  onNavigateToAddaLogin?: () => void;
 }
 
 const POPULAR_CITIES = [
@@ -41,7 +42,14 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
   slips,
   onViewSlip,
   onNavigateToDriverPortal,
+  onNavigateToAddaLogin,
 }) => {
+  // Check logged in user status
+  const isDriverLoggedIn = StorageService.isDriverLoggedIn();
+  const currentDriver = StorageService.getCurrentDriver();
+  const isManagerLoggedIn = StorageService.isLoggedIn();
+  const currentProfile = StorageService.getAddaProfile();
+
   // Free text search & filter states (ZERO DROPDOWNS)
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCityBadge, setSelectedCityBadge] = useState('تمام پاکستان');
@@ -64,31 +72,56 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
   const [formSuccess, setFormSuccess] = useState('');
   const [formError, setFormError] = useState('');
 
+  // Check if driver already has an existing active truck
+  const driverExistingTruck = useMemo(() => {
+    if (isDriverLoggedIn && currentDriver) {
+      const cleanPhone = (currentDriver.phone || '').replace(/[^0-9]/g, '');
+      return trucksList.find(
+        (t) =>
+          (t.userId && t.userId === currentDriver.id) ||
+          (t.createdByPhone && t.createdByPhone.replace(/[^0-9]/g, '') === cleanPhone) ||
+          (t.userRole === 'driver' && t.phone.replace(/[^0-9]/g, '') === cleanPhone)
+      );
+    }
+    return null;
+  }, [trucksList, isDriverLoggedIn, currentDriver]);
+
   // Refresh trucks on mount
   useEffect(() => {
     setTrucksList(StorageService.getAvailableTrucks());
   }, []);
 
-  // Check if current driver is logged in to prefill form
-  const currentDriver = StorageService.getCurrentDriver();
+  // Prefill when adding truck
   useEffect(() => {
-    if (currentDriver && isAddingTruck) {
-      if (!ownerName) setOwnerName(currentDriver.driverName || '');
-      if (!ownerPhone) setOwnerPhone(currentDriver.phone || '');
-      if (!truckCity) setTruckCity(currentDriver.currentCity || '');
-      if (!truckVehicleType) setTruckVehicleType(currentDriver.vehicleType || '22 Wheeler');
-      if (!truckNumber) setTruckNumber(currentDriver.vehicleNumber || '');
-      if (!preferredRoute) setPreferredRoute(currentDriver.preferredRoute || '');
+    if (isAddingTruck) {
+      if (isDriverLoggedIn && currentDriver) {
+        setOwnerName(currentDriver.driverName || '');
+        setOwnerPhone(currentDriver.phone || '');
+        setTruckCity(currentDriver.currentCity || '');
+        setTruckVehicleType(currentDriver.vehicleType || '22 Wheeler');
+        setTruckBodyType(currentDriver.bodyType || 'فل باڈی');
+        setTruckNumber(currentDriver.vehicleNumber || '');
+        setPreferredRoute(currentDriver.preferredRoute || '');
+      } else if (isManagerLoggedIn && currentProfile) {
+        setOwnerName(currentProfile.addaName || currentProfile.managerName || '');
+        setOwnerPhone(currentProfile.primaryPhone || '');
+        setTruckCity(currentProfile.city || '');
+      }
     }
-  }, [isAddingTruck, currentDriver]);
+  }, [isAddingTruck, isDriverLoggedIn, currentDriver, isManagerLoggedIn, currentProfile]);
 
-  // Handle adding new truck
+  // Handle adding or updating truck
   const handleAddTruckSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setFormError('');
 
+    if (!isDriverLoggedIn && !isManagerLoggedIn) {
+      setFormError('گاڑی لسٹ کرنے کے لیے پہلے رجسٹرڈ ڈرائیور یا اڈا منیجر کے طور پر لاگ ان کریں۔');
+      return;
+    }
+
     if (!ownerName.trim()) {
-      setFormError('براہ کرم ڈرائیور یا مالک کا نام درج کریں۔');
+      setFormError('براہ کرم نام درج کریں۔');
       return;
     }
     const cleanPhone = ownerPhone.trim().replace(/[^0-9]/g, '');
@@ -101,8 +134,11 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
       return;
     }
 
+    const effectiveRole: 'driver' | 'adda_manager' = isDriverLoggedIn ? 'driver' : 'adda_manager';
+    const existingId = effectiveRole === 'driver' && driverExistingTruck ? driverExistingTruck.id : `truck_${Date.now()}`;
+
     const newTruck: AvailableTruck = {
-      id: `truck_${Date.now()}`,
+      id: existingId,
       driverOrOwnerName: ownerName.trim(),
       phone: ownerPhone.trim(),
       whatsappNumber: ownerPhone.trim(),
@@ -113,28 +149,63 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
       locationDetails: truckLocation.trim() || 'مرکزی اڈا / گودام',
       preferredRoute: preferredRoute.trim() || undefined,
       createdAt: new Date().toISOString(),
-      userRole: 'driver',
+      userId: isDriverLoggedIn && currentDriver ? currentDriver.id : isManagerLoggedIn && currentProfile ? currentProfile.id : undefined,
+      createdByPhone: isDriverLoggedIn && currentDriver ? currentDriver.phone : isManagerLoggedIn && currentProfile ? currentProfile.primaryPhone : ownerPhone.trim(),
+      userRole: effectiveRole,
     };
 
     StorageService.saveAvailableTruck(newTruck);
-    setTrucksList(StorageService.getAvailableTrucks());
-    setFormSuccess('گاڑی کامیابی سے لسٹ ہو گئی!');
+    const updatedList = StorageService.getAvailableTrucks();
+    setTrucksList(updatedList);
+    setFormSuccess(
+      effectiveRole === 'driver' && driverExistingTruck 
+        ? 'آپ کی گاڑی کی تفصیلات کامیابی سے اپ ڈیٹ ہو گئیں!' 
+        : 'گاڑی کامیابی سے لسٹ ہو گئی!'
+    );
     
     setTimeout(() => {
       setIsAddingTruck(false);
       setFormSuccess('');
-      setOwnerName('');
-      setOwnerPhone('');
-      setTruckCity('');
-      setTruckNumber('');
-      setPreferredRoute('');
-      setTruckLocation('');
     }, 1200);
   };
 
   const handleDeleteTruck = (id: string) => {
-    StorageService.deleteAvailableTruck(id);
-    setTrucksList(StorageService.getAvailableTrucks());
+    if (confirm('کیا آپ واقعی یہ گاڑی لسٹ سے ہٹانا چاہتے ہیں؟')) {
+      StorageService.deleteAvailableTruck(id);
+      setTrucksList(StorageService.getAvailableTrucks());
+    }
+  };
+
+  // Check if current user is permitted to delete this truck
+  const canDeleteTruck = (truck: any): boolean => {
+    if (truck.isFromSlip) return false;
+
+    // 1. If viewer is logged-in driver
+    if (isDriverLoggedIn && currentDriver) {
+      const cleanDriverPhone = (currentDriver.phone || '').replace(/[^0-9]/g, '');
+      const cleanTruckPhone = (truck.phone || '').replace(/[^0-9]/g, '');
+      const cleanCreatedPhone = (truck.createdByPhone || '').replace(/[^0-9]/g, '');
+
+      if (truck.userId && truck.userId === currentDriver.id) return true;
+      if (cleanCreatedPhone && cleanCreatedPhone === cleanDriverPhone) return true;
+      if (truck.userRole === 'driver' && cleanTruckPhone === cleanDriverPhone) return true;
+      return false;
+    }
+
+    // 2. If viewer is logged-in Adda Manager
+    if (isManagerLoggedIn && currentProfile) {
+      const cleanManagerPhone = (currentProfile.primaryPhone || '').replace(/[^0-9]/g, '');
+      const cleanTruckPhone = (truck.phone || '').replace(/[^0-9]/g, '');
+      const cleanCreatedPhone = (truck.createdByPhone || '').replace(/[^0-9]/g, '');
+
+      if (truck.userId && truck.userId === currentProfile.id) return true;
+      if (cleanCreatedPhone && cleanCreatedPhone === cleanManagerPhone) return true;
+      if (truck.userRole === 'adda_manager' && cleanTruckPhone === cleanManagerPhone) return true;
+      return false;
+    }
+
+    // Public / unknown visitors cannot delete any truck
+    return false;
   };
 
   const resetFilters = () => {
@@ -144,31 +215,10 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
     setSelectedBodyBadge('تمام باڈی');
   };
 
-  // Convert active slips into available truck listings
-  const slipTrucks = useMemo(() => {
-    return slips
-      .filter((s) => s.status === 'active')
-      .map((s) => ({
-        id: `slip_truck_${s.id}`,
-        driverOrOwnerName: s.addaName,
-        phone: s.primaryPhone,
-        whatsappNumber: s.whatsappNumber || s.primaryPhone,
-        vehicleType: s.vehicleType,
-        bodyType: s.bodyType,
-        vehicleNumber: s.vehicleNumber,
-        currentCity: s.loadingCity,
-        locationDetails: s.loadingLocation,
-        preferredRoute: `${s.loadingCity} تا ${s.destinationCity}`,
-        createdAt: s.createdAt,
-        isFromSlip: true,
-        originalSlip: s,
-      }));
-  }, [slips]);
-
-  // Combined list of direct trucks and slip-based trucks
+  // Direct available trucks listed by drivers and adda managers (NO LOAD SLIPS)
   const allTrucks = useMemo(() => {
-    return [...trucksList, ...slipTrucks];
-  }, [trucksList, slipTrucks]);
+    return trucksList;
+  }, [trucksList]);
 
   // Filtered trucks
   const filteredTrucks = useMemo(() => {
@@ -382,12 +432,12 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                   <span className="bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-full">
                     {truck.bodyType}
                   </span>
-                  {!('isFromSlip' in truck) && (
+                  {canDeleteTruck(truck) && (
                     <button
                       type="button"
                       onClick={() => handleDeleteTruck(truck.id)}
                       className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-slate-100 transition"
-                      title="گاڑی لسٹ سے ہٹائیں"
+                      title="اپنی گاڑی لسٹ سے ہٹائیں"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -434,18 +484,6 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                     <span>WhatsApp</span>
                   </a>
                 </div>
-
-                {/* If slip-based truck */}
-                {Boolean((truck as any).originalSlip && onViewSlip) && (
-                  <button
-                    type="button"
-                    onClick={() => onViewSlip && onViewSlip((truck as any).originalSlip)}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-[#123A6D] hover:underline px-3 py-2 min-h-[40px]"
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    <span>لوڈ سلپ دیکھیں</span>
-                  </button>
-                )}
               </div>
 
             </div>
@@ -453,8 +491,66 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
         )}
       </div>
 
-      {/* MODAL: اپنی خالی گاڑی لسٹ کریں (ZERO DROPDOWNS) */}
-      {isAddingTruck && (
+      {/* MODAL: اگر صارف لاگ ان نہیں ہے تو رجسٹریشن اور لاگ ان کا گارڈ دکھائیں */}
+      {isAddingTruck && !isDriverLoggedIn && !isManagerLoggedIn && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/75 backdrop-blur-xs font-nafees">
+          <div 
+            className="bg-white rounded-3xl shadow-2xl max-w-md w-full border border-slate-100 p-6 sm:p-7 space-y-5 animate-in fade-in zoom-in-95 duration-200 text-center"
+            role="dialog"
+          >
+            <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto border border-amber-200 shadow-xs">
+              <ShieldCheck className="w-7 h-7 text-amber-600" />
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-xl font-bold text-slate-900">
+                گاڑی لسٹ کرنے کے لیے لاگ ان لازمی ہے
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                پی کے کارگو لنک پر دستیاب گاڑی لسٹ کرنے کی سہولت صرف <strong>رجسٹرڈ ڈرائیورز</strong> اور <strong>تصدیق شدہ گڈز اڈا منیجرز</strong> کے لیے مخصوص ہے۔
+              </p>
+            </div>
+
+            <div className="space-y-2.5 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAddingTruck(false);
+                  if (onNavigateToDriverPortal) onNavigateToDriverPortal();
+                }}
+                className="w-full bg-[#19A974] hover:bg-[#169163] text-white py-3 px-4 rounded-xl font-bold text-sm shadow-md transition active:scale-95 flex items-center justify-center gap-2"
+              >
+                <Truck className="w-4 h-4" />
+                <span>🚚 رجسٹرڈ ڈرائیور کے طور پر لاگ ان کریں</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAddingTruck(false);
+                  if (onNavigateToAddaLogin) onNavigateToAddaLogin();
+                }}
+                className="w-full bg-[#123A6D] hover:bg-[#0D2D57] text-white py-3 px-4 rounded-xl font-bold text-sm shadow-md transition active:scale-95 flex items-center justify-center gap-2"
+              >
+                <User className="w-4 h-4" />
+                <span>🏢 گڈز اڈا منیجر کے طور پر لاگ ان کریں</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsAddingTruck(false)}
+                className="w-full text-slate-500 hover:text-slate-800 text-xs font-bold py-2 transition"
+              >
+                منسوخ کریں
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: رجسٹرڈ ڈرائیور اور اڈا منیجر کے لیے گاڑی لسٹنگ فارم */}
+      {isAddingTruck && (isDriverLoggedIn || isManagerLoggedIn) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/75 backdrop-blur-xs font-nafees">
           <div 
             className="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[92vh] overflow-y-auto border border-slate-100 p-5 sm:p-7 space-y-4 animate-in fade-in zoom-in-95 duration-200"
@@ -493,11 +589,39 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
 
             <form onSubmit={handleAddTruckSubmit} className="space-y-3.5 text-right">
               
+              {/* Role Indicator */}
+              {isDriverLoggedIn && currentDriver ? (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 text-xs flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Truck className="w-4 h-4 text-emerald-700" />
+                    <div>
+                      <strong className="text-emerald-950 font-bold block">{currentDriver.driverName} (تصدیق شدہ ڈرائیور)</strong>
+                      <span className="text-slate-500 text-[11px]">ڈرائیور اکاؤنٹ: 1 گاڑی لسٹ کرنے کی اجازت</span>
+                    </div>
+                  </div>
+                  {driverExistingTruck && (
+                    <span className="bg-white border border-emerald-300 text-emerald-800 font-bold px-2 py-0.5 rounded-md text-[10px]">
+                      سابقہ لسٹنگ اپ ڈیٹ ہو گی
+                    </span>
+                  )}
+                </div>
+              ) : isManagerLoggedIn && currentProfile ? (
+                <div className="bg-blue-50 border border-blue-200 rounded-2xl p-3 text-xs flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-blue-700" />
+                    <div>
+                      <strong className="text-blue-950 font-bold block">{currentProfile.addaName} (تصدیق شدہ اڈا منیجر)</strong>
+                      <span className="text-slate-500 text-[11px]">اڈا اکاؤنٹ: جتنی چاہیں گاڑیاں لسٹ کریں</span>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
               {/* Driver / Owner Name & Phone */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-bold text-slate-700 block mb-1">
-                    ڈرائیور / مالک کا نام <span className="text-red-500">*</span>
+                    نام (رجسٹرڈ) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -639,7 +763,9 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                   className="flex-1 bg-[#19A974] hover:bg-[#169163] text-white py-3.5 rounded-xl font-bold text-sm shadow-md transition active:scale-95 flex items-center justify-center gap-2"
                 >
                   <PlusCircle className="w-4 h-4" />
-                  <span>گاڑی لسٹ کریں</span>
+                  <span>
+                    {isDriverLoggedIn && driverExistingTruck ? 'گاڑی اپ ڈیٹ کریں' : 'گاڑی لسٹ کریں'}
+                  </span>
                 </button>
                 <button
                   type="button"

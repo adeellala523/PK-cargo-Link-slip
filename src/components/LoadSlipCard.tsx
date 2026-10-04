@@ -818,6 +818,52 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
           )}
         </div>
 
+        {/* Manager Load Availability Status Control (دستیاب / بکڈ) */}
+        {isManagerView && onToggleStatus && (
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-2">
+            <div className="space-y-0.5">
+              <span className="text-xs font-bold text-slate-800 block">اڈا منیجر اسٹیٹس کنٹرول:</span>
+              <p className="text-[11px] text-slate-500">
+                لوڈ کا اسٹیٹس "دستیاب" یا "بکڈ" منتخب کریں (یہ سلپ 7 دن بعد خودکار ڈیلیٹ ہو جائے گی)
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (currentSlip.status !== 'active') {
+                    onToggleStatus();
+                    setCurrentSlip({ ...currentSlip, status: 'active' });
+                  }
+                }}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border ${
+                  currentSlip.status === 'active'
+                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                    : 'bg-white text-slate-700 border-slate-200 hover:bg-emerald-50'
+                }`}
+              >
+                <span>🟢 دستیاب</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (currentSlip.status === 'active') {
+                    onToggleStatus();
+                    setCurrentSlip({ ...currentSlip, status: 'booked' });
+                  }
+                }}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border ${
+                  currentSlip.status !== 'active'
+                    ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
+                    : 'bg-white text-slate-700 border-slate-200 hover:bg-amber-50'
+                }`}
+              >
+                <span>🔒 بکڈ</span>
+              </button>
+            </div>
+          </div>
+        )}
+
       </div>
 
       {/* ============================================================== */}

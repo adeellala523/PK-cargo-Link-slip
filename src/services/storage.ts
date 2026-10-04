@@ -636,26 +636,13 @@ export const StorageService = {
     
     if (found) {
       if (found.password && password && found.password !== password.trim()) {
-        return { success: false, message: 'پاس ورڈ درست نہیں ہے۔ دوبارہ کوشش کریں۔' };
+        return { success: false, message: 'درج کردہ پاس ورڈ درست نہیں ہے۔' };
       }
       this.setDriverLoggedIn(true, found);
-      return { success: true, message: 'لاگ ان کامیاب!', driver: found };
+      return { success: true, message: 'ڈرائیور لاگ ان کامیاب!', driver: found };
     }
 
-    // Auto-create or allow if password provided
-    const newDriver: DriverAccount = {
-      id: `driver_${Date.now()}`,
-      driverName: 'ڈرائیور صاحب',
-      phone: phone.trim(),
-      password: password?.trim() || '1234',
-      whatsappNumber: phone.trim(),
-      vehicleType: '22 Wheeler / ٹرالہ',
-      bodyType: 'فل باڈی',
-      currentCity: 'پاکستان',
-      createdAt: new Date().toISOString(),
-    };
-    this.saveDriverAccount(newDriver);
-    return { success: true, message: 'لاگ ان کامیاب!', driver: newDriver };
+    return { success: false, message: 'یہ فون نمبر بطور ڈرائیور رجسٹرڈ نہیں ہے۔ پہلے نیا ڈرائیور اکاؤنٹ بنائیں!' };
   },
 
   loginAddaManager(phone: string, password?: string): { success: boolean; message: string; user?: UserAccount } {
@@ -665,13 +652,13 @@ export const StorageService = {
 
     if (found) {
       if (found.password && password && found.password !== password.trim()) {
-        return { success: false, message: 'پاس ورڈ درست نہیں ہے۔ دوبارہ کوشش کریں۔' };
+        return { success: false, message: 'درج کردہ پاس ورڈ درست نہیں ہے۔' };
       }
       this.setLoggedIn(true, found.phone);
-      return { success: true, message: 'لاگ ان کامیاب!', user: found };
+      return { success: true, message: 'اڈا منیجر لاگ ان کامیاب!', user: found };
     }
 
-    return { success: false, message: 'یہ فون نمبر رجسٹرڈ نہیں ہے۔ پہلے اپنا اکاؤنٹ بنائیں۔' };
+    return { success: false, message: 'یہ فون نمبر رجسٹرڈ نہیں ہے۔ پہلے اپنا اڈا اکاؤنٹ بنائیں!' };
   },
 
   // -------------------------------------------------------------
@@ -719,23 +706,65 @@ export const StorageService = {
     } catch {}
   },
 
+  isSlipOlderThan7Days(slip: LoadSlip | any): boolean {
+    if (!slip) return true;
+    const dateStr = slip.createdAt || slip.date;
+    if (!dateStr) return false;
+    const timestamp = new Date(dateStr).getTime();
+    if (isNaN(timestamp)) return false;
+    const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+    return (Date.now() - timestamp) > SEVEN_DAYS_MS;
+  },
+
   getAllSlips(): LoadSlip[] {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.SLIPS);
       if (data) {
         const parsed: LoadSlip[] = JSON.parse(data);
         if (Array.isArray(parsed)) {
-          const nonDeleted = parsed.filter((s) => s && s.id && !this.isSlipDeleted(s.id));
-          return nonDeleted.map((s) => ({
-            ...s,
-            addaLogo: (s.addaLogo && !s.addaLogo.includes('adda-logo.png')) ? s.addaLogo : '',
-          }));
+          const validSlips: LoadSlip[] = [];
+          const expiredIds: string[] = [];
+
+          parsed.forEach((s) => {
+            if (!s || !s.id || this.isSlipDeleted(s.id)) return;
+            if (this.isSlipOlderThan7Days(s)) {
+              expiredIds.push(s.id);
+            } else {
+              validSlips.push({
+                ...s,
+                addaLogo: (s.addaLogo && !s.addaLogo.includes('adda-logo.png')) ? s.addaLogo : '',
+              });
+            }
+          });
+
+          // If any slips expired past 7 days, trigger background cleanup
+          if (expiredIds.length > 0) {
+            localStorage.setItem(STORAGE_KEYS.SLIPS, JSON.stringify(validSlips));
+            expiredIds.forEach((id) => this.deleteSlipAsync(id).catch(() => {}));
+          }
+
+          return validSlips;
         }
       }
     } catch (e) {
       console.error('[StorageService] Failed reading local slips', e);
     }
     return [];
+  },
+
+  updateSlipStatus(id: string, newStatus: 'active' | 'booked'): LoadSlip | null {
+    const slips = this.getAllSlips();
+    const index = slips.findIndex((s) => s.id === id);
+    if (index !== -1) {
+      const updated: LoadSlip = {
+        ...slips[index],
+        status: newStatus,
+        updatedAt: new Date().toISOString(),
+      };
+      this.updateSlip(updated);
+      return updated;
+    }
+    return null;
   },
 
   getSlipById(id: string): LoadSlip | null {
@@ -1151,88 +1180,33 @@ export const StorageService = {
       const data = localStorage.getItem(STORAGE_KEYS.AVAILABLE_TRUCKS);
       if (data) {
         const parsed = JSON.parse(data);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) {
+          // Filter out any legacy dummy trucks with IDs like truck-101, truck-102 etc.
+          return parsed.filter((t: AvailableTruck) => !t.id.startsWith('truck-10'));
+        }
       }
     } catch {}
-
-    const seedTrucks: AvailableTruck[] = [
-      {
-        id: 'truck-101',
-        driverOrOwnerName: 'ملک یوسف خان',
-        phone: '0300-8451234',
-        whatsappNumber: '0300-8451234',
-        vehicleType: '22 Wheeler',
-        bodyType: 'فل باڈی',
-        vehicleNumber: 'TL-9821',
-        currentCity: 'لاہور',
-        locationDetails: 'ٹھوکر نیاز بیگ بائی پاس',
-        preferredRoute: 'لاہور تا کراچی / ملتان',
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: 'truck-102',
-        driverOrOwnerName: 'حاجی جمیل احمد',
-        phone: '0321-4567890',
-        whatsappNumber: '0321-4567890',
-        vehicleType: '10 Wheeler',
-        bodyType: 'پھٹا',
-        vehicleNumber: 'KHI-4320',
-        currentCity: 'کراچی',
-        locationDetails: 'سپر ہائی وے، نزد گودام چورنگی',
-        preferredRoute: 'کراچی تا پنجاب / کے پی کے',
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: 'truck-103',
-        driverOrOwnerName: 'استاد فیاض بلوچ',
-        phone: '0333-7890123',
-        whatsappNumber: '0333-7890123',
-        vehicleType: 'Mazda',
-        bodyType: 'فل باڈی',
-        vehicleNumber: 'MN-7712',
-        currentCity: 'ملتان',
-        locationDetails: 'شیر شاہ چوک گڈز اڈا',
-        preferredRoute: 'ملتان تا لاہور / فیصل آباد',
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: 'truck-104',
-        driverOrOwnerName: 'رانا طارق محمود',
-        phone: '0302-6543210',
-        whatsappNumber: '0302-6543210',
-        vehicleType: 'Shahzor',
-        bodyType: 'ہاف باڈی',
-        vehicleNumber: 'FSD-2201',
-        currentCity: 'فیصل آباد',
-        locationDetails: 'جھنگ روڈ غلہ منڈی',
-        preferredRoute: 'فیصل آباد تا لاہور / سرگودھا',
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: 'truck-105',
-        driverOrOwnerName: 'خان باز خان',
-        phone: '0345-9876543',
-        whatsappNumber: '0345-9876543',
-        vehicleType: '40 Foot Container',
-        bodyType: 'کنٹینر',
-        vehicleNumber: 'RWP-8854',
-        currentCity: 'راولپنڈی',
-        locationDetails: 'آئی-9 اسلام آباد انڈسٹریل ایریا',
-        preferredRoute: 'راولپنڈی تا پشاور / لاہور',
-        createdAt: new Date().toISOString(),
-      },
-    ];
-
-    try {
-      localStorage.setItem(STORAGE_KEYS.AVAILABLE_TRUCKS, JSON.stringify(seedTrucks));
-    } catch {}
-
-    return seedTrucks;
+    return [];
   },
 
   saveAvailableTruck(truck: AvailableTruck): void {
     const list = this.getAvailableTrucks();
-    const filtered = list.filter((t) => t.id !== truck.id);
+    let filtered: AvailableTruck[];
+
+    if (truck.userRole === 'driver') {
+      // A Driver can only have 1 active truck in the network
+      const cleanPhone = truck.phone.replace(/[^0-9]/g, '');
+      filtered = list.filter((t) => {
+        if (t.id === truck.id) return false;
+        if (truck.userId && t.userId && t.userId === truck.userId) return false;
+        if (cleanPhone && t.phone.replace(/[^0-9]/g, '') === cleanPhone && t.userRole === 'driver') return false;
+        return true;
+      });
+    } else {
+      // Adda Manager can add multiple trucks (only filter out exact ID on update)
+      filtered = list.filter((t) => t.id !== truck.id);
+    }
+
     filtered.unshift(truck);
     try {
       localStorage.setItem(STORAGE_KEYS.AVAILABLE_TRUCKS, JSON.stringify(filtered));

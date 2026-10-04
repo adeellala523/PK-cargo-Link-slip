@@ -21,12 +21,29 @@ if (!fs.existsSync(DATA_DIR)) {
 
 // Clean state, no demo slips
 const INITIAL_SERVER_SLIPS: any[] = [];
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+
+function isSlipExpired7Days(slip: any): boolean {
+  if (!slip) return true;
+  const dateStr = slip.createdAt || slip.date;
+  if (!dateStr) return false;
+  const timestamp = new Date(dateStr).getTime();
+  if (isNaN(timestamp)) return false;
+  return (Date.now() - timestamp) > SEVEN_DAYS_MS;
+}
 
 function getStoredSlips(): any[] {
   try {
     if (fs.existsSync(SLIPS_FILE)) {
       const data = fs.readFileSync(SLIPS_FILE, 'utf-8');
-      return JSON.parse(data);
+      const all = JSON.parse(data);
+      if (Array.isArray(all)) {
+        const fresh = all.filter((s) => !isSlipExpired7Days(s));
+        if (fresh.length !== all.length) {
+          saveStoredSlips(fresh);
+        }
+        return fresh;
+      }
     }
   } catch (err) {
     console.error('Error reading slips file', err);

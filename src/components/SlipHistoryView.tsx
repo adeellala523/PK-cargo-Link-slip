@@ -167,27 +167,33 @@ export const SlipHistoryView: React.FC<SlipHistoryViewProps> = ({
           ))}
         </div>
 
-        {/* Status Filters: تمام | فعال | مکمل (Section 14) */}
-        <div className="flex flex-wrap items-center gap-1.5 text-xs pt-1 border-t border-slate-100">
-          <span className="text-slate-400 font-bold ml-1">اسٹیٹس:</span>
-          {[
-            { id: 'all', label: `تمام (${slips.length})` },
-            { id: 'active', label: 'فعال' },
-            { id: 'booked', label: 'مکمل' },
-          ].map((sf) => (
-            <button
-              key={sf.id}
-              type="button"
-              onClick={() => setStatusFilter(sf.id as any)}
-              className={`px-3 py-1.5 rounded-lg font-bold transition min-h-[36px] ${
-                statusFilter === sf.id
-                  ? 'bg-[#19A974] text-white'
-                  : 'bg-[#F4F7FB] text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              {sf.label}
-            </button>
-          ))}
+        {/* Status Filters: تمام | دستیاب | بکڈ */}
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs pt-2 border-t border-slate-100">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-slate-400 font-bold ml-1">اسٹیٹس:</span>
+            {[
+              { id: 'all', label: `تمام (${slips.length})` },
+              { id: 'active', label: '🟢 دستیاب' },
+              { id: 'booked', label: '🔒 بکڈ' },
+            ].map((sf) => (
+              <button
+                key={sf.id}
+                type="button"
+                onClick={() => setStatusFilter(sf.id as any)}
+                className={`px-3 py-1.5 rounded-lg font-bold transition min-h-[36px] ${
+                  statusFilter === sf.id
+                    ? 'bg-[#19A974] text-white'
+                    : 'bg-[#F4F7FB] text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                {sf.label}
+              </button>
+            ))}
+          </div>
+
+          <span className="text-[11px] text-slate-400 font-medium">
+            ⏰ لوڈ سلپ 7 دن بعد خودکار طور پر ڈیلیٹ ہو جاتی ہے
+          </span>
         </div>
       </div>
 
@@ -212,18 +218,18 @@ export const SlipHistoryView: React.FC<SlipHistoryViewProps> = ({
                     {slip.id}
                   </span>
                   
-                  {/* Subtle State Transition Animated Status Badge */}
+                  {/* Status Toggle Badge: دستیاب vs بکڈ */}
                   {onToggleStatus ? (
                     <button
                       type="button"
                       onClick={() => handleToggle(slip)}
-                      title={slip.status === 'active' ? 'لوڈ مکمل ہو گیا؟ کلک کر کے مکمل مارک کریں' : 'دوبارہ فعال مارک کرنے کے لیے کلک کریں'}
+                      title={slip.status === 'active' ? 'لوڈ بک ہو گیا ہے؟ کلک کر کے "بکڈ" مارک کریں' : 'دوبارہ "دستیاب" مارک کرنے کے لیے کلک کریں'}
                       className={`group relative inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full border transition-all duration-300 ease-in-out cursor-pointer shadow-2xs select-none ${
                         animatingId === slip.id ? 'scale-110 ring-2 ring-emerald-500/50' : 'hover:scale-105 active:scale-95'
                       } ${
                         slip.status === 'active'
                           ? 'bg-emerald-50 text-emerald-800 border-emerald-300/80 hover:bg-emerald-100 hover:border-emerald-400 ring-1 ring-emerald-500/20'
-                          : 'bg-slate-100 text-slate-700 border-slate-300/80 hover:bg-slate-200 hover:border-slate-400 ring-1 ring-slate-400/20'
+                          : 'bg-amber-50 text-amber-800 border-amber-300/80 hover:bg-amber-100 hover:border-amber-400 ring-1 ring-amber-500/20'
                       }`}
                     >
                       {slip.status === 'active' ? (
@@ -232,12 +238,12 @@ export const SlipHistoryView: React.FC<SlipHistoryViewProps> = ({
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600"></span>
                           </span>
-                          <span className="transition-all duration-300">● فعال لوڈ</span>
+                          <span className="transition-all duration-300">🟢 دستیاب</span>
                         </>
                       ) : (
                         <>
-                          <Check className="w-3.5 h-3.5 text-slate-600 stroke-[2.5] transition-transform duration-300 group-hover:scale-110" />
-                          <span className="transition-all duration-300">✓ مکمل</span>
+                          <Check className="w-3.5 h-3.5 text-amber-700 stroke-[2.5]" />
+                          <span className="transition-all duration-300">🔒 بکڈ</span>
                         </>
                       )}
                       <span className="text-[9px] opacity-0 group-hover:opacity-75 transition-opacity duration-200 text-slate-500 mr-0.5 hidden sm:inline">
@@ -248,7 +254,7 @@ export const SlipHistoryView: React.FC<SlipHistoryViewProps> = ({
                     <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full border transition-all duration-300 ease-in-out shadow-2xs ${
                       slip.status === 'active'
                         ? 'bg-emerald-50 text-emerald-800 border-emerald-300/80 ring-1 ring-emerald-500/20'
-                        : 'bg-slate-100 text-slate-700 border-slate-300/80 ring-1 ring-slate-400/20'
+                        : 'bg-amber-50 text-amber-800 border-amber-300/80 ring-1 ring-amber-500/20'
                     }`}>
                       {slip.status === 'active' ? (
                         <>
@@ -256,12 +262,12 @@ export const SlipHistoryView: React.FC<SlipHistoryViewProps> = ({
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600"></span>
                           </span>
-                          <span>● فعال لوڈ</span>
+                          <span>🟢 دستیاب</span>
                         </>
                       ) : (
                         <>
-                          <Check className="w-3.5 h-3.5 text-slate-600 stroke-[2.5]" />
-                          <span>✓ مکمل</span>
+                          <Check className="w-3.5 h-3.5 text-amber-700 stroke-[2.5]" />
+                          <span>🔒 بکڈ</span>
                         </>
                       )}
                     </span>
