@@ -799,12 +799,38 @@ async function startServer() {
     ws.on('message', async (message) => {
       try {
         const data = JSON.parse(message.toString());
-        if (data.type === 'audio' && data.pcmBase64) {
-          // Live Audio Chunk Proxy
+
+        if (data.type === 'text' && data.query) {
+          const queryText = data.query.trim();
+          const lower = queryText.toLowerCase();
+          const allSlips = getStoredSlips().filter((s: any) => s.status === 'active');
+
+          let matched = allSlips;
+          if (lower.includes('لاہور')) matched = matched.filter((s: any) => s.loadingCity?.includes('لاہور') || s.destinationCity?.includes('لاہور'));
+          if (lower.includes('کراچی')) matched = matched.filter((s: any) => s.loadingCity?.includes('کراچی') || s.destinationCity?.includes('کراچی'));
+          if (lower.includes('ملتان')) matched = matched.filter((s: any) => s.loadingCity?.includes('ملتان') || s.destinationCity?.includes('ملتان'));
+
+          const count = matched.length;
+          const replyText = count > 0 
+            ? `جی استاد جی! ${count} اصلی لوڈز مل گئے ہیں، سامنے سکرین پر دکھا دیے ہیں۔`
+            : `معذرت استاد جی! اس وقت اس روٹ کے لیے کوئی دستیاب لوڈ نہیں ہے۔`;
+
           ws.send(JSON.stringify({
             type: 'transcript',
-            user: 'صوت موصولہ',
-            ai: 'جی استاد جی، آواز موصول ہو گئی۔ میں آپ کے لیے مطلوبہ لوڈ تلاش کر رہا ہوں...'
+            user: queryText,
+            ai: replyText
+          }));
+
+          ws.send(JSON.stringify({
+            type: 'action',
+            action: { type: 'search_loads', params: { found: count > 0, count } }
+          }));
+
+        } else if (data.type === 'audio' && data.pcmBase64) {
+          ws.send(JSON.stringify({
+            type: 'transcript',
+            user: 'صوت موصولہ (آواز)',
+            ai: 'جی استاد جی، میں آپ کا حکم سن رہا ہوں۔ کس شہر کا مال چاہیے؟'
           }));
         } else if (data.type === 'interrupt') {
           console.log('[Gemini Live WS] User interrupted AI speech');

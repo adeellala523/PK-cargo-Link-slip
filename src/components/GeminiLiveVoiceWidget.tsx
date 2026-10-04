@@ -185,8 +185,19 @@ export const GeminiLiveVoiceWidget: React.FC<GeminiLiveVoiceWidgetProps> = ({
                   </div>
                 )}
                 {(voiceState === 'idle' || voiceState === 'error') && (
-                  <div className="inline-flex items-center gap-2 bg-slate-800 text-slate-300 border border-slate-700 px-4 py-1.5 rounded-full text-xs font-bold">
-                    <span>{statusText}</span>
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="inline-flex items-center gap-2 bg-slate-800 text-slate-300 border border-slate-700 px-4 py-1.5 rounded-full text-xs font-bold">
+                      <span>{statusText}</span>
+                    </div>
+                    {voiceState === 'error' && (
+                      <button
+                        onClick={handleMicToggle}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-md transition cursor-pointer"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        <span>دوبارہ کوشش کریں</span>
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -223,6 +234,34 @@ export const GeminiLiveVoiceWidget: React.FC<GeminiLiveVoiceWidgetProps> = ({
                   </h4>
                   <p className="text-xs text-slate-400">مثال: "لاہور سے کراچی کا مال تلاش کرو"</p>
                 </div>
+
+                {/* Text Fallback Query Input */}
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const form = e.currentTarget;
+                    const input = form.elements.namedItem('textQuery') as HTMLInputElement;
+                    if (input && input.value.trim()) {
+                      engineRef.current?.sendTextMessage(input.value.trim());
+                      setUserTranscript(input.value.trim());
+                      input.value = '';
+                    }
+                  }}
+                  className="w-full max-w-sm mx-auto flex items-center gap-2 pt-2"
+                >
+                  <input
+                    type="text"
+                    name="textQuery"
+                    placeholder="یا یہاں لکھ کر سرچ کریں..."
+                    className="flex-1 bg-slate-800 border border-slate-700 text-white placeholder-slate-400 text-xs rounded-xl px-3 py-2.5 outline-none focus:border-emerald-500 text-right"
+                  />
+                  <button
+                    type="submit"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer"
+                  >
+                    بھیجیں
+                  </button>
+                </form>
               </div>
 
               {/* Live Transcript View */}

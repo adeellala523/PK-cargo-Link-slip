@@ -32,20 +32,30 @@ export class GeminiLiveEngine {
   public async startSession(userPhone?: string) {
     this.setState('connecting', 'Gemini Live سے کنیکٹ ہو رہا ہے...');
 
+    // 1. Attempt Microphone Access (Non-blocking failover)
+    let micAvailable = false;
     try {
-      // 1. Microphone Access
-      this.micStream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          sampleRate: 16000,
-          channelCount: 1,
-          echoCancellation: true,
-          noiseSuppression: true,
-        },
-      });
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        try {
+          this.micStream = await navigator.mediaDevices.getUserMedia({
+            audio: { echoCancellation: true, noiseSuppression: true }
+          });
+          micAvailable = true;
+        } catch {
+          this.micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          micAvailable = true;
+        }
+      }
+    } catch (e) {
+      console.warn('[Gemini Live] Microphone permission denied or unavailable in browser. Falling back to Text/Speech mode.', e);
+    }
 
-      // 2. Initialize Audio Context
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      this.audioContext = new AudioCtx({ sampleRate: 24000 });
+    try {
+      // 2. Initialize Audio Context if mic is available
+      if (micAvailable) {
+        const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+        this.audioContext = new AudioCtx();
+      }
 
       // 3. Establish WebSocket connection to backend proxy
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -55,8 +65,12 @@ export class GeminiLiveEngine {
       this.ws = new WebSocket(wsUrl);
 
       this.ws.onopen = () => {
-        this.setState('listening', '🔴 میں سن رہا ہوں...');
-        this.setupMicrophoneProcessor();
+        if (micAvailable) {
+          this.setState('listening', '🔴 میں سن رہا ہوں...');
+          this.setupMicrophoneProcessor();
+        } else {
+          this.setState('listening', '💬 اپنا کام لکھیں یا بٹن دبائیں');
+        }
       };
 
       this.ws.onmessage = async (event) => {
@@ -82,15 +96,15 @@ export class GeminiLiveEngine {
       };
 
       this.ws.onerror = () => {
-        this.setState('error', 'وائس کنکشن میں مسئلہ آیا ہے۔ دوبارہ کوشش کریں۔');
+        this.setState('listening', '💬 لکھ کر تلاش کریں');
       };
 
       this.ws.onclose = () => {
         this.stopSession();
       };
     } catch (err: any) {
-      console.error('Failed to start Live session', err);
-      this.setState('error', 'مائیکروفون کی اجازت درکار ہے۔ براہ کرم براؤزر کی سیٹنگز سے مائیک الاؤ کریں۔');
+      console.error('Failed to establish WebSocket session', err);
+      this.setState('listening', '💬 سرچ بار سے کام لیں');
     }
   }
 
@@ -180,6 +194,12 @@ export class GeminiLiveEngine {
       source.start();
     } catch (e) {
       console.error('Error playing PCM audio chunk', e);
+    }
+  }
+
+  public sendTextMessage(text: string) {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify({ type: 'text', query: text }));
     }
   }
 
