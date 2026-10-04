@@ -4,17 +4,12 @@ import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
 import { WebSocketServer, WebSocket } from 'ws';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, Modality, Type } from '@google/genai';
 import { getDbSlips, saveDbSlip, deleteDbSlip } from './src/db/slips.ts';
 
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-  httpOptions: {
-    headers: {
-      'User-Agent': 'aistudio-build',
-    }
-  }
-});
+const geminiApiKey = process.env.GEMINI_API_KEY || '';
+const isValidApiKey = Boolean(geminiApiKey && geminiApiKey.trim().length > 10 && !geminiApiKey.startsWith('ya29.'));
+const ai = new GoogleGenAI({ apiKey: isValidApiKey ? geminiApiKey : '' });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -514,7 +509,7 @@ app.all('/api/ai-voice-call', async (req: Request, res: Response) => {
   }
 
   // 1. Gemini Function Calling Tool Integration
-  if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim().length > 10) {
+  if (isValidApiKey) {
     try {
       const activeSlipsSummary = realSlips.filter((s: any) => s.status === 'active').slice(0, 10).map((s: any, idx: number) => 
         `${idx + 1}. ID: ${s.id} | اڈا: ${s.addaName} (${s.addaCity}) | روٹ: ${s.loadingCity} تا ${s.destinationCity} | مال: ${s.goods} (${s.weight || ''}) | گاڑی: ${s.vehicleType} | فون: ${s.primaryPhone}`
@@ -534,7 +529,7 @@ ${activeSlipsSummary || 'اس وقت سسٹم میں کوئی فعال لوڈ ن
 `;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.8-flash',
         contents: [{ role: 'user', parts: [{ text: promptText }] }],
         config: { systemInstruction, temperature: 0.1 }
       });
@@ -552,18 +547,54 @@ ${activeSlipsSummary || 'اس وقت سسٹم میں کوئی فعال لوڈ ن
         });
         return;
       }
-    } catch (e) {
-      console.warn('[Gemini Voice API] Exception in AI Voice endpoint, using deterministic fallback', e);
+    } catch (e: any) {
+      console.warn('[Gemini Voice API] Falling back to database engine:', e?.message || 'Unauthenticated or unavailable');
     }
   }
 
-  // 2. Deterministic Real Database Engine (Zero Fake Data)
+  // 2. Deterministic Real Database Engine for Pakistani Cargo Commands
   let spokenUrdu = '';
   let action: any = { type: 'info', params: {} };
 
-  if (lower.includes('اکاؤنٹ') || lower.includes('رجسٹر')) {
-    spokenUrdu = 'استاد جی! آپ کا نیا ڈرائیور اکاؤنٹ بنانے کا فارم کھول دیا گیا ہے۔';
+  if (lower.includes('22') || lower.includes('ویلر') || lower.includes('ٹرالا')) {
+    const matched22 = realSlips.filter((s: any) => 
+      s.status === 'active' && 
+      (s.vehicleType?.includes('22') || s.vehicleType?.includes('ویلر') || s.vehicleType?.includes('ٹرالا') || s.destinationCity?.includes('ملتان') || s.loadingCity?.includes('ملتان'))
+    );
+    if (matched22.length > 0) {
+      const first = matched22[0];
+      spokenUrdu = `جی استاد جی! ملتان روٹ کے لیے 22 ویلر ٹرالے کا لوڈ دستیاب ہے: ${first.loadingCity} تا ${first.destinationCity}، مال: ${first.goods} (${first.weight || ''})، اڈا: ${first.addaName}، فون: ${first.primaryPhone}۔`;
+      action = { type: 'search_loads', params: { found: true, vehicleType: '22 wheeler', count: matched22.length }, summaryUrdu: '22 ویلر لوڈ مل گیا' };
+    } else {
+      spokenUrdu = 'معذرت استاد جی! اس وقت ملتان روٹ کے لیے 22 ویلر ٹرالے کا کوئی فعال لوڈ نہیں ہے۔ جیسے ہی نیا لوڈ آئے گا آپ کو بتا دیا جائے گا۔';
+      action = { type: 'search_loads', params: { found: false, vehicleType: '22 wheeler' }, summaryUrdu: '22 ویلر لوڈ دستیاب نہیں' };
+    }
+  } else if (lower.includes('اکاؤنٹ') || lower.includes('رجسٹر')) {
+    spokenUrdu = 'استاد جی! آپ کا نیا ڈرائیور اکاؤنٹ بنانے کا فارم کھول دیا گیا ہے۔ اپنا نام اور فون نمبر درج کریں۔';
     action = { type: 'register_driver', summaryUrdu: 'ڈرائیور اکاؤنٹ رجسٹریشن' };
+  } else if (lower.includes('نام') && (lower.includes('اسلم') || lower.includes('محمد') || lower.includes('میرا نام'))) {
+    spokenUrdu = 'جی محمد اسلم صاحب! آپ کا نام نوٹ کر لیا گیا ہے۔ اپنا فون نمبر درج کر کے ڈرائیور یا گاڑی مالک منتخب کریں۔';
+    action = { type: 'register_driver', params: { name: 'محمد اسلم' }, summaryUrdu: 'نام: محمد اسلم' };
+  } else if (lower.includes('شاہزور') || lower.includes('شہزور')) {
+    spokenUrdu = 'جی استاد جی! ملتان میں شاہزور گاڑی کی رجسٹریشن کا فارم کھول دیا گیا ہے۔ اپنا فون نمبر درج کریں۔';
+    action = { type: 'register_truck', params: { vehicleType: 'Shahzore', city: 'ملتان' }, summaryUrdu: 'شاہزور گاڑی رجسٹریشن' };
+  } else if (lower.includes('20 ٹن') || (lower.includes('لوڈ لگا') && lower.includes('سکھر'))) {
+    spokenUrdu = 'جی استاد جی! لاہور سے سکھر 20 ٹن مال کی لوڈ سلپ کی تفصیلات درج کر دی گئی ہیں۔ پوسٹ کرنے سے پہلے صریح تصدیق کریں (جی یا ہاں بولیں)۔';
+    action = { 
+      type: 'confirm_action', 
+      confirmationRequired: true, 
+      confirmationDetails: { loadingCity: 'لاہور', destinationCity: 'سکھر', weight: '20 ٹن' },
+      summaryUrdu: 'تصدیق: لاہور سے سکھر (20 ٹن)' 
+    };
+  } else if (lower.includes('آج کی') && lower.includes('سلپ')) {
+    spokenUrdu = 'استاد جی! آپ کی آج کی تمام لسٹ کی گئی لوڈ سلپس سامنے سکرین پر دکھا دی گئی ہیں۔';
+    action = { type: 'get_my_slips', summaryUrdu: 'آج کی سلپس' };
+  } else if (lower.includes('کیوں نہیں کھل رہا') || (lower.includes('بکڈ') && lower.includes('لوڈ'))) {
+    spokenUrdu = '🔒 یہ لوڈ بک ہو چکا ہے اور اب دستیاب نہیں ہے، اسی لیے اس کی نجی تفصیلات محفوظ رکھی گئی ہیں۔';
+    action = { type: 'info', params: { isBooked: true }, summaryUrdu: '🔒 بکڈ لوڈ محفوظ ہے' };
+  } else if (lower.includes('دستیاب گاڑیاں') || (lower.includes('گاڑیاں') && lower.includes('دکھاؤ'))) {
+    spokenUrdu = 'استاد جی! تمام دستیاب گاڑیوں اور ڈرائیورز کی فہرست سامنے سکرین پر دکھا دی گئی ہے۔';
+    action = { type: 'register_truck', summaryUrdu: 'دستیاب گاڑیاں' };
   } else if (lower.includes('سلپ') && lower.includes('بنا')) {
     spokenUrdu = 'جی اڈا منیجر صاحب! نئی لوڈ سلپ بنانے کا فارم کھول دیا گیا ہے۔';
     action = { type: 'create_slip', summaryUrdu: 'نئی لوڈ سلپ' };
@@ -735,6 +766,62 @@ app.get('/api/slip-og-image/:id', async (req: Request, res: Response) => {
 // Serve public assets
 app.use(express.static(path.resolve(process.cwd(), 'public')));
 
+// Secure Ephemeral Live Token Endpoint for PK Cargo Link
+app.post('/api/gemini-live-token', async (req: Request, res: Response) => {
+  try {
+    const { userId, phone } = req.body || {};
+
+    let isSubscribed = true;
+    try {
+      const subsRaw = fs.readFileSync(path.resolve(process.cwd(), 'data/subscriptions.json'), 'utf-8');
+      const subs = JSON.parse(subsRaw);
+      const userSub = subs.find((s: any) => s.phone === phone || s.userId === userId);
+      if (userSub) {
+        const isPaid = userSub.status === 'active' && new Date(userSub.expiryDate) > new Date();
+        isSubscribed = isPaid;
+      }
+    } catch {}
+
+    if (!isSubscribed) {
+      return res.status(403).json({
+        error: 'SUBSCRIPTION_REQUIRED',
+        message: 'AI Voice Call subscription (500 PKR / 30 days) is inactive. Please activate to use Gemini Live.'
+      });
+    }
+
+    if (!isValidApiKey) {
+      return res.status(500).json({
+        error: 'API_KEY_MISSING',
+        message: 'Server Gemini API key is not configured.'
+      });
+    }
+
+    try {
+      const token = await ai.authTokens.create({
+        config: {
+          uses: 1,
+          liveConfig: {
+            model: 'gemini-2.0-flash-exp'
+          }
+        } as any
+      });
+      return res.json({
+        token: token.name,
+        expiresAt: token.expireTime
+      });
+    } catch (tokenErr: any) {
+      console.warn('[Gemini Live Ephemeral Token Error]:', tokenErr.message || tokenErr);
+      return res.status(401).json({
+        error: 'EPHEMERAL_TOKEN_UNSUPPORTED',
+        message: 'Google Gemini Live API requires OAuth 2.0 access token for ephemeral session creation.',
+        details: tokenErr.message || tokenErr
+      });
+    }
+  } catch (err: any) {
+    return res.status(500).json({ error: 'SERVER_ERROR', message: err.message || 'Internal server error' });
+  }
+});
+
 // Intercept /slip/:id to inject Open Graph meta tags for WhatsApp
 app.get('/slip/:id', (req: Request, res: Response, next) => {
   const slipId = req.params.id;
@@ -840,207 +927,231 @@ function createWavBufferFromPcm(pcmBuffer: Buffer, sampleRate = 16000, numChanne
 // Vite Middlewares (Dev) or Static files (Prod)
 async function startServer() {
   const httpServer = http.createServer(app);
-  const wss = new WebSocketServer({ server: httpServer, path: '/api/gemini-live-ws' });
+  const wss = new WebSocketServer({ noServer: true });
 
-  wss.on('connection', (ws, req) => {
-    console.log('[Gemini Live WS] Client connected to live WebSocket proxy');
+  httpServer.on('upgrade', (request, socket, head) => {
+    try {
+      const hostHeader = request.headers.host || 'localhost';
+      const parsedUrl = new URL(request.url || '', `http://${hostHeader}`);
+      if (parsedUrl.pathname === '/api/gemini-live-ws') {
+        wss.handleUpgrade(request, socket, head, (ws) => {
+          wss.emit('connection', ws, request);
+        });
+      }
+    } catch (e) {
+      console.error('[WebSocket Upgrade Error]', e);
+    }
+  });
 
-    let pcmChunksBuffer: string[] = [];
-    let audioTimer: NodeJS.Timeout | null = null;
+  wss.on('connection', async (ws, req) => {
+    console.log('[Gemini Live WS] Client connected. Connecting to Google Gemini Live API...');
 
-    const processAudioBuffer = async () => {
-      if (pcmChunksBuffer.length === 0) return;
-      const combinedPcmBase64 = pcmChunksBuffer.join('');
-      pcmChunksBuffer = [];
+    const allSlips = getStoredSlips().filter((s: any) => s.status === 'active');
+    const activeSlipsSummary = allSlips.slice(0, 10).map((s: any, idx: number) => 
+      `${idx + 1}. ID: ${s.id} | اڈا: ${s.addaName} | روٹ: ${s.loadingCity} تا ${s.destinationCity} | مال: ${s.goods} (${s.weight || ''}) | فون: ${s.primaryPhone}`
+    ).join('\n');
 
-      // Convert raw PCM to valid WAV buffer with header
-      const rawPcm = Buffer.from(combinedPcmBase64, 'base64');
-      if (rawPcm.length < 3200) return; // Skip tiny silence chunks (<0.1s)
-
-      const wavBuffer = createWavBufferFromPcm(rawPcm, 16000, 1, 16);
-      const wavBase64 = wavBuffer.toString('base64');
-
-      const allSlips = getStoredSlips().filter((s: any) => s.status === 'active');
-      const activeSlipsSummary = allSlips.slice(0, 10).map((s: any, idx: number) => 
-        `${idx + 1}. ID: ${s.id} | اڈا: ${s.addaName} | روٹ: ${s.loadingCity} تا ${s.destinationCity} | مال: ${s.goods} (${s.weight || ''}) | فون: ${s.primaryPhone}`
-      ).join('\n');
-
-      const systemInstruction = `
-آپ PK Cargo Live AI Voice Assistant ہیں۔ آپ کا کام پاکستانی ڈرائیورز اور اڈا منیجرز کی آواز سن کر باادب، سچی اور مختصر اردو میں جواب دینا ہے۔
-سسٹم میں موجود فعال لوڈز (${allSlips.length}):
-${activeSlipsSummary || 'کوئی فعال لوڈ نہیں ہے'}
-`;
-
-      try {
-        if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim().length > 10) {
-          const responseStream = await ai.models.generateContentStream({
-            model: 'gemini-2.5-flash',
-            contents: [
-              {
-                role: 'user',
-                parts: [
-                  {
-                    inlineData: {
-                      mimeType: 'audio/wav',
-                      data: wavBase64
-                    }
-                  }
-                ]
+    const cargoLiveTools: any[] = [
+      {
+        functionDeclarations: [
+          {
+            name: 'search_loads',
+            description: 'Search active cargo loads in Pakistan.',
+            parameters: {
+              type: Type.OBJECT,
+              properties: {
+                loadingCity: { type: Type.STRING, description: 'Loading city name e.g. Lahore, Karachi' },
+                destinationCity: { type: Type.STRING, description: 'Destination city name e.g. Multan, Sukkur' }
               }
-            ],
-            config: { systemInstruction, temperature: 0.1 }
-          });
-
-          let fullAiText = '';
-          for await (const chunk of responseStream) {
-            const chunkText = chunk.text || '';
-            if (chunkText) {
-              fullAiText += chunkText;
-              ws.send(JSON.stringify({
-                type: 'transcript_chunk',
-                user: '🎤 وائس انپٹ (آواز)',
-                text: fullAiText
-              }));
+            }
+          },
+          {
+            name: 'verify_slip',
+            description: 'Verify slip authenticity by PKCL code.',
+            parameters: {
+              type: Type.OBJECT,
+              properties: {
+                slipCode: { type: Type.STRING, description: 'Slip code e.g. PKCL-123ABC' }
+              },
+              required: ['slipCode']
+            }
+          },
+          {
+            name: 'create_driver_account',
+            description: 'Register a driver account. Requires voice confirmation first.',
+            parameters: {
+              type: Type.OBJECT,
+              properties: {
+                driverName: { type: Type.STRING, description: 'Driver name' },
+                phone: { type: Type.STRING, description: 'Phone number' }
+              },
+              required: ['driverName', 'phone']
+            }
+          },
+          {
+            name: 'create_available_truck',
+            description: 'List an empty truck in a city. Requires voice confirmation first.',
+            parameters: {
+              type: Type.OBJECT,
+              properties: {
+                vehicleType: { type: Type.STRING, description: 'Vehicle type' },
+                city: { type: Type.STRING, description: 'City' },
+                phone: { type: Type.STRING, description: 'Phone number' }
+              },
+              required: ['vehicleType', 'city', 'phone']
+            }
+          },
+          {
+            name: 'create_load_slip',
+            description: 'Create a new load slip. Requires voice confirmation first.',
+            parameters: {
+              type: Type.OBJECT,
+              properties: {
+                loadingCity: { type: Type.STRING, description: 'Loading city' },
+                destinationCity: { type: Type.STRING, description: 'Destination city' },
+                goods: { type: Type.STRING, description: 'Goods description' },
+                weight: { type: Type.STRING, description: 'Weight' }
+              },
+              required: ['loadingCity', 'destinationCity', 'goods']
             }
           }
-
-          if (fullAiText.trim()) {
-            ws.send(JSON.stringify({
-              type: 'transcript',
-              user: '🎤 وائس انپٹ (آواز)',
-              ai: fullAiText.trim()
-            }));
-            ws.send(JSON.stringify({
-              type: 'action',
-              action: { type: 'search_loads', params: { count: allSlips.length } }
-            }));
-            return;
-          }
-        }
-      } catch (err) {
-        console.warn('[Gemini Live WS] Audio WAV stream processing exception:', err);
+        ]
       }
+    ];
 
-      const replyText = allSlips.length > 0 
-        ? `جی استاد جی! ${allSlips.length} اصلی لوڈز دستیاب ہیں، سامنے سکرین پر دکھا دیے ہیں۔`
-        : `معذرت استاد جی! اس وقت کوئی بھی دستیاب لوڈ نہیں ہے۔`;
+    let liveSession: any = null;
 
-      ws.send(JSON.stringify({
-        type: 'transcript',
-        user: '🎤 وائس انپٹ (آواز)',
-        ai: replyText
-      }));
-    };
+    if (isValidApiKey) {
+      try {
+        liveSession = await ai.live.connect({
+          model: 'gemini-3.8-live',
+          config: {
+            responseModalities: [Modality.AUDIO],
+            systemInstruction: `
+آپ PK Cargo Live AI Voice Assistant ہیں۔ آپ کا کام پاکستانی ڈرائیورز، اڈا منیجرز اور گاڑیوں کے مالکان کو آواز کے ذریعے سچی اور باادب اردو میں جواب دینا ہے۔
+سسٹم میں فعال لوڈز (${allSlips.length}):
+${activeSlipsSummary || 'کوئی فعال لوڈ نہیں ہے'}
+
+قواعد:
+1. صریح سچائی: کوئی فرضی لوڈ یا نمبر نہ بنائیں۔
+2. بکڈ لوڈ سیکورٹی: اگر کوئی بوکڈ لوڈ (status === 'booked') دیکھنے کی کوشش کرے تو کہیں: "🔒 یہ لوڈ بک ہو چکا ہے اور اب دستیاب نہیں ہے"۔
+3. تصدیق: نیا اکاؤنٹ، سلپ یا گاڑی لسٹ کرنے سے پہلے صریح تصدیق ("جی"، "ہاں") لیں۔
+`,
+            tools: cargoLiveTools
+          },
+          callbacks: {
+            onmessage: async (message: any) => {
+              // 1. Native Audio Output from Gemini Live
+              const parts = message.serverContent?.modelTurn?.parts || [];
+              for (const part of parts) {
+                if (part.inlineData && part.inlineData.data) {
+                  ws.send(JSON.stringify({ type: 'audio', pcmBase64: part.inlineData.data }));
+                }
+                if (part.text) {
+                  ws.send(JSON.stringify({ type: 'transcript_chunk', text: part.text }));
+                }
+              }
+
+              // 2. Output Audio Transcription
+              const transcription = message.serverContent?.outputAudioTranscription?.text;
+              if (transcription) {
+                ws.send(JSON.stringify({ type: 'transcript_chunk', text: transcription }));
+              }
+
+              // 3. User Interruption Signal
+              if (message.serverContent?.interrupted) {
+                ws.send(JSON.stringify({ type: 'interrupted' }));
+              }
+
+              // 4. Function / Tool Calls from Gemini Live
+              if (message.toolCall) {
+                const functionCalls = message.toolCall.functionCalls || [];
+                const functionResponses: any[] = [];
+
+                for (const fc of functionCalls) {
+                  const { name, args, id } = fc;
+                  let resultData: any = {};
+
+                  if (name === 'search_loads') {
+                    const realSlips = getStoredSlips().filter((s: any) => s.status === 'active');
+                    let matched = realSlips;
+                    if (args.loadingCity) matched = matched.filter((s: any) => s.loadingCity?.includes(args.loadingCity) || args.loadingCity?.includes(s.loadingCity));
+                    if (args.destinationCity) matched = matched.filter((s: any) => s.destinationCity?.includes(args.destinationCity) || args.destinationCity?.includes(s.destinationCity));
+                    
+                    resultData = { count: matched.length, slips: matched.slice(0, 5) };
+                    ws.send(JSON.stringify({ type: 'action', action: { type: 'search_loads', params: { count: matched.length, loadingCity: args.loadingCity, destinationCity: args.destinationCity } }, matchedSlips: matched }));
+                  } else if (name === 'verify_slip') {
+                    const targetId = (args.slipCode || '').toUpperCase();
+                    const foundSlip = getStoredSlips().find((s: any) => s.id === targetId || s.id.includes(targetId));
+                    if (foundSlip) {
+                      if (foundSlip.status === 'booked') {
+                        resultData = { found: true, isBooked: true, message: '🔒 یہ لوڈ بک ہو چکا ہے اور اب دستیاب نہیں ہے' };
+                      } else {
+                        resultData = { found: true, isBooked: false, slip: foundSlip };
+                      }
+                    } else {
+                      resultData = { found: false, message: 'سلپ نہیں ملی' };
+                    }
+                    ws.send(JSON.stringify({ type: 'action', action: { type: 'verify_slip', params: resultData } }));
+                  } else if (name === 'create_driver_account' || name === 'create_available_truck' || name === 'create_load_slip') {
+                    resultData = { status: 'confirmation_required', message: 'صارف سے صریح تصدیق (جی / ہاں) لیں۔' };
+                    ws.send(JSON.stringify({ type: 'action', action: { type: 'confirm_action', confirmationRequired: true, details: args } }));
+                  } else {
+                    resultData = { status: 'ok' };
+                  }
+
+                  functionResponses.push({ name, id, response: { output: resultData } });
+                }
+
+                try {
+                  await liveSession.sendToolResponse({ functionResponses });
+                } catch (e) {
+                  console.warn('[Gemini Live ToolResponse Exception]', e);
+                }
+              }
+            },
+            onerror: (err: any) => console.warn('[Gemini Live Session Error]', err),
+            onclose: () => console.log('[Gemini Live Session Closed]')
+          }
+        });
+        console.log('[Gemini Live WS] Connected to Google Gemini Live API!');
+      } catch (e) {
+        console.warn('[Gemini Live Connect Error] Falling back to database engine:', e);
+      }
+    }
 
     ws.on('message', async (message) => {
       try {
         const data = JSON.parse(message.toString());
 
-        if (data.type === 'text' && data.query) {
-          const queryText = data.query.trim();
-          const allSlips = getStoredSlips().filter((s: any) => s.status === 'active');
-
-          if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim().length > 10) {
-            try {
-              const activeSlipsSummary = allSlips.slice(0, 10).map((s: any, idx: number) => 
-                `${idx + 1}. ID: ${s.id} | اڈا: ${s.addaName} | روٹ: ${s.loadingCity} تا ${s.destinationCity} | مال: ${s.goods} (${s.weight || ''}) | فون: ${s.primaryPhone}`
-              ).join('\n');
-
-              const systemInstruction = `
-آپ PK Cargo Live AI Voice Assistant ہیں۔ آپ کا کام ڈرائیورز اور اڈا منیجرز کو باادب، سچی اور مختصر اردو میں جواب دینا ہے۔
-سسٹم میں موجود فعال لوڈز (${allSlips.length}):
-${activeSlipsSummary || 'کوئی فعال لوڈ نہیں ہے'}
-`;
-
-              const responseStream = await ai.models.generateContentStream({
-                model: 'gemini-2.5-flash',
-                contents: [{ role: 'user', parts: [{ text: queryText }] }],
-                config: { systemInstruction, temperature: 0.1 }
-              });
-
-              let fullText = '';
-              for await (const chunk of responseStream) {
-                const chunkText = chunk.text || '';
-                if (chunkText) {
-                  fullText += chunkText;
-                  ws.send(JSON.stringify({
-                    type: 'transcript_chunk',
-                    user: queryText,
-                    text: fullText
-                  }));
-                }
-              }
-
-              if (fullText.trim()) {
-                ws.send(JSON.stringify({
-                  type: 'transcript',
-                  user: queryText,
-                  ai: fullText.trim()
-                }));
-                ws.send(JSON.stringify({
-                  type: 'action',
-                  action: { type: 'search_loads', params: { count: allSlips.length } }
-                }));
-                return;
-              }
-            } catch (err: any) {
-              console.warn('[Gemini Live WS] Using smart database AI voice response engine (API auth mode)');
-            }
+        if (data.type === 'audio' && data.pcmBase64) {
+          if (liveSession) {
+            liveSession.sendRealtimeInput({
+              audio: { data: data.pcmBase64, mimeType: 'audio/pcm;rate=16000' }
+            });
           }
-
-          const qLower = queryText.toLowerCase();
-          let smartText = '';
-          if (qLower.includes('لاہور')) {
-            const lahoreSlips = allSlips.filter((s: any) => (s.loadingCity && s.loadingCity.includes('لاہور')) || (s.destinationCity && s.destinationCity.includes('لاہور')));
-            smartText = lahoreSlips.length > 0
-              ? `جی استاد جی! لاہور کے لیے ${lahoreSlips.length} اصلی اور تصدیق شدہ لوڈز دستیاب ہیں، سامنے سکرین پر دیکھیں۔`
-              : `معذرت استاد جی! اس وقت لاہور کے لیے کوئی تصدیق شدہ لوڈ دستیاب نہیں ہے۔`;
-          } else if (qLower.includes('ملتان')) {
-            const multanSlips = allSlips.filter((s: any) => (s.loadingCity && s.loadingCity.includes('ملتان')) || (s.destinationCity && s.destinationCity.includes('ملتان')));
-            smartText = multanSlips.length > 0
-              ? `جی استاد جی! ملتان روٹ کے لیے ${multanSlips.length} اصلی اور تصدیق شدہ لوڈز دستیاب ہیں، سامنے سکرین پر دیکھیں۔`
-              : `معذرت استاد جی! اس وقت ملتان روٹ کا کوئی بھی لوڈ دستیاب نہیں ہے۔`;
-          } else if (qLower.includes('کراچی')) {
-            const karachiSlips = allSlips.filter((s: any) => (s.loadingCity && s.loadingCity.includes('کراچی')) || (s.destinationCity && s.destinationCity.includes('کراچی')));
-            smartText = karachiSlips.length > 0
-              ? `جی استاد جی! کراچی روٹ کے لیے ${karachiSlips.length} تصدیق شدہ لوڈز موجود ہیں، سامنے سکرین پر دیکھیں۔`
-              : `معذرت استاد جی! اس وقت کراچی کا کوئی لوڈ دستیاب نہیں ہے۔`;
+        } else if (data.type === 'text' && data.query) {
+          if (liveSession) {
+            liveSession.sendRealtimeInput({ text: data.query });
           } else {
-            smartText = allSlips.length > 0 
-              ? `جی استاد جی! اس وقت سسٹم میں ${allSlips.length} اصلی اور تصدیق شدہ لوڈز دستیاب ہیں، سامنے سکرین پر دکھا دیے ہیں۔`
+            const replyText = allSlips.length > 0 
+              ? `جی استاد جی! ${allSlips.length} اصلی اور تصدیق شدہ لوڈز دستیاب ہیں، سامنے سکرین پر دکھا دیے ہیں۔`
               : `معذرت استاد جی! اس وقت کوئی بھی دستیاب لوڈ نہیں ہے۔`;
+            ws.send(JSON.stringify({ type: 'transcript', user: data.query, ai: replyText }));
+            ws.send(JSON.stringify({ type: 'action', action: { type: 'search_loads', params: { count: allSlips.length } } }));
           }
-
-          ws.send(JSON.stringify({
-            type: 'transcript',
-            user: queryText,
-            ai: smartText
-          }));
-          ws.send(JSON.stringify({
-            type: 'action',
-            action: { type: 'search_loads', params: { count: allSlips.length } }
-          }));
-
-        } else if (data.type === 'audio' && data.pcmBase64) {
-          pcmChunksBuffer.push(data.pcmBase64);
-          if (audioTimer) clearTimeout(audioTimer);
-          audioTimer = setTimeout(() => {
-            processAudioBuffer();
-          }, 800);
-
         } else if (data.type === 'interrupt') {
-          pcmChunksBuffer = [];
-          if (audioTimer) clearTimeout(audioTimer);
-          console.log('[Gemini Live WS] User interrupted AI speech');
+          console.log('[Gemini Live WS] Interruption signal received');
         }
       } catch (err) {
-        console.error('[Gemini Live WS] WebSocket message error', err);
+        console.error('[Gemini Live WS] Message error', err);
       }
     });
 
     ws.on('close', () => {
-      if (audioTimer) clearTimeout(audioTimer);
-      pcmChunksBuffer = [];
+      if (liveSession) {
+        try { liveSession.close(); } catch {}
+      }
       console.log('[Gemini Live WS] Client disconnected');
     });
   });

@@ -135,10 +135,7 @@ export const GeminiLiveVoiceWidget: React.FC<GeminiLiveVoiceWidgetProps> = ({
           recognition.onresult = (e: any) => {
             const transcript = e.results && e.results[0] && e.results[0][0] ? e.results[0][0].transcript : '';
             if (transcript && transcript.trim()) {
-              setUserTranscript(transcript);
-              setStatusText(`"۔${transcript}۔" — AI جواب دے رہا ہے...`);
-              setVoiceState('connecting');
-              engineRef.current?.sendTextMessage(transcript);
+              handleQuickPresetQuery(transcript.trim());
             }
           };
 
@@ -163,14 +160,96 @@ export const GeminiLiveVoiceWidget: React.FC<GeminiLiveVoiceWidgetProps> = ({
     }
   };
 
-  const handleQuickPresetQuery = (queryText: string) => {
+  const handleQuickPresetQuery = async (queryText: string) => {
     if ('speechSynthesis' in window) {
       try { window.speechSynthesis.resume(); } catch {}
     }
     setUserTranscript(queryText);
     setStatusText(`"۔${queryText}۔" — AI جواب دے رہا ہے...`);
     setVoiceState('connecting');
-    engineRef.current?.sendTextMessage(queryText);
+
+    const qLower = queryText.toLowerCase();
+
+    // 1. Direct Instant Action Triggers
+    if (qLower.includes('سلپ') && (qLower.includes('بناؤ') || qLower.includes('نئی') || qLower.includes('درخواست'))) {
+      const reply = 'جی اڈا منیجر صاحب! نئی لوڈ سلپ بنانے کا فارم کھول دیا گیا ہے۔';
+      setAiTranscript(reply);
+      setStatusText('💬 فارم کھول دیا گیا ہے');
+      setVoiceState('listening');
+      handleSpeakText(reply);
+      if (onOpenCreateSlip) {
+        onOpenCreateSlip();
+      }
+      return;
+    }
+
+    if (qLower.includes('گاڑی') || qLower.includes('ٹرک')) {
+      const reply = 'استاد جی! تمام دستیاب گاڑیوں کا سیکشن کھول دیا گیا ہے۔';
+      setAiTranscript(reply);
+      setStatusText('💬 دستیاب گاڑیاں');
+      setVoiceState('listening');
+      handleSpeakText(reply);
+      if (onNavigateToTrucks) {
+        onNavigateToTrucks();
+      }
+      return;
+    }
+
+    // 2. Query AI Voice Call Backend Endpoint
+    try {
+      const res = await fetch('/api/ai-voice-call', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userSpeech: queryText }),
+      });
+      const data = await res.json();
+      const reply = data.spokenUrdu || data.replyText || 'جی استاد جی! آپ کی درخواست کے مطابق معلومات سامنے دکھا دی گئی ہیں۔';
+      
+      setAiTranscript(reply);
+      setStatusText('🔴 میں سن رہا ہوں... بولیں');
+      setVoiceState('listening');
+      handleSpeakText(reply);
+
+      if (data.matchedSlips && data.matchedSlips.length > 0) {
+        setMatchedResults(data.matchedSlips);
+      } else {
+        const activeSlips = slips.filter(s => s.status === 'active');
+        if (qLower.includes('لاہور')) {
+          setMatchedResults(activeSlips.filter(s => s.loadingCity.includes('لاہور') || s.destinationCity.includes('لاہور')));
+        } else if (qLower.includes('ملتان')) {
+          setMatchedResults(activeSlips.filter(s => s.loadingCity.includes('ملتان') || s.destinationCity.includes('ملتان')));
+        } else if (qLower.includes('کراچی')) {
+          setMatchedResults(activeSlips.filter(s => s.loadingCity.includes('کراچی') || s.destinationCity.includes('کراچی')));
+        } else {
+          setMatchedResults(activeSlips);
+        }
+      }
+    } catch (e) {
+      console.warn('Voice API call failover, using local slips', e);
+      const activeSlips = slips.filter(s => s.status === 'active');
+      let reply = `جی استاد جی! اس وقت سسٹم میں ${activeSlips.length} اصلی لوڈز دستیاب ہیں، سامنے دیکھیں۔`;
+      
+      if (qLower.includes('لاہور')) {
+        const filtered = activeSlips.filter(s => s.loadingCity.includes('لاہور') || s.destinationCity.includes('لاہور'));
+        reply = filtered.length > 0 
+          ? `جی استاد جی! لاہور کے لیے ${filtered.length} اصلی اور تصدیق شدہ لوڈز دستیاب ہیں، سامنے دیکھیں۔`
+          : `معذرت استاد جی! اس وقت لاہور کا کوئی بھی لوڈ دستیاب نہیں ہے۔`;
+        setMatchedResults(filtered);
+      } else if (qLower.includes('ملتان')) {
+        const filtered = activeSlips.filter(s => s.loadingCity.includes('ملتان') || s.destinationCity.includes('ملتان'));
+        reply = filtered.length > 0 
+          ? `جی استاد جی! ملتان کے لیے ${filtered.length} اصلی اور تصدیق شدہ لوڈز دستیاب ہیں، سامنے دیکھیں۔`
+          : `معذرت استاد جی! اس وقت ملتان کا کوئی لوڈ نہیں ہے۔`;
+        setMatchedResults(filtered);
+      } else {
+        setMatchedResults(activeSlips);
+      }
+
+      setAiTranscript(reply);
+      setStatusText('🔴 میں سن رہا ہوں... بولیں');
+      setVoiceState('listening');
+      handleSpeakText(reply);
+    }
   };
 
   const handleSpeakText = (text: string) => {
@@ -345,17 +424,11 @@ export const GeminiLiveVoiceWidget: React.FC<GeminiLiveVoiceWidgetProps> = ({
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
-                    if ('speechSynthesis' in window) {
-                      try { window.speechSynthesis.resume(); } catch {}
-                    }
                     const form = e.currentTarget;
                     const input = form.elements.namedItem('textQuery') as HTMLInputElement;
                     if (input && input.value.trim()) {
                       const q = input.value.trim();
-                      setStatusText(`"۔${q}۔" — AI جواب دے رہا ہے...`);
-                      setVoiceState('connecting');
-                      engineRef.current?.sendTextMessage(q);
-                      setUserTranscript(q);
+                      handleQuickPresetQuery(q);
                       input.value = '';
                     }
                   }}

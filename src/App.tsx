@@ -54,13 +54,18 @@ export default function App() {
 
     const logCapturedError = (msg: string, details?: string) => {
       const lower = (msg + ' ' + (details || '')).toLowerCase();
+      
+      // Ignore harmless Vite HMR websocket reconnection notices
+      if (lower.includes('[vite]') || lower.includes('websocket closed without opened') || lower.includes('vite:ws')) {
+        return;
+      }
+
       const isSecurityOrPermission = 
         lower.includes('notallowederror') || 
         lower.includes('securityerror') || 
         lower.includes('permission denied') || 
         lower.includes('permissions-policy') || 
         lower.includes('getusermedia') || 
-        lower.includes('websocket') || 
         lower.includes('microphone');
 
       if (isSecurityOrPermission) {

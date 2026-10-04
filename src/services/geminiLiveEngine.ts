@@ -64,80 +64,83 @@ export class GeminiLiveEngine {
       }
 
       // 3. Establish WebSocket connection to backend proxy
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const host = window.location.host;
-      const wsUrl = `${protocol}//${host}/api/gemini-live-ws${userPhone ? `?phone=${encodeURIComponent(userPhone)}` : ''}`;
+      try {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const host = window.location.host;
+        const wsUrl = `${protocol}//${host}/api/gemini-live-ws${userPhone ? `?phone=${encodeURIComponent(userPhone)}` : ''}`;
 
-      this.ws = new WebSocket(wsUrl);
+        this.ws = new WebSocket(wsUrl);
 
-      this.ws.onopen = () => {
-        if (micAvailable) {
-          this.setState('listening', '🔴 میں سن رہا ہوں...');
-          this.setupMicrophoneProcessor();
-        } else {
-          this.setState('listening', '💬 اپنا کام لکھیں یا بٹن دبائیں');
-        }
-      };
+        this.ws.onopen = () => {
+          if (micAvailable) {
+            this.setState('listening', '🔴 میں سن رہا ہوں...');
+            this.setupMicrophoneProcessor();
+          } else {
+            this.setState('listening', '💬 اپنا کام لکھیں یا بٹن دبائیں');
+          }
+        };
 
-      this.ws.onmessage = async (event) => {
-        try {
-          const data = JSON.parse(event.data);
+        this.ws.onmessage = async (event) => {
+          try {
+            const data = JSON.parse(event.data);
 
-          if (data.type === 'transcript_chunk') {
-            this.setState('speaking', 'PK Cargo Assistant بول رہا ہے...');
-            this.callbacks.onTranscriptUpdate(data.user || '', data.text || '');
-          } else if (data.type === 'transcript') {
-            this.callbacks.onTranscriptUpdate(data.user || '', data.ai || '');
-            if (data.ai && 'speechSynthesis' in window) {
-              try {
-                window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(data.ai);
-                utterance.lang = 'ur-PK';
-                utterance.rate = 0.95;
-                utterance.onstart = () => {
-                  this.setState('speaking', 'PK Cargo Assistant بول رہا ہے...');
-                };
-                utterance.onend = () => {
+            if (data.type === 'transcript_chunk') {
+              this.setState('speaking', 'PK Cargo Assistant بول رہا ہے...');
+              this.callbacks.onTranscriptUpdate(data.user || '', data.text || '');
+            } else if (data.type === 'transcript') {
+              this.callbacks.onTranscriptUpdate(data.user || '', data.ai || '');
+              if (data.ai && 'speechSynthesis' in window) {
+                try {
+                  window.speechSynthesis.cancel();
+                  const utterance = new SpeechSynthesisUtterance(data.ai);
+                  utterance.lang = 'ur-PK';
+                  utterance.rate = 0.95;
+                  utterance.onstart = () => {
+                    this.setState('speaking', 'PK Cargo Assistant بول رہا ہے...');
+                  };
+                  utterance.onend = () => {
+                    this.setState('listening', '🔴 میں سن رہا ہوں... بولیں');
+                  };
+                  utterance.onerror = () => {
+                    this.setState('listening', '🔴 میں سن رہا ہوں... بولیں');
+                  };
+                  window.speechSynthesis.speak(utterance);
+                } catch (err) {
+                  console.warn('SpeechSynthesis error:', err);
                   this.setState('listening', '🔴 میں سن رہا ہوں... بولیں');
-                };
-                utterance.onerror = () => {
-                  this.setState('listening', '🔴 میں سن رہا ہوں... بولیں');
-                };
-                window.speechSynthesis.speak(utterance);
-              } catch (err) {
-                console.warn('SpeechSynthesis error:', err);
+                }
+              } else {
                 this.setState('listening', '🔴 میں سن رہا ہوں... بولیں');
               }
-            } else {
-              this.setState('listening', '🔴 میں سن رہا ہوں... بولیں');
+            } else if (data.type === 'audio') {
+              this.setState('speaking', 'PK Cargo Assistant بول رہا ہے...');
+              this.playAudioChunk(data.pcmBase64);
+            } else if (data.type === 'action') {
+              if (this.callbacks.onActionTriggered) {
+                this.callbacks.onActionTriggered(data.action);
+              }
+            } else if (data.type === 'error') {
+              this.setState('error', data.message || 'وائس کنکشن میں مسئلہ آیا ہے۔');
+              if (this.callbacks.onError) this.callbacks.onError(data.message);
             }
-          } else if (data.type === 'audio') {
-            this.setState('speaking', 'PK Cargo Assistant بول رہا ہے...');
-            this.playAudioChunk(data.pcmBase64);
-          } else if (data.type === 'action') {
-            if (this.callbacks.onActionTriggered) {
-              this.callbacks.onActionTriggered(data.action);
-            }
-          } else if (data.type === 'error') {
-            this.setState('error', data.message || 'وائس کنکشن میں مسئلہ آیا ہے۔');
-            if (this.callbacks.onError) this.callbacks.onError(data.message);
+          } catch (e) {
+            console.error('Error parsing WebSocket message', e);
           }
-        } catch (e) {
-          console.error('Error parsing WebSocket message', e);
-        }
-      };
+        };
 
-      this.ws.onerror = (e) => {
-        console.warn('[Gemini Live WS] Connection error or reverse proxy blocked WS. Using HTTP REST failover mode.', e);
-        this.setState('listening', '🔴 اردو میں بولیں یا سوال منتخب کریں');
-      };
-
-      this.ws.onclose = () => {
-        // Do not force stop session if user is in HTTP REST mode
-        if (this.state === 'connecting') {
+        this.ws.onerror = () => {
           this.setState('listening', '🔴 اردو میں بولیں یا سوال منتخب کریں');
-        }
-      };
+        };
+
+        this.ws.onclose = () => {
+          if (this.state === 'connecting') {
+            this.setState('listening', '🔴 اردو میں بولیں یا سوال منتخب کریں');
+          }
+        };
+      } catch (err) {
+        console.warn('WebSocket proxy unavailable, using HTTP REST mode', err);
+        this.setState('listening', '🔴 اردو میں بولیں یا سوال منتخب کریں');
+      }
     } catch (err: any) {
       console.error('Failed to establish WebSocket session', err);
       this.setState('listening', '💬 سرچ بار سے کام لیں');
@@ -192,45 +195,6 @@ export class GeminiLiveEngine {
 
     micSource.connect(processor);
     processor.connect(this.audioContext.destination);
-  }
-
-  private playAudioChunk(base64Pcm: string) {
-    if (!this.audioContext) return;
-
-    try {
-      const binary = atob(base64Pcm);
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) {
-        bytes[i] = binary.charCodeAt(i);
-      }
-      const int16 = new Int16Array(bytes.buffer);
-      const float32 = new Float32Array(int16.length);
-      for (let i = 0; i < int16.length; i++) {
-        float32[i] = int16[i] / 32768;
-      }
-
-      const buffer = this.audioContext.createBuffer(1, float32.length, 24000);
-      buffer.getChannelData(0).set(float32);
-
-      const source = this.audioContext.createBufferSource();
-      source.buffer = buffer;
-      source.connect(this.audioContext.destination);
-
-      this.activeSource = source;
-      this.isPlaying = true;
-
-      source.onended = () => {
-        this.isPlaying = false;
-        this.activeSource = null;
-        if (this.state === 'speaking') {
-          this.setState('listening', '🔴 میں سن رہا ہوں...');
-        }
-      };
-
-      source.start();
-    } catch (e) {
-      console.error('Error playing PCM audio chunk', e);
-    }
   }
 
   public async sendTextMessage(text: string) {
@@ -312,6 +276,54 @@ export class GeminiLiveEngine {
           this.callbacks.onActionTriggered({ type: 'search_loads', params: { found: true } });
         }
       }
+    }
+  }
+
+  private playbackAudioContext: AudioContext | null = null;
+  private nextStartTime = 0;
+
+  private playAudioChunk(pcmBase64: string) {
+    if (!pcmBase64) return;
+    try {
+      if (!this.playbackAudioContext) {
+        const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+        this.playbackAudioContext = new AudioCtx({ sampleRate: 24000 });
+      }
+      if (this.playbackAudioContext.state === 'suspended') {
+        this.playbackAudioContext.resume();
+      }
+
+      const binaryString = atob(pcmBase64);
+      const len = binaryString.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+
+      const int16Array = new Int16Array(bytes.buffer);
+      const float32Array = new Float32Array(int16Array.length);
+      for (let i = 0; i < int16Array.length; i++) {
+        float32Array[i] = int16Array[i] / 32768;
+      }
+
+      const buffer = this.playbackAudioContext.createBuffer(1, float32Array.length, 24000);
+      buffer.getChannelData(0).set(float32Array);
+
+      const source = this.playbackAudioContext.createBufferSource();
+      source.buffer = buffer;
+      source.connect(this.playbackAudioContext.destination);
+
+      const currentTime = this.playbackAudioContext.currentTime;
+      if (this.nextStartTime < currentTime) {
+        this.nextStartTime = currentTime;
+      }
+
+      source.start(this.nextStartTime);
+      this.nextStartTime += buffer.duration;
+      this.activeSource = source;
+      this.isPlaying = true;
+    } catch (err) {
+      console.warn('Error playing Live audio chunk:', err);
     }
   }
 
