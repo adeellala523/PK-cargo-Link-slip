@@ -13,7 +13,9 @@ import {
   Eye,
   ArrowLeft,
   Bell,
-  Check
+  Check,
+  Mic,
+  Sparkles
 } from 'lucide-react';
 import { AddaProfile, LoadSlip } from '../types';
 import { sanitizePhoneForCall, getWhatsAppShareUrl } from '../utils/formatters';
@@ -32,6 +34,7 @@ interface AddaDashboardViewProps {
   onDuplicateSlip?: (slip: LoadSlip) => void;
   onToggleSlipStatus?: (slip: LoadSlip) => void;
   onOpenNotifications?: () => void;
+  onOpenVoiceModal?: () => void;
 }
 
 export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
@@ -48,6 +51,7 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
   onDuplicateSlip,
   onToggleSlipStatus,
   onOpenNotifications,
+  onOpenVoiceModal,
 }) => {
   const [animatingId, setAnimatingId] = useState<string | null>(null);
 
@@ -220,6 +224,32 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
 
       {/* 4. MAIN ACTIONS (Section 9) */}
       <div className="space-y-3">
+        {onOpenVoiceModal && (
+          <button
+            type="button"
+            onClick={onOpenVoiceModal}
+            className="w-full bg-gradient-to-r from-[#123A6D] via-[#0E335C] to-[#19A974] hover:from-[#0d2a4f] hover:to-[#168a5f] text-white p-4 rounded-2xl sm:rounded-3xl shadow-md border-2 border-emerald-400/40 flex items-center justify-between transition active:scale-98 text-right cursor-pointer"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-2xl bg-white/20 text-amber-300 flex items-center justify-center flex-shrink-0">
+                <Mic className="w-6 h-6 animate-pulse" />
+              </div>
+              <div>
+                <h4 className="font-extrabold text-sm sm:text-base text-white flex items-center gap-1.5">
+                  <span>🎙️ وائس سے لوڈ بنائیں (Voice to Multi-Load)</span>
+                  <span className="text-[10px] bg-amber-400/30 text-amber-200 px-2 py-0.5 rounded-full font-bold">نیا</span>
+                </h4>
+                <p className="text-xs text-emerald-100">
+                  بولیں: "بہاولپور سے کراچی مکئی، کبیروالا سے کراچی گندم" اور فوری تصدیق کر کے سلپ بنائیں
+                </p>
+              </div>
+            </div>
+            <span className="bg-white text-[#123A6D] font-bold text-xs px-3.5 py-2 rounded-xl shadow-xs hidden sm:inline-block flex-shrink-0">
+              بول کر بنائیں →
+            </span>
+          </button>
+        )}
+
         <h3 className="text-base font-bold text-[#08284F]">
           اہم ایکشنز
         </h3>

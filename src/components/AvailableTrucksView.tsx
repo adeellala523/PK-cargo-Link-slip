@@ -60,6 +60,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
   // Custom truck posting form modal
   const [isAddingTruck, setIsAddingTruck] = useState(false);
   const [trucksList, setTrucksList] = useState<AvailableTruck[]>(() => StorageService.getAvailableTrucks());
+  const [deletingTruckId, setDeletingTruckId] = useState<string | null>(null);
 
   // Rating modal state
   const [ratingTruck, setRatingTruck] = useState<AvailableTruck | null>(null);
@@ -177,10 +178,9 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
   };
 
   const handleDeleteTruck = (id: string) => {
-    if (confirm('کیا آپ واقعی یہ گاڑی لسٹ سے ہٹانا چاہتے ہیں؟')) {
-      StorageService.deleteAvailableTruck(id);
-      setTrucksList(StorageService.getAvailableTrucks());
-    }
+    StorageService.deleteAvailableTruck(id);
+    setTrucksList(StorageService.getAvailableTrucks());
+    setDeletingTruckId(null);
   };
 
   // Check if current user is permitted to delete this truck
@@ -451,14 +451,34 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                     {truck.bodyType}
                   </span>
                   {canDeleteTruck(truck) && (
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteTruck(truck.id)}
-                      className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-slate-100 transition"
-                      title="اپنی گاڑی لسٹ سے ہٹائیں"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    deletingTruckId === truck.id ? (
+                      <div className="flex items-center gap-1 bg-red-50 p-1 rounded-xl border border-red-200">
+                        <span className="text-[10px] text-red-700 font-bold px-1">ڈیلیٹ؟</span>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteTruck(truck.id)}
+                          className="px-2 py-0.5 bg-red-600 hover:bg-red-700 text-white rounded text-[10px] font-bold shadow-2xs"
+                        >
+                          ہاں
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDeletingTruckId(null)}
+                          className="px-1.5 py-0.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded text-[10px]"
+                        >
+                          نہیں
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setDeletingTruckId(truck.id)}
+                        className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-slate-100 transition"
+                        title="اپنی گاڑی لسٹ سے ہٹائیں"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )
                   )}
                 </div>
               </div>

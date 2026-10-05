@@ -24,6 +24,7 @@ import { NotificationCenterModal } from './components/NotificationCenterModal';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { AiVoiceSupportWidget } from './components/AiVoiceSupportWidget';
 import { GeminiLiveVoiceWidget } from './components/GeminiLiveVoiceWidget';
+import { VoiceLoadCreatorModal } from './components/VoiceLoadCreatorModal';
 import { PaymentSettings } from './components/PaymentSettings';
 import { StorageService } from './services/storage';
 import { LoadSlip, AddaProfile, WhatsAppGroup } from './types';
@@ -41,6 +42,7 @@ export default function App() {
   const [activeSlip, setActiveSlip] = useState<LoadSlip | null>(null);
   const [shareModalSlip, setShareModalSlip] = useState<LoadSlip | null>(null);
   const [prefillSlip, setPrefillSlip] = useState<LoadSlip | null>(null);
+  const [isVoiceLoadModalOpen, setIsVoiceLoadModalOpen] = useState<boolean>(false);
   const [loginInitialMode, setLoginInitialMode] = useState<'login' | 'register'>('login');
   const [loginInitialRole, setLoginInitialRole] = useState<'adda_manager' | 'driver'>('adda_manager');
   const [loginNoticeMessage, setLoginNoticeMessage] = useState<string>('');
@@ -347,12 +349,22 @@ export default function App() {
   };
 
   const handleDeleteSlip = async (id: string) => {
-    await StorageService.deleteSlipAsync(id);
+    // Immediate optimistic UI update
+    const cleanId = id.trim();
+    const cleanDigitsOnly = cleanId.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+    setSlips((prev) => prev.filter((s) => {
+      const sClean = s.id.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+      return s.id !== cleanId && sClean !== cleanDigitsOnly;
+    }));
+
+    await StorageService.deleteSlipAsync(cleanId);
     const updatedSlips = StorageService.getAllSlips();
     setSlips(updatedSlips);
-    if (activeSlip && activeSlip.id === id) {
+    if (activeSlip && (activeSlip.id === cleanId || activeSlip.id.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() === cleanDigitsOnly)) {
       setActiveSlip(null);
-      navigateTo('my-slips');
+      if (currentTab === 'slip-detail') {
+        navigateTo('home');
+      }
     }
   };
 
@@ -526,6 +538,7 @@ export default function App() {
               recentSlips={myAddaSlips}
               prefillSlip={prefillSlip}
               onCancel={() => navigateTo(isLoggedIn ? 'dashboard' : 'home')}
+              onOpenVoiceModal={() => setIsVoiceLoadModalOpen(true)}
             />
           ) : (
             <AddaLoginView
@@ -555,6 +568,7 @@ export default function App() {
             onDuplicateSlip={(slip) => handleOpenCreateModal(slip)}
             onToggleSlipStatus={handleToggleSlipStatus}
             onOpenNotifications={() => setIsNotificationCenterOpen(true)}
+            onOpenVoiceModal={() => setIsVoiceLoadModalOpen(true)}
           />
         )}
 
@@ -723,6 +737,17 @@ export default function App() {
           if (target) viewSlipDetail(target);
         }}
         myActiveSlips={myAddaSlips}
+      />
+
+      {/* Voice to Multi-Load Creator Modal */}
+      <VoiceLoadCreatorModal
+        isOpen={isVoiceLoadModalOpen}
+        onClose={() => setIsVoiceLoadModalOpen(false)}
+        addaProfile={profile}
+        onSlipCreated={(newSlip) => {
+          handleSlipCreated(newSlip);
+          setIsVoiceLoadModalOpen(false);
+        }}
       />
 
       {/* PWA Install Banner */}

@@ -75,6 +75,20 @@ export interface AddaProfile {
   updatedAt: string;
 }
 
+export interface SingleLoadItem {
+  id?: string;
+  goods: string;
+  loadingCity: string;
+  loadingLocation?: string;
+  destinationCity: string;
+  destinationLocation?: string;
+  weight?: string;
+  quantity?: string;
+  vehicleType?: string;
+  bodyType?: string;
+  fareOffer?: string;
+}
+
 export interface LoadSlip {
   id: string; // Unique format: PKCLYYYYMMDDXXXXXX
   addaId: string;
@@ -124,16 +138,8 @@ export interface LoadSlip {
   lastDriverUpdateAt?: string;
 
   // Multi-Load Support (Allow 2 or more loads per slip)
-  additionalLoads?: Array<{
-    goods: string;
-    loadingCity: string;
-    destinationCity: string;
-    weight?: string;
-    quantity?: string;
-    vehicleType?: string;
-    bodyType?: string;
-    fareOffer?: string;
-  }>;
+  additionalLoads?: SingleLoadItem[];
+  includeContactsInWhatsApp?: boolean; // Default false (Preview only rule)
 }
 
 export interface WhatsAppGroup {

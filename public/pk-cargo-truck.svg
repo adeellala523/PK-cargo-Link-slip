@@ -1,0 +1,589 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2048 1080" width="2048" height="1080">
+  <defs>
+    <!-- Master Lighting & Shading Filters -->
+    <filter id="contactShadowBlur" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="12" />
+    </filter>
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <!-- Volvo Sunflower Yellow Gradients (Exact match to uploaded image) -->
+    <linearGradient id="volvoYellowCab" x1="0%" y1="0%" x2="100%" y2="80%">
+      <stop offset="0%" stop-color="#FCD34D" />
+      <stop offset="25%" stop-color="#FBBF24" />
+      <stop offset="60%" stop-color="#F59E0B" />
+      <stop offset="90%" stop-color="#D97706" />
+      <stop offset="100%" stop-color="#B45309" />
+    </linearGradient>
+
+    <linearGradient id="volvoFrontFaceGrad" x1="0%" y1="0%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#FBBF24" />
+      <stop offset="40%" stop-color="#F59E0B" />
+      <stop offset="85%" stop-color="#D97706" />
+      <stop offset="100%" stop-color="#92400E" />
+    </linearGradient>
+
+    <linearGradient id="volvoBumperGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FDE68A" />
+      <stop offset="30%" stop-color="#FBBF24" />
+      <stop offset="75%" stop-color="#F59E0B" />
+      <stop offset="100%" stop-color="#B45309" />
+    </linearGradient>
+
+    <linearGradient id="volvoRoofGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#F59E0B" />
+      <stop offset="60%" stop-color="#FCD34D" />
+      <stop offset="100%" stop-color="#FEF08A" />
+    </linearGradient>
+
+    <!-- Trailer Panel Gradients (Clean White-Grey Commercial Box) -->
+    <linearGradient id="trailerPanelGrad" x1="0%" y1="0%" x2="100%" y2="90%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="30%" stop-color="#F8FAFC" />
+      <stop offset="70%" stop-color="#F1F5F9" />
+      <stop offset="100%" stop-color="#E2E8F0" />
+    </linearGradient>
+
+    <linearGradient id="trailerRailGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="40%" stop-color="#E2E8F0" />
+      <stop offset="80%" stop-color="#94A3B8" />
+      <stop offset="100%" stop-color="#64748B" />
+    </linearGradient>
+
+    <!-- Chrome & Metallics -->
+    <linearGradient id="chromeSlashGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="25%" stop-color="#E2E8F0" />
+      <stop offset="50%" stop-color="#94A3B8" />
+      <stop offset="75%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#64748B" />
+    </linearGradient>
+
+    <linearGradient id="fuelTankGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F1F5F9" />
+      <stop offset="15%" stop-color="#FFFFFF" />
+      <stop offset="45%" stop-color="#CBD5E1" />
+      <stop offset="75%" stop-color="#94A3B8" />
+      <stop offset="100%" stop-color="#475569" />
+    </linearGradient>
+
+    <!-- Glass & Windshield Reflections -->
+    <linearGradient id="windshieldGlass" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="35%" stop-color="#1E293B" />
+      <stop offset="70%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+
+    <linearGradient id="glassReflection" x1="0%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.5" />
+      <stop offset="25%" stop-color="#FFFFFF" stop-opacity="0.12" />
+      <stop offset="60%" stop-color="#FFFFFF" stop-opacity="0.0" />
+    </linearGradient>
+
+    <!-- Headlight Projector Core Glow -->
+    <radialGradient id="xenonProjector" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="45%" stop-color="#E0F2FE" />
+      <stop offset="75%" stop-color="#38BDF8" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#0284C7" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Wheels & Tires -->
+    <radialGradient id="tireRubber" cx="42%" cy="42%" r="58%">
+      <stop offset="0%" stop-color="#334155" />
+      <stop offset="65%" stop-color="#1E293B" />
+      <stop offset="90%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#020617" />
+    </radialGradient>
+
+    <radialGradient id="alloyRim" cx="45%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="35%" stop-color="#E2E8F0" />
+      <stop offset="70%" stop-color="#94A3B8" />
+      <stop offset="90%" stop-color="#64748B" />
+      <stop offset="100%" stop-color="#334155" />
+    </radialGradient>
+
+    <!-- Soft Ambient Ground Shadow (Completely Transparent Outside) -->
+    <radialGradient id="groundShadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#000000" stop-opacity="0.75" />
+      <stop offset="40%" stop-color="#000000" stop-opacity="0.45" />
+      <stop offset="75%" stop-color="#000000" stop-opacity="0.12" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <!-- 1. REALISTIC GROUND SHADOW (No background, 100% transparent alpha) -->
+  <g id="ground-shadows">
+    <ellipse cx="1020" cy="875" rx="900" ry="42" fill="url(#groundShadow)" />
+    <!-- Darker contact shadows directly under tire contact footprints -->
+    <ellipse cx="380" cy="880" rx="60" ry="14" fill="#000000" opacity="0.85" />
+    <ellipse cx="500" cy="880" rx="60" ry="14" fill="#000000" opacity="0.85" />
+    <ellipse cx="1185" cy="880" rx="65" ry="15" fill="#000000" opacity="0.85" />
+    <ellipse cx="1555" cy="880" rx="70" ry="16" fill="#000000" opacity="0.9" />
+    <ellipse cx="1780" cy="880" rx="42" ry="13" fill="#000000" opacity="0.8" />
+  </g>
+
+  <!-- 2. TRAILER CHASSIS & UNDERCARRIAGE -->
+  <g id="trailer-undercarriage">
+    <!-- Main Black Steel Chassis I-Beam -->
+    <rect x="220" y="690" width="1080" height="28" fill="#0B132B" />
+    <!-- Rear Mudguards & Black Mudflaps -->
+    <path d="M 310 775 A 68 68 0 0 1 445 775 L 450 775 A 68 68 0 0 1 580 775 L 580 735 L 310 735 Z" fill="#090D16" />
+    <!-- Rear DOT Safety Underrun Bumper -->
+    <path d="M 205 715 L 290 715 L 290 780 L 270 780 L 270 735 L 205 735 Z" fill="#475569" stroke="#334155" stroke-width="2" />
+    <rect x="210" y="755" width="10" height="32" fill="#DC2626" />
+    <!-- Retracted Heavy-Duty Landing Gear Legs -->
+    <g transform="translate(950, 710)">
+      <rect x="0" y="0" width="24" height="90" fill="#1E293B" stroke="#0F172A" stroke-width="2" />
+      <rect x="-8" y="85" width="40" height="15" rx="3" fill="#334155" />
+      <circle cx="12" cy="28" r="8" fill="#475569" />
+    </g>
+    <!-- White Side Protective Barrier Rails (Exact match to uploaded image) -->
+    <g transform="translate(585, 715)">
+      <rect x="20" y="0" width="12" height="72" fill="#334155" />
+      <rect x="180" y="0" width="12" height="72" fill="#334155" />
+      <rect x="340" y="0" width="12" height="72" fill="#334155" />
+      <rect x="0" y="16" width="375" height="18" rx="4" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2" />
+      <rect x="0" y="48" width="375" height="18" rx="4" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2" />
+    </g>
+  </g>
+
+  <!-- 3. TRAILER WHEELS (Tandem Dual Axles) -->
+  <g id="trailer-wheels">
+    <!-- Axle 1 Wheel -->
+    <g transform="translate(380, 815)">
+      <circle cx="0" cy="0" r="62" fill="url(#tireRubber)" stroke="#020617" stroke-width="3" />
+      <circle cx="0" cy="0" r="50" fill="#1E293B" />
+      <circle cx="0" cy="0" r="39" fill="url(#alloyRim)" stroke="#64748B" stroke-width="2" />
+      <circle cx="0" cy="0" r="26" fill="#0F172A" />
+      <circle cx="0" cy="0" r="14" fill="url(#chromeSlashGrad)" />
+      <!-- Lug nuts -->
+      <circle cx="0" cy="-20" r="3" fill="#FFFFFF" />
+      <circle cx="13" cy="-16" r="3" fill="#FFFFFF" />
+      <circle cx="19" cy="-5" r="3" fill="#FFFFFF" />
+      <circle cx="16" cy="12" r="3" fill="#FFFFFF" />
+      <circle cx="5" cy="19" r="3" fill="#FFFFFF" />
+      <circle cx="-10" cy="18" r="3" fill="#FFFFFF" />
+      <circle cx="-18" cy="7" r="3" fill="#FFFFFF" />
+      <circle cx="-18" cy="-10" r="3" fill="#FFFFFF" />
+    </g>
+
+    <!-- Axle 2 Wheel -->
+    <g transform="translate(500, 815)">
+      <circle cx="0" cy="0" r="62" fill="url(#tireRubber)" stroke="#020617" stroke-width="3" />
+      <circle cx="0" cy="0" r="50" fill="#1E293B" />
+      <circle cx="0" cy="0" r="39" fill="url(#alloyRim)" stroke="#64748B" stroke-width="2" />
+      <circle cx="0" cy="0" r="26" fill="#0F172A" />
+      <circle cx="0" cy="0" r="14" fill="url(#chromeSlashGrad)" />
+      <!-- Lug nuts -->
+      <circle cx="0" cy="-20" r="3" fill="#FFFFFF" />
+      <circle cx="13" cy="-16" r="3" fill="#FFFFFF" />
+      <circle cx="19" cy="-5" r="3" fill="#FFFFFF" />
+      <circle cx="16" cy="12" r="3" fill="#FFFFFF" />
+      <circle cx="5" cy="19" r="3" fill="#FFFFFF" />
+      <circle cx="-10" cy="18" r="3" fill="#FFFFFF" />
+      <circle cx="-18" cy="7" r="3" fill="#FFFFFF" />
+      <circle cx="-18" cy="-10" r="3" fill="#FFFFFF" />
+    </g>
+  </g>
+
+  <!-- 4. WHITE SEMI-TRAILER BODY WITH "PK CARGO LINK" -->
+  <g id="trailer-body">
+    <!-- Main Trailer Box Wall -->
+    <polygon points="215,280 1280,250 1280,690 215,690" fill="url(#trailerPanelGrad)" stroke="#CBD5E1" stroke-width="2" />
+    
+    <!-- Top Extruded Aluminum Roof Rail & Rivets -->
+    <polygon points="210,265 1285,235 1285,252 210,282" fill="url(#trailerRailGrad)" stroke="#94A3B8" stroke-width="1.5" />
+    
+    <!-- Bottom Extruded Aluminum Rail -->
+    <polygon points="215,678 1280,678 1280,692 215,692" fill="url(#trailerRailGrad)" stroke="#64748B" stroke-width="1.5" />
+
+    <!-- Trailer Front Bulkhead Corner Cap -->
+    <polygon points="1280,235 1335,262 1335,690 1280,690" fill="#E2E8F0" stroke="#CBD5E1" stroke-width="1.5" />
+
+    <!-- Structural Vertical Panel Rivet Lines -->
+    <g stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="3, 15" opacity="0.65">
+      <line x1="280" y1="285" x2="280" y2="676" />
+      <line x1="430" y1="280" x2="430" y2="676" />
+      <line x1="580" y1="275" x2="580" y2="676" />
+      <line x1="730" y1="270" x2="730" y2="676" />
+      <line x1="880" y1="265" x2="880" y2="676" />
+      <line x1="1030" y1="260" x2="1030" y2="676" />
+      <line x1="1180" y1="255" x2="1180" y2="676" />
+      <line x1="1260" y1="252" x2="1260" y2="676" />
+    </g>
+
+    <!-- Amber Side Marker Reflector Lights along lower border -->
+    <g fill="#F59E0B" stroke="#B45309" stroke-width="1">
+      <rect x="235" y="668" width="12" height="6" rx="2" />
+      <rect x="365" y="668" width="12" height="6" rx="2" />
+      <rect x="495" y="668" width="12" height="6" rx="2" />
+      <rect x="635" y="668" width="12" height="6" rx="2" />
+      <rect x="785" y="668" width="12" height="6" rx="2" />
+      <rect x="935" y="668" width="12" height="6" rx="2" />
+      <rect x="1085" y="668" width="12" height="6" rx="2" />
+      <rect x="1225" y="668" width="12" height="6" rx="2" />
+    </g>
+
+    <!-- ★ BOLD "PK CARGO LINK" TEXT ON TRAILER (Exact font, proportions & weight) ★ -->
+    <text 
+      x="265" 
+      y="515" 
+      fill="#0B132B" 
+      font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" 
+      font-weight="900" 
+      font-size="112" 
+      letter-spacing="5px"
+    >
+      PK CARGO LINK
+    </text>
+  </g>
+
+  <!-- 5. TRACTOR CHASSIS, FUEL TANK & WHEELS -->
+  <g id="tractor-chassis">
+    <!-- Frame Rails -->
+    <rect x="1100" y="690" width="720" height="30" fill="#0B132B" />
+
+    <!-- Brushed Aluminum Cylindrical Fuel Tank with Chrome Straps -->
+    <rect x="1220" y="730" width="245" height="115" rx="25" fill="url(#fuelTankGrad)" stroke="#475569" stroke-width="2" />
+    <rect x="1265" y="726" width="15" height="123" rx="4" fill="#0F172A" />
+    <rect x="1405" y="726" width="15" height="123" rx="4" fill="#0F172A" />
+    <circle cx="1242" cy="765" r="13" fill="url(#chromeSlashGrad)" stroke="#334155" stroke-width="2" />
+
+    <!-- AdBlue Tank & Battery Unit (Silver/Grey with steps) -->
+    <rect x="1370" y="735" width="90" height="105" rx="8" fill="#CBD5E1" stroke="#64748B" stroke-width="1.5" />
+
+    <!-- Drive Axle Wheel (Dual Wheels) -->
+    <g transform="translate(1080, 815)">
+      <circle cx="0" cy="0" r="66" fill="url(#tireRubber)" stroke="#020617" stroke-width="3" />
+      <circle cx="0" cy="0" r="54" fill="#1E293B" />
+      <circle cx="0" cy="0" r="42" fill="url(#alloyRim)" stroke="#64748B" stroke-width="2" />
+      <circle cx="0" cy="0" r="28" fill="#0F172A" />
+      <circle cx="0" cy="0" r="15" fill="url(#chromeSlashGrad)" />
+      <!-- Lug nuts -->
+      <circle cx="0" cy="-21" r="3" fill="#FFFFFF" />
+      <circle cx="14" cy="-16" r="3" fill="#FFFFFF" />
+      <circle cx="20" cy="-5" r="3" fill="#FFFFFF" />
+      <circle cx="16" cy="13" r="3" fill="#FFFFFF" />
+      <circle cx="6" cy="20" r="3" fill="#FFFFFF" />
+      <circle cx="-10" cy="19" r="3" fill="#FFFFFF" />
+      <circle cx="-19" cy="8" r="3" fill="#FFFFFF" />
+      <circle cx="-19" cy="-10" r="3" fill="#FFFFFF" />
+    </g>
+
+    <!-- Front Steer Axle Wheel (Detailed 10-Hole Polished Commercial Rim) -->
+    <g transform="translate(1555, 815)">
+      <circle cx="0" cy="0" r="68" fill="url(#tireRubber)" stroke="#020617" stroke-width="4" />
+      <circle cx="0" cy="0" r="56" fill="#1E293B" />
+      <!-- Alloy Outer Dish -->
+      <circle cx="0" cy="0" r="45" fill="url(#alloyRim)" stroke="#94A3B8" stroke-width="2.5" />
+      <circle cx="0" cy="0" r="32" fill="#0F172A" />
+      <!-- Center Chrome Cap -->
+      <circle cx="0" cy="0" r="18" fill="url(#chromeSlashGrad)" stroke="#475569" stroke-width="2" />
+      <circle cx="0" cy="0" r="8" fill="#0F172A" />
+      <!-- 10 Chrome Lug Nuts -->
+      <circle cx="0" cy="-23" r="3.5" fill="#FFFFFF" />
+      <circle cx="15" cy="-18" r="3.5" fill="#FFFFFF" />
+      <circle cx="22" cy="-4" r="3.5" fill="#FFFFFF" />
+      <circle cx="19" cy="14" r="3.5" fill="#FFFFFF" />
+      <circle cx="7" cy="23" r="3.5" fill="#FFFFFF" />
+      <circle cx="-11" cy="21" r="3.5" fill="#FFFFFF" />
+      <circle cx="-21" cy="9" r="3.5" fill="#FFFFFF" />
+      <circle cx="-21" cy="-10" r="3.5" fill="#FFFFFF" />
+      <circle cx="-11" cy="-21" r="3.5" fill="#FFFFFF" />
+    </g>
+
+    <!-- Far Opposite Front Wheel (Perspective 3D angle) -->
+    <g transform="translate(1780, 825)">
+      <ellipse cx="0" cy="0" rx="36" ry="52" fill="url(#tireRubber)" />
+      <ellipse cx="-2" cy="0" rx="24" ry="36" fill="url(#alloyRim)" />
+      <ellipse cx="-2" cy="0" rx="12" ry="18" fill="#0F172A" />
+    </g>
+  </g>
+
+  <!-- 6. HIGH-PRECISION 2024 VOLVO FH16 CABIN (CURVED, PHOTOREALISTIC FRONT) -->
+  <g id="volvo-fh16-cabin">
+    <!-- Globetrotter Curved Aerodynamic Roof & Wind Deflectors -->
+    <path 
+      d="M 1300 260 
+         C 1340 255, 1420 250, 1530 265 
+         C 1600 275, 1680 300, 1720 325 
+         L 1690 405 
+         C 1640 395, 1520 390, 1300 395 Z" 
+      fill="url(#volvoRoofGrad)" 
+      stroke="#D97706" 
+      stroke-width="2" 
+    />
+    <!-- Roof Sunroof / Skylight Glass -->
+    <polygon points="1420,275 1600,305 1590,335 1420,298" fill="#0F172A" stroke="#334155" stroke-width="1.5" />
+    <polygon points="1430,280 1585,308 1580,325 1430,295" fill="#38BDF8" opacity="0.35" />
+    <!-- Dual Roof CB / Radio Antennas -->
+    <line x1="1580" y1="285" x2="1560" y2="235" stroke="#0F172A" stroke-width="3" stroke-linecap="round" />
+    <line x1="1710" y1="315" x2="1720" y2="260" stroke="#0F172A" stroke-width="3" stroke-linecap="round" />
+
+    <!-- Sleeper Cab Side Wall -->
+    <path 
+      d="M 1300 395 L 1390 395 L 1390 720 L 1300 720 Z" 
+      fill="url(#volvoYellowCab)" 
+      stroke="#B45309" 
+      stroke-width="1.5" 
+    />
+
+    <!-- Driver Side Door Panel (Curved Body Lines) -->
+    <path 
+      d="M 1390 395 
+         L 1640 400 
+         C 1645 460, 1640 550, 1630 720 
+         L 1390 720 Z" 
+      fill="url(#volvoYellowCab)" 
+      stroke="#B45309" 
+      stroke-width="2" 
+    />
+
+    <!-- Tinted Driver Window Glass -->
+    <path 
+      d="M 1405 415 
+         L 1590 415 
+         C 1595 470, 1590 530, 1585 550 
+         L 1515 560 
+         L 1405 555 Z" 
+      fill="url(#windshieldGlass)" 
+      stroke="#0F172A" 
+      stroke-width="3" 
+    />
+    <path d="M 1410 420 L 1480 420 L 1450 545 L 1410 545 Z" fill="url(#glassReflection)" />
+
+    <!-- Aerodynamic Side Mirror (Yellow Cap, Black Mount) -->
+    <path 
+      d="M 1565 425 
+         C 1615 425, 1615 425, 1610 550 
+         C 1560 550, 1560 550, 1565 425 Z" 
+      fill="#0F172A" 
+      stroke="#334155" 
+      stroke-width="2" 
+    />
+    <path d="M 1585 430 L 1605 430 L 1600 540 L 1580 540 Z" fill="url(#volvoYellowCab)" />
+
+    <!-- Door Handle Cutout -->
+    <rect x="1560" y="575" width="30" height="9" rx="3" fill="#0F172A" stroke="#334155" stroke-width="1" />
+
+    <!-- Chrome "FH16" Badge -->
+    <text x="1440" y="612" fill="#64748B" font-family="system-ui, sans-serif" font-weight="bold" font-size="16" letter-spacing="1px">
+      FH16
+    </text>
+
+    <!-- ★ BOLD "PK" TEXT ON DRIVER DOOR (Exact match to user's uploaded image) ★ -->
+    <text 
+      x="1540" 
+      y="635" 
+      fill="#0B132B" 
+      font-family="system-ui, -apple-system, BlinkMacSystemFont, sans-serif" 
+      font-weight="900" 
+      font-size="58" 
+      letter-spacing="2px"
+    >
+      PK
+    </text>
+
+    <!-- Molded Wheel Arch & Boarding Steps -->
+    <path 
+      d="M 1410 720 
+         L 1420 780 
+         C 1450 710, 1580 710, 1625 780 
+         L 1635 720 Z" 
+      fill="#92400E" 
+      stroke="#78350F" 
+      stroke-width="2" 
+    />
+    <!-- Chrome Boarding Step Plates -->
+    <rect x="1380" y="715" width="36" height="10" rx="2" fill="url(#chromeSlashGrad)" />
+    <rect x="1385" y="755" width="32" height="10" rx="2" fill="url(#chromeSlashGrad)" />
+
+    <!-- ═══ CURVED, REALISTIC VOLVO FH FRONT FASCIA ═══ -->
+    
+    <!-- Curved Front Cab Cowling -->
+    <path 
+      d="M 1640 330 
+         C 1680 340, 1780 365, 1830 385 
+         C 1835 480, 1830 600, 1820 735 
+         C 1780 735, 1670 725, 1630 720 
+         C 1640 550, 1645 420, 1640 330 Z" 
+      fill="url(#volvoFrontFaceGrad)" 
+      stroke="#B45309" 
+      stroke-width="2" 
+    />
+
+    <!-- Panoramic Curved Windshield Glass -->
+    <path 
+      d="M 1642 345 
+         C 1700 355, 1780 375, 1815 395 
+         C 1815 450, 1810 520, 1805 550 
+         C 1750 545, 1680 540, 1635 535 
+         Z" 
+      fill="url(#windshieldGlass)" 
+      stroke="#0F172A" 
+      stroke-width="3" 
+    />
+    <!-- Windshield Specular Gloss Curve -->
+    <path 
+      d="M 1650 355 
+         C 1710 365, 1760 380, 1780 395 
+         L 1740 540 
+         C 1700 538, 1660 535, 1642 535 Z" 
+      fill="url(#glassReflection)" 
+    />
+
+    <!-- Black Aerodynamic Sun Visor with Integrated Marker Lights -->
+    <path 
+      d="M 1640 335 
+         C 1700 348, 1780 370, 1825 390 
+         L 1825 435 
+         C 1780 415, 1700 395, 1640 380 Z" 
+      fill="#0B132B" 
+      stroke="#1E293B" 
+      stroke-width="2" 
+    />
+    <rect x="1685" y="365" width="38" height="12" rx="3" fill="#BAE6FD" opacity="0.85" />
+    <rect x="1755" y="380" width="38" height="12" rx="3" fill="#BAE6FD" opacity="0.85" />
+
+    <!-- Dual Windshield Wipers -->
+    <line x1="1685" y1="535" x2="1725" y2="455" stroke="#0F172A" stroke-width="4.5" stroke-linecap="round" />
+    <line x1="1760" y1="545" x2="1795" y2="465" stroke="#0F172A" stroke-width="4.5" stroke-linecap="round" />
+
+    <!-- Black Gloss Trim Bar with "V O L V O" Chrome Lettering -->
+    <path 
+      d="M 1633 540 
+         C 1700 548, 1770 560, 1815 572 
+         L 1810 620 
+         C 1765 608, 1695 596, 1630 590 Z" 
+      fill="#0B132B" 
+      stroke="#1E293B" 
+      stroke-width="2" 
+    />
+    <text 
+      x="1695" 
+      y="588" 
+      fill="#E2E8F0" 
+      font-family="system-ui, -apple-system, sans-serif" 
+      font-weight="900" 
+      font-size="22" 
+      letter-spacing="6px"
+    >
+      VOLVO
+    </text>
+
+    <!-- ═══ VOLVO FH HONEYCOMB GRILLE WITH DIAGONAL CHROME SLASH ═══ -->
+    <g id="main-volvo-grille">
+      <!-- Dark Honeycomb Grille Cavity -->
+      <path 
+        d="M 1630 595 
+           C 1695 600, 1765 612, 1810 625 
+           L 1805 735 
+           C 1760 722, 1690 710, 1625 705 Z" 
+        fill="#080C14" 
+        stroke="#1E293B" 
+        stroke-width="2.5" 
+      />
+
+      <!-- Honeycomb Horizontal Slat Details -->
+      <line x1="1632" y1="620" x2="1807" y2="635" stroke="#1E293B" stroke-width="3" />
+      <line x1="1630" y1="645" x2="1805" y2="660" stroke="#1E293B" stroke-width="3" />
+      <line x1="1628" y1="670" x2="1803" y2="685" stroke="#1E293B" stroke-width="3" />
+      <line x1="1626" y1="695" x2="1801" y2="710" stroke="#1E293B" stroke-width="3" />
+
+      <!-- ★ ICONIC VOLVO DIAGONAL CHROME SLASH ★ -->
+      <line 
+        x1="1660" 
+        y1="710" 
+        x2="1780" 
+        y2="615" 
+        stroke="url(#chromeSlashGrad)" 
+        stroke-width="9" 
+        stroke-linecap="round" 
+      />
+
+      <!-- ★ VOLVO 3D IRON MARK EMBLEM (Center of Grille) ★ -->
+      <circle cx="1720" cy="662" r="20" fill="url(#chromeSlashGrad)" stroke="#0F172A" stroke-width="3" />
+      <circle cx="1720" cy="662" r="12" fill="#080C14" />
+      <polygon points="1728,648 1742,644 1738,658" fill="url(#chromeSlashGrad)" />
+    </g>
+
+    <!-- ═══ CURVED FRONT BUMPER & V-SHAPED VOLVO LED HEADLIGHTS ═══ -->
+    <g id="front-bumper-and-headlights">
+      <!-- Aerodynamic Yellow Bumper (Sculpted with Beziers) -->
+      <path 
+        d="M 1625 710 
+           C 1685 715, 1770 725, 1818 738 
+           C 1822 780, 1815 825, 1810 835 
+           C 1765 825, 1675 810, 1622 800 
+           Z" 
+        fill="url(#volvoBumperGrad)" 
+        stroke="#B45309" 
+        stroke-width="2" 
+      />
+
+      <!-- Lower Central Air Dam Intake (Black Honeycomb) -->
+      <path 
+        d="M 1680 775 
+           C 1715 778, 1755 782, 1770 785 
+           L 1765 825 
+           C 1740 822, 1700 818, 1680 815 Z" 
+        fill="#0F172A" 
+        stroke="#334155" 
+        stroke-width="2" 
+      />
+
+      <!-- Yellow Tow Hook Cover -->
+      <rect x="1750" y="805" width="16" height="12" rx="2" fill="#F59E0B" stroke="#B45309" stroke-width="1.5" />
+
+      <!-- Left V-Shaped LED Headlight (Outer Projector + DRL Light Pipe) -->
+      <g transform="translate(1630, 715)">
+        <!-- Polycarbonate Housing -->
+        <polygon points="0,0 48,3 44,80 0,70" fill="#080C14" stroke="#94A3B8" stroke-width="2.5" rx="5" />
+        <!-- Signature V-Shaped LED Daytime Running Light Tube -->
+        <polyline 
+          points="8,10 40,14 36,60 10,52" 
+          fill="none" 
+          stroke="#FFFFFF" 
+          stroke-width="4.5" 
+          stroke-linecap="round" 
+          stroke-linejoin="round" 
+          filter="url(#softGlow)" 
+        />
+        <!-- Xenon Projector Lens with High-Intensity Core -->
+        <ellipse cx="24" cy="38" rx="14" ry="12" fill="url(#xenonProjector)" />
+        <ellipse cx="24" cy="38" rx="7" ry="6" fill="#FFFFFF" />
+        <!-- Amber Turn Indicator Strip -->
+        <rect x="4" y="65" width="34" height="9" rx="2" fill="#F59E0B" />
+      </g>
+
+      <!-- Right V-Shaped LED Headlight (Perspective View) -->
+      <g transform="translate(1765, 730)">
+        <polygon points="0,3 46,5 40,75 0,78" fill="#080C14" stroke="#94A3B8" stroke-width="2.5" rx="5" />
+        <polyline 
+          points="38,10 10,12 14,56 34,58" 
+          fill="none" 
+          stroke="#FFFFFF" 
+          stroke-width="4.5" 
+          stroke-linecap="round" 
+          stroke-linejoin="round" 
+          filter="url(#softGlow)" 
+        />
+        <ellipse cx="24" cy="38" rx="14" ry="12" fill="url(#xenonProjector)" />
+        <ellipse cx="24" cy="38" rx="7" ry="6" fill="#FFFFFF" />
+        <rect x="8" y="64" width="30" height="9" rx="2" fill="#F59E0B" />
+      </g>
+
+      <!-- Recessed Round Fog Lamps -->
+      <circle cx="1650" cy="785" r="9" fill="#0F172A" stroke="#475569" stroke-width="2" />
+      <circle cx="1650" cy="785" r="6" fill="#FFFFFF" opacity="0.95" />
+      <circle cx="1795" cy="798" r="9" fill="#0F172A" stroke="#475569" stroke-width="2" />
+      <circle cx="1795" cy="798" r="6" fill="#FFFFFF" opacity="0.95" />
+    </g>
+  </g>
+</svg>

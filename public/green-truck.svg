@@ -1,0 +1,332 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 950" width="1600" height="950">
+  <defs>
+    <!-- Filters for realistic 3D lighting & depth -->
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <filter id="dropShadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="18" stdDeviation="15" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+
+    <!-- Gradients for 3D Cabin -->
+    <linearGradient id="cabFrontGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4ADE80" />
+      <stop offset="35%" stop-color="#22C55E" />
+      <stop offset="80%" stop-color="#16A34A" />
+      <stop offset="100%" stop-color="#14532D" />
+    </linearGradient>
+
+    <linearGradient id="cabSideGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#16A34A" />
+      <stop offset="40%" stop-color="#15803D" />
+      <stop offset="100%" stop-color="#166534" />
+    </linearGradient>
+
+    <linearGradient id="roofSpoilerGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#15803D" />
+      <stop offset="60%" stop-color="#22C55E" />
+      <stop offset="100%" stop-color="#86EFAC" />
+    </linearGradient>
+
+    <!-- Gradients for 3D Cargo Box Container -->
+    <linearGradient id="boxFrontGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#16A34A" />
+      <stop offset="100%" stop-color="#14532D" />
+    </linearGradient>
+
+    <linearGradient id="boxSideGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#22C55E" />
+      <stop offset="25%" stop-color="#16A34A" />
+      <stop offset="70%" stop-color="#15803D" />
+      <stop offset="100%" stop-color="#14532D" />
+    </linearGradient>
+
+    <linearGradient id="boxRoofGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#4ADE80" />
+      <stop offset="50%" stop-color="#86EFAC" />
+      <stop offset="100%" stop-color="#22C55E" />
+    </linearGradient>
+
+    <linearGradient id="boxTopBevel" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#BBF7D0" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#16A34A" stop-opacity="0.1" />
+    </linearGradient>
+
+    <!-- Glass & Windshield Reflections -->
+    <linearGradient id="windshieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" />
+      <stop offset="40%" stop-color="#0F172A" />
+      <stop offset="75%" stop-color="#334155" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+
+    <linearGradient id="glassGloss" x1="0%" y1="0%" x2="100%" y2="70%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.45" />
+      <stop offset="35%" stop-color="#FFFFFF" stop-opacity="0.1" />
+      <stop offset="70%" stop-color="#FFFFFF" stop-opacity="0.0" />
+    </linearGradient>
+
+    <!-- Chrome & Grille -->
+    <linearGradient id="chromeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="25%" stop-color="#E2E8F0" />
+      <stop offset="50%" stop-color="#94A3B8" />
+      <stop offset="75%" stop-color="#CBD5E1" />
+      <stop offset="100%" stop-color="#64748B" />
+    </linearGradient>
+
+    <linearGradient id="grilleDark" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#1E293B" />
+    </linearGradient>
+
+    <!-- Headlight beam -->
+    <radialGradient id="lightGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="40%" stop-color="#FEF08A" />
+      <stop offset="80%" stop-color="#EAB308" stop-opacity="0.5" />
+      <stop offset="100%" stop-color="#CA8A04" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Tires & Rims -->
+    <radialGradient id="tireTread" cx="40%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#334155" />
+      <stop offset="60%" stop-color="#1E293B" />
+      <stop offset="90%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#020617" />
+    </radialGradient>
+
+    <radialGradient id="alloyRim" cx="45%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="35%" stop-color="#CBD5E1" />
+      <stop offset="70%" stop-color="#64748B" />
+      <stop offset="90%" stop-color="#475569" />
+      <stop offset="100%" stop-color="#1E293B" />
+    </radialGradient>
+
+    <!-- Ground Contact Shadow -->
+    <radialGradient id="groundShadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#000000" stop-opacity="0.65" />
+      <stop offset="45%" stop-color="#000000" stop-opacity="0.4" />
+      <stop offset="80%" stop-color="#000000" stop-opacity="0.1" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <!-- 1. REALISTIC GROUND SHADOW (Seamlessly fades to transparent) -->
+  <g id="ground-shadows">
+    <ellipse cx="780" cy="800" rx="680" ry="55" fill="url(#groundShadow)" />
+    <!-- Darker tire touch points -->
+    <ellipse cx="435" cy="805" rx="90" ry="18" fill="#000000" opacity="0.75" />
+    <ellipse cx="615" cy="805" rx="65" ry="16" fill="#000000" opacity="0.6" />
+    <ellipse cx="1060" cy="805" rx="75" ry="16" fill="#000000" opacity="0.75" />
+    <ellipse cx="1190" cy="805" rx="75" ry="16" fill="#000000" opacity="0.75" />
+  </g>
+
+  <!-- 2. UNDERCARRIAGE / CHASSIS FRAME & FUEL TANKS -->
+  <g id="chassis" fill="#1E293B" stroke="#0F172A" stroke-width="2">
+    <!-- Main Steel Chassis Rail -->
+    <path d="M 400 660 L 1400 640 L 1400 690 L 400 705 Z" fill="#0F172A" />
+    <!-- Rear Bumper & Under-run Bar -->
+    <path d="M 1320 660 L 1440 655 L 1440 735 L 1390 735 L 1390 685 L 1320 685 Z" fill="#475569" stroke="#334155" />
+    <!-- Side Protective Rail (Silver Bars) -->
+    <rect x="670" y="660" width="310" height="14" rx="4" fill="url(#chromeGrad)" />
+    <rect x="670" y="682" width="310" height="14" rx="4" fill="url(#chromeGrad)" />
+    <!-- Battery / Toolbox Unit -->
+    <path d="M 680 650 L 960 650 L 960 705 L 680 705 Z" fill="#334155" />
+    <!-- Fuel Tank Cylindrical Body with Chrome Straps -->
+    <rect x="710" y="655" width="220" height="42" rx="8" fill="#475569" />
+    <rect x="740" y="653" width="10" height="46" fill="url(#chromeGrad)" />
+    <rect x="880" y="653" width="10" height="46" fill="url(#chromeGrad)" />
+    <!-- Rear Mudguards / Arches -->
+    <path d="M 980 740 A 90 90 0 0 1 1140 740 L 1150 740 A 90 90 0 0 1 1300 740 L 1290 700 L 990 700 Z" fill="#090D16" />
+  </g>
+
+  <!-- 3. WHEELS & TIRES (High-Detail Alloy Rims) -->
+  <g id="wheels">
+    <!-- FRONT RIGHT TIRE (Angle View) -->
+    <g transform="translate(430, 745)">
+      <!-- Outer Tire Tread & Sidewall -->
+      <ellipse cx="0" cy="0" rx="72" ry="72" fill="url(#tireTread)" stroke="#090D16" stroke-width="4" />
+      <ellipse cx="-4" cy="0" rx="60" ry="60" fill="#1E293B" />
+      <!-- Alloy Rim Outer -->
+      <ellipse cx="-4" cy="0" rx="46" ry="46" fill="url(#alloyRim)" stroke="#94A3B8" stroke-width="2" />
+      <!-- Rim Inner Ring & Dark Vents -->
+      <ellipse cx="-4" cy="0" rx="34" ry="34" fill="#0F172A" />
+      <!-- Spokes & Chrome Center Hub -->
+      <circle cx="-4" cy="0" r="18" fill="url(#chromeGrad)" stroke="#475569" stroke-width="2" />
+      <circle cx="-4" cy="0" r="8" fill="#0F172A" />
+      <!-- Lug Nuts around hub -->
+      <circle cx="-4" cy="-26" r="3.5" fill="#E2E8F0" />
+      <circle cx="16" cy="-18" r="3.5" fill="#E2E8F0" />
+      <circle cx="21" cy="5" r="3.5" fill="#E2E8F0" />
+      <circle cx="11" cy="24" r="3.5" fill="#E2E8F0" />
+      <circle cx="-13" cy="25" r="3.5" fill="#E2E8F0" />
+      <circle cx="-27" cy="9" r="3.5" fill="#E2E8F0" />
+      <circle cx="-24" cy="-15" r="3.5" fill="#E2E8F0" />
+    </g>
+
+    <!-- FRONT LEFT TIRE (Distant Side View) -->
+    <g transform="translate(615, 755)">
+      <ellipse cx="0" cy="0" rx="45" ry="58" fill="url(#tireTread)" />
+      <ellipse cx="-2" cy="0" rx="30" ry="42" fill="url(#alloyRim)" />
+      <ellipse cx="-2" cy="0" rx="14" ry="20" fill="#0F172A" />
+    </g>
+
+    <!-- REAR AXLE 1 (Dual Wheels) -->
+    <g transform="translate(1060, 745)">
+      <ellipse cx="0" cy="0" rx="68" ry="68" fill="url(#tireTread)" stroke="#090D16" stroke-width="3" />
+      <ellipse cx="-3" cy="0" rx="56" ry="56" fill="#1E293B" />
+      <ellipse cx="-3" cy="0" rx="43" ry="43" fill="url(#alloyRim)" stroke="#94A3B8" stroke-width="2" />
+      <ellipse cx="-3" cy="0" rx="30" ry="30" fill="#0F172A" />
+      <circle cx="-3" cy="0" r="16" fill="url(#chromeGrad)" />
+      <circle cx="-3" cy="0" r="6" fill="#0F172A" />
+      <!-- Lug Nuts -->
+      <circle cx="-3" cy="-22" r="3" fill="#E2E8F0" />
+      <circle cx="14" cy="-15" r="3" fill="#E2E8F0" />
+      <circle cx="18" cy="4" r="3" fill="#E2E8F0" />
+      <circle cx="8" cy="20" r="3" fill="#E2E8F0" />
+      <circle cx="-11" cy="20" r="3" fill="#E2E8F0" />
+      <circle cx="-22" cy="7" r="3" fill="#E2E8F0" />
+      <circle cx="-20" cy="-12" r="3" fill="#E2E8F0" />
+    </g>
+
+    <!-- REAR AXLE 2 (Twin Trailing Wheels) -->
+    <g transform="translate(1190, 745)">
+      <ellipse cx="0" cy="0" rx="68" ry="68" fill="url(#tireTread)" stroke="#090D16" stroke-width="3" />
+      <ellipse cx="-3" cy="0" rx="56" ry="56" fill="#1E293B" />
+      <ellipse cx="-3" cy="0" rx="43" ry="43" fill="url(#alloyRim)" stroke="#94A3B8" stroke-width="2" />
+      <ellipse cx="-3" cy="0" rx="30" ry="30" fill="#0F172A" />
+      <circle cx="-3" cy="0" r="16" fill="url(#chromeGrad)" />
+      <circle cx="-3" cy="0" r="6" fill="#0F172A" />
+      <!-- Lug Nuts -->
+      <circle cx="-3" cy="-22" r="3" fill="#E2E8F0" />
+      <circle cx="14" cy="-15" r="3" fill="#E2E8F0" />
+      <circle cx="18" cy="4" r="3" fill="#E2E8F0" />
+      <circle cx="8" cy="20" r="3" fill="#E2E8F0" />
+      <circle cx="-11" cy="20" r="3" fill="#E2E8F0" />
+      <circle cx="-22" cy="7" r="3" fill="#E2E8F0" />
+      <circle cx="-20" cy="-12" r="3" fill="#E2E8F0" />
+    </g>
+  </g>
+
+  <!-- 4. CARGO CONTAINER BODY (Green Box Trailer in 3D Perspective) -->
+  <g id="cargo-container">
+    <!-- Container Side Wall -->
+    <path d="M 640 230 L 1410 300 L 1400 660 L 640 660 Z" fill="url(#boxSideGrad)" stroke="#14532D" stroke-width="2" />
+    
+    <!-- Subtle Specular Highlights and Aerodynamic Rib Panels on Container Side -->
+    <path d="M 640 230 L 1410 300 L 1410 315 L 640 245 Z" fill="url(#boxTopBevel)" />
+    
+    <!-- Vertical Structural Rib Lines (Subtle Depth) -->
+    <line x1="750" y1="240" x2="750" y2="660" stroke="#14532D" stroke-width="1.5" opacity="0.35" />
+    <line x1="860" y1="250" x2="860" y2="660" stroke="#14532D" stroke-width="1.5" opacity="0.35" />
+    <line x1="970" y1="260" x2="970" y2="660" stroke="#14532D" stroke-width="1.5" opacity="0.35" />
+    <line x1="1080" y1="270" x2="1080" y2="660" stroke="#14532D" stroke-width="1.5" opacity="0.35" />
+    <line x1="1190" y1="280" x2="1190" y2="660" stroke="#14532D" stroke-width="1.5" opacity="0.35" />
+    <line x1="1300" y1="290" x2="1300" y2="660" stroke="#14532D" stroke-width="1.5" opacity="0.35" />
+
+    <!-- Container Top Roof (Perspective Slant) -->
+    <path d="M 540 200 L 1320 270 L 1410 300 L 640 230 Z" fill="url(#boxRoofGrad)" stroke="#22C55E" stroke-width="1.5" />
+
+    <!-- Container Front Wall (facing the cabin) -->
+    <path d="M 540 200 L 640 230 L 640 660 L 540 660 Z" fill="url(#boxFrontGrad)" />
+
+    <!-- Container Rear Doors Frame & Corner Posts -->
+    <path d="M 1400 300 L 1415 300 L 1405 660 L 1390 660 Z" fill="#14532D" />
+  </g>
+
+  <!-- 5. DRIVER CABIN (3D Modern Green Tractor Unit) -->
+  <g id="cabin">
+    <!-- Cabin Roof Deflector / Wind Spoiler -->
+    <path d="M 230 270 Q 290 220 540 195 L 560 270 L 230 330 Z" fill="url(#roofSpoilerGrad)" stroke="#166534" stroke-width="2" />
+    <!-- Top Marker Lights on Roof -->
+    <rect x="260" y="305" width="22" height="8" rx="3" fill="#FEF08A" stroke="#CA8A04" />
+    <rect x="300" y="295" width="22" height="8" rx="3" fill="#FEF08A" stroke="#CA8A04" />
+    <rect x="340" y="285" width="22" height="8" rx="3" fill="#FEF08A" stroke="#CA8A04" />
+
+    <!-- Cabin Side Panel & Sleeper Cab Wall -->
+    <path d="M 370 330 L 580 290 L 580 660 L 370 660 Z" fill="url(#cabSideGrad)" stroke="#15803D" stroke-width="1.5" />
+    
+    <!-- Cabin Front Panel (Main Face) -->
+    <path d="M 210 350 L 370 330 L 370 670 L 205 670 Z" fill="url(#cabFrontGrad)" stroke="#16A34A" stroke-width="2" />
+
+    <!-- Cabin Aerodynamic Corner Deflectors / Wings -->
+    <path d="M 195 360 L 215 350 L 210 660 L 190 660 Z" fill="#15803D" stroke="#166534" />
+    <path d="M 365 330 L 385 330 L 380 660 L 365 660 Z" fill="#166534" />
+
+    <!-- Side Window (Driver Door) -->
+    <path d="M 385 360 L 520 340 L 520 460 L 385 470 Z" fill="url(#windshieldGrad)" stroke="#0F172A" stroke-width="3" />
+    <path d="M 390 365 L 450 355 L 430 460 L 390 465 Z" fill="url(#glassGloss)" />
+    <!-- Door Cut Line & Chrome Handle -->
+    <path d="M 535 340 L 535 620" stroke="#14532D" stroke-width="2" />
+    <rect x="500" y="490" width="26" height="7" rx="3" fill="url(#chromeGrad)" />
+
+    <!-- FRONT WINDSHIELD (Glossy Tinted Glass) -->
+    <path d="M 220 365 L 360 345 L 355 480 L 215 490 Z" fill="url(#windshieldGrad)" stroke="#0F172A" stroke-width="3" />
+    <!-- Diagonal Sun Reflection Gloss -->
+    <path d="M 230 370 L 300 358 L 260 485 L 225 485 Z" fill="url(#glassGloss)" />
+    <!-- Sun Visor Strip on Top of Windshield -->
+    <path d="M 218 360 L 362 342 L 362 370 L 218 388 Z" fill="#14532D" opacity="0.9" />
+
+    <!-- Dual Windshield Wipers -->
+    <line x1="250" y1="480" x2="275" y2="420" stroke="#0F172A" stroke-width="4" stroke-linecap="round" />
+    <line x1="290" y1="475" x2="315" y2="415" stroke="#0F172A" stroke-width="4" stroke-linecap="round" />
+
+    <!-- Big Rig Side Mirrors (Aerodynamic Mounts) -->
+    <path d="M 175 385 L 205 385 L 205 475 L 175 475 Z" fill="#0F172A" stroke="#334155" stroke-width="2" rx="4" />
+    <path d="M 180 390 L 195 390 L 195 450 L 180 450 Z" fill="#94A3B8" />
+    <!-- Mirror Bracket Arm -->
+    <path d="M 205 400 L 220 400 M 205 460 L 220 460" stroke="#0F172A" stroke-width="3" />
+
+    <!-- FRONT RADIATOR GRILLE (Horizontal Chrome & Matte Slats) -->
+    <g id="grille">
+      <!-- Outer Grille Housing -->
+      <path d="M 220 510 L 355 500 L 350 640 L 215 640 Z" fill="url(#grilleDark)" stroke="#334155" stroke-width="2" rx="4" />
+      
+      <!-- Horizontal Chrome Slats -->
+      <path d="M 225 525 L 350 517" stroke="url(#chromeGrad)" stroke-width="7" stroke-linecap="round" />
+      <path d="M 225 545 L 350 537" stroke="url(#chromeGrad)" stroke-width="7" stroke-linecap="round" />
+      <path d="M 225 565 L 348 557" stroke="url(#chromeGrad)" stroke-width="7" stroke-linecap="round" />
+      <path d="M 225 585 L 348 577" stroke="url(#chromeGrad)" stroke-width="7" stroke-linecap="round" />
+      <path d="M 225 605 L 345 597" stroke="url(#chromeGrad)" stroke-width="7" stroke-linecap="round" />
+
+      <!-- Center Logo / Emblem Badge -->
+      <circle cx="286" cy="558" r="14" fill="url(#chromeGrad)" stroke="#16A34A" stroke-width="2" />
+      <circle cx="286" cy="558" r="9" fill="#15803D" />
+    </g>
+
+    <!-- FRONT BUMPER & HEADLIGHTS -->
+    <g id="bumper-and-lights">
+      <!-- Heavy Duty Front Bumper -->
+      <path d="M 195 635 L 375 625 L 375 680 L 195 680 Z" fill="#166534" stroke="#0F172A" stroke-width="2" rx="6" />
+
+      <!-- Front Left Headlight Cluster (Xenon LED) -->
+      <g transform="translate(202, 638)">
+        <polygon points="0,0 35,-3 35,28 0,26" fill="#0F172A" stroke="#94A3B8" stroke-width="2" />
+        <ellipse cx="16" cy="12" rx="10" ry="8" fill="url(#lightGlow)" filter="url(#softGlow)" />
+        <ellipse cx="16" cy="12" rx="5" ry="4" fill="#FFFFFF" />
+        <!-- Amber Turn Indicator Strip -->
+        <rect x="2" y="2" width="6" height="22" rx="2" fill="#F59E0B" />
+      </g>
+
+      <!-- Front Right Headlight Cluster -->
+      <g transform="translate(325, 630)">
+        <polygon points="0,-3 38,0 38,26 0,28" fill="#0F172A" stroke="#94A3B8" stroke-width="2" />
+        <ellipse cx="18" cy="12" rx="10" ry="8" fill="url(#lightGlow)" filter="url(#softGlow)" />
+        <ellipse cx="18" cy="12" rx="5" ry="4" fill="#FFFFFF" />
+        <rect x="30" y="2" width="6" height="22" rx="2" fill="#F59E0B" />
+      </g>
+
+      <!-- Front Registration Plate Holder (Clean, No Text) -->
+      <rect x="255" y="650" width="65" height="18" rx="3" fill="#FFFFFF" stroke="#0F172A" stroke-width="2" />
+
+      <!-- Driver Cabin Boarding Steps (Chrome Footsteps) -->
+      <rect x="365" y="580" width="30" height="8" rx="2" fill="url(#chromeGrad)" />
+      <rect x="365" y="615" width="30" height="8" rx="2" fill="url(#chromeGrad)" />
+      <!-- Wheel Arch Flare (Molded Front Fender) -->
+      <path d="M 370 650 A 75 75 0 0 1 510 650 L 515 690 L 365 690 Z" fill="#14532D" />
+    </g>
+  </g>
+</svg>

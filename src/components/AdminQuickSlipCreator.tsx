@@ -101,6 +101,8 @@ export const AdminQuickSlipCreator: React.FC<AdminQuickSlipCreatorProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdSlip, setCreatedSlip] = useState<LoadSlip | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [deletingSlipId, setDeletingSlipId] = useState<string | null>(null);
+  const [slipDeleteMsg, setSlipDeleteMsg] = useState<string | null>(null);
 
   // Populate from registered user when selected
   useEffect(() => {
@@ -1015,17 +1017,36 @@ export const AdminQuickSlipCreator: React.FC<AdminQuickSlipCreatorProps> = ({
                           >
                             <ExternalLink className="w-3.5 h-3.5" />
                           </a>
-                          <button
-                            onClick={() => {
-                              if (confirm(`کیا آپ واقعی سلپ ${slip.id} کو ڈیلیٹ کرنا چاہتے ہیں؟`)) {
-                                onDeleteSlip(slip.id);
-                              }
-                            }}
-                            title="ڈیلیٹ کریں"
-                            className="p-1.5 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 transition"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          {deletingSlipId === slip.id ? (
+                            <div className="flex items-center gap-1 bg-red-50 p-1 rounded-xl border border-red-200">
+                              <span className="text-[10px] text-red-800 font-bold px-1">ڈیلیٹ؟</span>
+                              <button
+                                onClick={() => {
+                                  onDeleteSlip(slip.id);
+                                  setDeletingSlipId(null);
+                                  setSlipDeleteMsg(`سلپ #${slip.id} ڈیلیٹ ہو گئی۔`);
+                                  setTimeout(() => setSlipDeleteMsg(null), 3000);
+                                }}
+                                className="px-2 py-0.5 bg-red-600 hover:bg-red-700 text-white rounded text-[10px] font-bold shadow-2xs"
+                              >
+                                ہاں
+                              </button>
+                              <button
+                                onClick={() => setDeletingSlipId(null)}
+                                className="px-1.5 py-0.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded text-[10px]"
+                              >
+                                نہیں
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setDeletingSlipId(slip.id)}
+                              title="سلپ ڈیلیٹ کریں"
+                              className="p-1.5 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 transition"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

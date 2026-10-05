@@ -14,7 +14,8 @@ import {
   User,
   Plus,
   Trash2,
-  Check
+  Check,
+  Mic
 } from 'lucide-react';
 import { LoadSlip, AddaProfile, NamedContact } from '../types';
 import { generateSlipId } from '../utils/formatters';
@@ -25,6 +26,7 @@ interface CreateSlipViewProps {
   recentSlips: LoadSlip[];
   prefillSlip?: LoadSlip | null;
   onCancel?: () => void;
+  onOpenVoiceModal?: () => void;
 }
 
 const POPULAR_CITIES = [
@@ -58,6 +60,7 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
   recentSlips,
   prefillSlip,
   onCancel,
+  onOpenVoiceModal,
 }) => {
   // Pickup & Destination Details (FREE TEXT INPUTS)
   const [loadingCity, setLoadingCity] = useState(prefillSlip?.loadingCity || addaProfile.city || 'لاہور');
@@ -242,16 +245,29 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
           </p>
         </div>
 
-        {onCancel && (
-          <button
-            type="button"
-            onClick={onCancel}
-            className="inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-xl font-bold transition min-h-[40px] self-start sm:self-auto"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>منسوخ</span>
-          </button>
-        )}
+        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+          {onOpenVoiceModal && (
+            <button
+              type="button"
+              onClick={onOpenVoiceModal}
+              className="inline-flex items-center gap-1.5 text-xs text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 px-4 py-2.5 rounded-xl font-bold transition shadow-sm active:scale-95"
+            >
+              <Mic className="w-4 h-4 text-amber-300 animate-pulse" />
+              <span>🎙️ وائس سے لوڈ بنائیں</span>
+            </button>
+          )}
+
+          {onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-xl font-bold transition min-h-[40px]"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>منسوخ</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Quick Reuse Section */}

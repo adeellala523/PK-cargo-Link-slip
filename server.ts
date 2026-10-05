@@ -6,6 +6,7 @@ import sharp from 'sharp';
 import { WebSocketServer, WebSocket } from 'ws';
 import { GoogleGenAI, Modality, Type } from '@google/genai';
 import { getDbSlips, saveDbSlip, deleteDbSlip } from './src/db/slips.ts';
+import { parseVoiceToLoads } from './src/utils/voiceLoadParser.ts';
 
 const geminiApiKey = process.env.GEMINI_API_KEY || '';
 const isValidApiKey = Boolean(geminiApiKey && geminiApiKey.trim().length > 10 && !geminiApiKey.startsWith('ya29.'));
@@ -35,9 +36,33 @@ const DATA_DIR = path.resolve(process.cwd(), 'data');
 const SLIPS_FILE = path.join(DATA_DIR, 'slips.json');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const SETTINGS_FILE = path.join(DATA_DIR, 'payment-settings.json');
+const DELETED_USERS_FILE = path.join(DATA_DIR, 'deleted-users.json');
 
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
+function getStoredDeletedUsers(): string[] {
+  try {
+    if (fs.existsSync(DELETED_USERS_FILE)) {
+      return JSON.parse(fs.readFileSync(DELETED_USERS_FILE, 'utf-8'));
+    }
+  } catch {}
+  return [];
+}
+
+function saveStoredDeletedUsers(ids: string[]) {
+  try {
+    fs.writeFileSync(DELETED_USERS_FILE, JSON.stringify(ids, null, 2));
+  } catch {}
+}
+
+function isServerUserDeleted(user: any): boolean {
+  if (!user) return false;
+  const deleted = getStoredDeletedUsers();
+  const id = user.id ? String(user.id).trim() : '';
+  const phone = user.phone ? String(user.phone).replace(/[^0-9]/g, '') : '';
+  return deleted.includes(id) || (phone.length > 0 && deleted.includes(phone));
 }
 
 // Clean state, no demo slips
@@ -213,7 +238,7 @@ app.get('/api/slips/:id', (req: Request, res: Response) => {
 
 // Users Sync API (Two-way sync with live production pkcargolink.com)
 app.get('/api/users-sync', async (_req: Request, res: Response) => {
-  const localUsers = getStoredUsers();
+  const localUsers = getStoredUsers().filter((u: any) => !isServerUserDeleted(u));
   const map = new Map<string, any>();
   localUsers.forEach((u: any) => {
     if (u && u.phone) map.set(u.phone.replace(/[^0-9]/g, ''), u);
@@ -228,12 +253,12 @@ app.get('/api/users-sync', async (_req: Request, res: Response) => {
       const liveUsers = await liveRes.json();
       if (Array.isArray(liveUsers)) {
         liveUsers.forEach((u: any) => {
-          if (u && u.phone) {
+          if (u && u.phone && !isServerUserDeleted(u)) {
             const k = u.phone.replace(/[^0-9]/g, '');
             map.set(k, { ...(map.get(k) || {}), ...u });
           }
         });
-        const merged = Array.from(map.values());
+        const merged = Array.from(map.values()).filter((u: any) => !isServerUserDeleted(u));
         saveStoredUsers(merged);
         res.json(merged);
         return;
@@ -243,11 +268,25 @@ app.get('/api/users-sync', async (_req: Request, res: Response) => {
     console.warn('[Server] Live users sync from pkcargolink.com failed or timed out:', err);
   }
 
-  res.json(Array.from(map.values()));
+  const result = Array.from(map.values()).filter((u: any) => !isServerUserDeleted(u));
+  res.json(result);
 });
 
 app.post('/api/users-sync', async (req: Request, res: Response) => {
-  const current = getStoredUsers();
+  const isReplace = req.query.replace === 'true' || (req.body && req.body.replaceAll === true);
+
+  if (isReplace) {
+    const incoming = Array.isArray(req.body) 
+      ? req.body 
+      : (Array.isArray(req.body?.users) ? req.body.users : []);
+    const filtered = incoming.filter((u: any) => !isServerUserDeleted(u));
+    saveStoredUsers(filtered);
+    console.log(`[API:Users] POST /api/users-sync (Replace All) -> Saved ${filtered.length} users`);
+    res.json({ success: true, count: filtered.length, users: filtered });
+    return;
+  }
+
+  const current = getStoredUsers().filter((u: any) => !isServerUserDeleted(u));
   const map = new Map<string, any>();
   current.forEach((u: any) => {
     if (u && u.phone) map.set(u.phone.replace(/[^0-9]/g, ''), u);
@@ -255,15 +294,15 @@ app.post('/api/users-sync', async (req: Request, res: Response) => {
 
   if (Array.isArray(req.body)) {
     req.body.forEach((u: any) => {
-      if (u && u.phone) {
+      if (u && u.phone && !isServerUserDeleted(u)) {
         map.set(u.phone.replace(/[^0-9]/g, ''), u);
       }
     });
-  } else if (req.body && req.body.phone) {
+  } else if (req.body && req.body.phone && !isServerUserDeleted(req.body)) {
     map.set(req.body.phone.replace(/[^0-9]/g, ''), req.body);
   }
 
-  const updated = Array.from(map.values());
+  const updated = Array.from(map.values()).filter((u: any) => !isServerUserDeleted(u));
   saveStoredUsers(updated);
 
   // Also push to live production server if reachable
@@ -277,6 +316,78 @@ app.post('/api/users-sync', async (req: Request, res: Response) => {
   } catch {}
 
   res.json({ success: true, count: updated.length, users: updated });
+});
+
+// Delete user by ID or Phone endpoint
+app.delete('/api/users/:idOrPhone', async (req: Request, res: Response) => {
+  const target = req.params.idOrPhone.trim();
+  const targetClean = target.replace(/[^0-9]/g, '');
+
+  // 1. Record in deleted users list
+  const deleted = getStoredDeletedUsers();
+  if (!deleted.includes(target)) deleted.push(target);
+  if (targetClean.length > 0 && !deleted.includes(targetClean)) deleted.push(targetClean);
+  saveStoredDeletedUsers(deleted);
+
+  // 2. Remove from stored users
+  const current = getStoredUsers();
+  const initialCount = current.length;
+  const filtered = current.filter((u: any) => {
+    if (!u) return false;
+    const phoneClean = (u.phone || '').replace(/[^0-9]/g, '');
+    const id = u.id || '';
+    return id !== target && phoneClean !== targetClean && u.phone !== target;
+  });
+  saveStoredUsers(filtered);
+  console.log(`[API:Users] DELETE /api/users/${target} 🗑️ Removed user. Before: ${initialCount}, After: ${filtered.length}`);
+
+  // Push updated list to live server
+  try {
+    await fetch('https://pkcargolink.com/api/users.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(filtered),
+      signal: AbortSignal.timeout(3500)
+    });
+  } catch {}
+
+  res.json({ success: true, deleted: target, remainingCount: filtered.length, users: filtered });
+});
+
+app.delete('/api/users', async (req: Request, res: Response) => {
+  const target = ((req.query.id as string) || (req.query.phone as string) || '').trim();
+  if (!target) {
+    res.status(400).json({ error: 'Missing id or phone query parameter' });
+    return;
+  }
+  const targetClean = target.replace(/[^0-9]/g, '');
+
+  const deleted = getStoredDeletedUsers();
+  if (!deleted.includes(target)) deleted.push(target);
+  if (targetClean.length > 0 && !deleted.includes(targetClean)) deleted.push(targetClean);
+  saveStoredDeletedUsers(deleted);
+
+  const current = getStoredUsers();
+  const initialCount = current.length;
+  const filtered = current.filter((u: any) => {
+    if (!u) return false;
+    const phoneClean = (u.phone || '').replace(/[^0-9]/g, '');
+    const id = u.id || '';
+    return id !== target && phoneClean !== targetClean && u.phone !== target;
+  });
+  saveStoredUsers(filtered);
+  console.log(`[API:Users] DELETE /api/users?target=${target} 🗑️ Removed user. Before: ${initialCount}, After: ${filtered.length}`);
+
+  try {
+    await fetch('https://pkcargolink.com/api/users.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(filtered),
+      signal: AbortSignal.timeout(3500)
+    });
+  } catch {}
+
+  res.json({ success: true, deleted: target, remainingCount: filtered.length, users: filtered });
 });
 
 // -------------------------------------------------------------
@@ -462,6 +573,68 @@ app.post('/api/payment-settings', (req: Request, res: Response) => {
     fs.writeFileSync(SETTINGS_FILE, JSON.stringify(req.body, null, 2));
   } catch {}
   res.json({ success: true });
+});
+
+// -------------------------------------------------------------
+// Voice to Load Extraction API (Speech/Text to Multi-Cargo Loads)
+// -------------------------------------------------------------
+app.post('/api/parse-voice-load', async (req: Request, res: Response) => {
+  const text = (req.body?.text || req.body?.userSpeech || '').toString().trim();
+  if (!text) {
+    res.status(400).json({ error: 'Text/voice input is required', loads: [] });
+    return;
+  }
+
+  // 1. First run deterministic rule-based extractor
+  const ruleLoads = parseVoiceToLoads(text);
+
+  // 2. If valid Gemini API key is configured, optionally enrich with Gemini 2.5 Flash
+  if (isValidApiKey) {
+    try {
+      const prompt = `You are a Pakistani Goods Transport Load Slip assistant.
+Analyze this spoken voice note in Urdu/Roman Urdu:
+"${text}"
+
+Extract all load items into a JSON array.
+CRITICAL SAFETY RULES:
+1. NEVER invent, hallucinate, or assume missing information. If weight, vehicle, or pickup is not mentioned, leave as empty string "".
+2. Detect MULTIPLE loads if user mentions multiple routes or commodities.
+3. Cities must be clean Pakistani city names (e.g. بہاولپور, کراچی, کبیروالا, ٹھینگ موڑ, وہاڑی, ملتان, لاہور, etc.)
+4. Commodities must be clean Urdu terms (e.g. مکئی, گندم, چاول, کپاس, کھاد, سیمنٹ, etc.)
+
+Return JSON:
+{
+  "loads": [
+    {
+      "goods": "مکئی",
+      "loadingCity": "بہاولپور",
+      "destinationCity": "کراچی",
+      "weight": "",
+      "quantity": "",
+      "vehicleType": "",
+      "bodyType": ""
+    }
+  ]
+}`;
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json',
+        }
+      });
+      const parsed = JSON.parse(response.text || '{}');
+      if (Array.isArray(parsed.loads) && parsed.loads.length > 0) {
+        res.json({ success: true, loads: parsed.loads, rawText: text, source: 'ai' });
+        return;
+      }
+    } catch (err) {
+      console.warn('[Voice Load Parse AI Failover]', err);
+    }
+  }
+
+  // Return rule loads
+  res.json({ success: true, loads: ruleLoads, rawText: text, source: 'rule' });
 });
 
 // -------------------------------------------------------------

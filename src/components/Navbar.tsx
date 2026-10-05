@@ -73,8 +73,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => { setCurrentTab('home'); setMenuOpen(false); }}
             className="flex items-center gap-2.5 cursor-pointer select-none group"
           >
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-[#19A974] to-emerald-800 flex items-center justify-center shadow-md border border-emerald-400/40 transform group-hover:scale-105 transition-transform flex-shrink-0">
-              <Truck className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-[#19A974] to-emerald-900 flex items-center justify-center shadow-md border border-emerald-400/40 transform group-hover:scale-105 transition-transform flex-shrink-0">
+              <Truck className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
             </div>
             <div className="flex flex-col">
               <span className="text-xl sm:text-2xl font-bold tracking-tight text-white font-nafees leading-tight">

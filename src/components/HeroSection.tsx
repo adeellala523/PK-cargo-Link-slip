@@ -37,7 +37,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       
       {/* 1. HERO BANNER SECTION (Section 6) */}
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#123A6D] via-[#0D2D57] to-[#08284F] text-white p-6 sm:p-10 shadow-xl border border-emerald-500/20">
-        <div className="relative z-10 max-w-3xl mx-auto text-center space-y-5 sm:space-y-6">
+        {/* Subtle decorative glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 max-w-4xl mx-auto text-center space-y-4 sm:space-y-6 pt-2 sm:pt-4">
           
           {/* Main Heading */}
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold leading-tight tracking-tight text-white font-nafees">

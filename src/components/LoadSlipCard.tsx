@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { 
   Phone, 
+  PhoneCall,
   MessageSquare, 
   Share2, 
   Printer, 
@@ -111,6 +112,15 @@ export const LoadSlipCard: React.FC<LoadSlipCardProps> = ({
   const cleanId = currentSlip.id.replace(/[^a-zA-Z0-9]/g, '');
   const publicUrl = `${OFFICIAL_WEBSITE_URL}/slip/${cleanId}`;
   const whatsappText = formatWhatsAppMessage(currentSlip);
+
+  // Exact inquiry message for driver to Adda Manager
+  const targetManagerPhone = currentSlip.whatsappNumber || currentSlip.primaryPhone;
+  const driverInquiryMessage = `السلام علیکم، کیا یہ لوڈ دستیاب ہے؟ سلپ نمبر: #${currentSlip.id}
+📍 روٹ: ${currentSlip.loadingCity} تا ${currentSlip.destinationCity}
+🚛 گاڑی کی قسم: ${currentSlip.vehicleType}
+${currentSlip.goods ? `📦 مال: ${currentSlip.goods}\n` : ''}${currentSlip.quantity || currentSlip.weight ? `⚖️ وزن: ${currentSlip.quantity || currentSlip.weight}\n` : ''}${currentSlip.fareOffer ? `💰 کرایہ: ${currentSlip.fareOffer}\n` : ''}🔗 مکمل سلپ تفصیلات: ${publicUrl}`;
+
+  const driverWhatsAppInquiryUrl = getWhatsAppShareUrl(driverInquiryMessage, targetManagerPhone);
 
   const handleCopyLink = async () => {
     try {
@@ -612,10 +622,11 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
 
             {currentSlip.whatsappNumber && (
               <a 
-                href={getWhatsAppShareUrl(whatsappText, currentSlip.whatsappNumber)}
+                href={driverWhatsAppInquiryUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 bg-[#25D366] text-white px-3 py-1.5 rounded-lg font-bold hover:bg-[#20ba59] transition"
+                title="لوڈ کے بارے میں واٹس ایپ پر بات کریں"
               >
                 <MessageSquare className="w-3.5 h-3.5" />
                 <span className="font-mono">{currentSlip.whatsappNumber}</span>
@@ -787,6 +798,117 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
             </div>
           )}
 
+          {/* ============================================================== */}
+          {/* DEDICATED DRIVER CONTACT & INQUIRY (BIG ICONS & BIG URDU TEXT) */}
+          {/* ============================================================== */}
+          <div className="bg-gradient-to-br from-emerald-50 via-teal-50 to-sky-50 border-2 border-emerald-500/50 rounded-3xl p-5 sm:p-7 shadow-sm space-y-4 my-3">
+            
+            {/* BIG URDU HEADER */}
+            <div className="text-center space-y-1.5">
+              <span className="inline-flex items-center gap-1.5 bg-emerald-600 text-white text-xs sm:text-sm font-bold px-3.5 py-1 rounded-full shadow-xs">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>ڈرائیور حضرات کے لیے فوری رابطہ و بکنگ</span>
+              </span>
+              <h3 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 font-nafees leading-tight">
+                لوڈ حاصل کرنے کے لیے اڈا مینیجر سے رابطہ کریں
+              </h3>
+              <p className="text-sm sm:text-base text-slate-700 font-nafees font-semibold">
+                نیچے واٹس ایپ یا فون کال کے بڑے بٹن پر کلک کر کے فوری بات چیت کریں
+              </p>
+            </div>
+
+            {/* BIG WHATSAPP & PHONE ACTION CARDS */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              
+              {/* 1. BIG WHATSAPP BUTTON (With exact ready-made inquiry message) */}
+              <a
+                href={driverWhatsAppInquiryUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center justify-between gap-3 bg-[#25D366] hover:bg-[#20ba59] active:scale-[0.98] text-white p-4 sm:p-5 rounded-2xl shadow-md hover:shadow-lg transition-all border border-emerald-300"
+              >
+                <div className="flex items-center gap-3.5">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-inner">
+                    {/* BARA WHATSAPP ICON */}
+                    <MessageSquare className="w-8 h-8 sm:w-10 sm:h-10 text-white fill-white" />
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs sm:text-sm text-emerald-100 font-bold block">واٹس ایپ پر رابطہ</span>
+                    <span className="text-xl sm:text-2xl font-black font-nafees block leading-tight">
+                      WhatsApp پر بات کریں
+                    </span>
+                    <span className="text-xs sm:text-sm text-emerald-100/90 font-mono block mt-0.5">
+                      {currentSlip.whatsappNumber || currentSlip.primaryPhone}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex flex-col items-center justify-center bg-white/20 rounded-xl px-2.5 py-1.5 text-center flex-shrink-0">
+                  <span className="text-[10px] text-emerald-100 block">تیار میسج</span>
+                  <span className="text-xs font-black font-mono">#{currentSlip.id}</span>
+                </div>
+              </a>
+
+              {/* 2. BIG PHONE CALL BUTTON */}
+              <a
+                href={`tel:${sanitizePhoneForCall(currentSlip.primaryPhone)}`}
+                className="group flex items-center justify-between gap-3 bg-gradient-to-r from-[#123A6D] to-[#0A2540] hover:from-[#0D2D57] hover:to-[#071B2F] active:scale-[0.98] text-white p-4 sm:p-5 rounded-2xl shadow-md hover:shadow-lg transition-all border border-blue-400/40"
+              >
+                <div className="flex items-center gap-3.5">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-inner">
+                    {/* BARA PHONE ICON */}
+                    <PhoneCall className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-300" />
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs sm:text-sm text-blue-200 font-bold block">براہِ راست کال</span>
+                    <span className="text-xl sm:text-2xl font-black font-nafees block leading-tight">
+                      {currentSlip.managerName ? `${currentSlip.managerName} کو کال کریں` : 'فون کال کریں'}
+                    </span>
+                    <span className="text-xs sm:text-sm font-bold font-mono text-emerald-300 block mt-0.5">
+                      {currentSlip.primaryPhone}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex flex-col items-center justify-center bg-white/10 rounded-xl px-2.5 py-1.5 text-center flex-shrink-0">
+                  <span className="text-[10px] text-blue-200 block">فوری کال</span>
+                  <span className="text-xs font-bold text-emerald-300">ڈائل</span>
+                </div>
+              </a>
+
+            </div>
+
+            {/* In-app hint explaining the ready-made WhatsApp inquiry message */}
+            <div className="bg-white/90 rounded-xl p-3 border border-emerald-200/80 flex items-center justify-between gap-2 text-xs text-slate-700 shadow-2xs">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
+                <span className="font-nafees font-semibold">
+                  واٹس ایپ پر کلک کرنے پر یہ تیار میسج خود بخود لکھ جائے گا: 
+                  <strong className="text-emerald-950 font-bold mr-1.5">"کیا یہ لوڈ دستیاب ہے؟ سلپ نمبر: #{currentSlip.id}"</strong>
+                </span>
+              </div>
+            </div>
+
+            {/* Additional Contact Numbers */}
+            {currentSlip.namedContacts && currentSlip.namedContacts.length > 0 && (
+              <div className="pt-2 border-t border-emerald-200/70 flex flex-wrap items-center justify-center gap-2 text-xs">
+                <span className="text-slate-600 font-bold">دیگر اڈا رابطہ نمبرز:</span>
+                {currentSlip.namedContacts.map((c, i) => (
+                  c && c.number ? (
+                    <a
+                      key={i}
+                      href={`tel:${sanitizePhoneForCall(c.number)}`}
+                      className="inline-flex items-center gap-1.5 bg-white hover:bg-emerald-50 text-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 font-bold shadow-2xs transition"
+                    >
+                      <Phone className="w-3.5 h-3.5 text-emerald-600" />
+                      {c.name && <span className="text-emerald-800 font-bold">{c.name}:</span>}
+                      <span className="font-mono">{c.number}</span>
+                    </a>
+                  ) : null
+                ))}
+              </div>
+            )}
+
+          </div>
+
           {/* QR Code & Verification (Section 11) */}
           <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
             <div className="flex items-center gap-3">
@@ -825,9 +947,43 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
       </div>
 
       {/* ============================================================== */}
-      {/* SECTION 12: SLIP SHARE OPTIONS (4 LARGE BUTTONS) */}
+      {/* SECTION 12: SLIP SHARE & DRIVER CONTACT OPTIONS */}
       {/* ============================================================== */}
-      <div className="no-print bg-white p-5 rounded-3xl shadow-sm border border-slate-200 space-y-3">
+      <div className="no-print bg-white p-5 sm:p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
+        
+        {/* Driver Immediate Contact Card */}
+        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-4 rounded-2xl border border-emerald-300 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="text-right">
+            <span className="text-xs bg-emerald-600 text-white font-bold px-2.5 py-0.5 rounded-full inline-block mb-1">
+              ڈرائیور فوری رابطہ (سلپ #{currentSlip.id})
+            </span>
+            <h4 className="text-base sm:text-lg font-black text-slate-900 font-nafees">
+              کیا آپ کو یہ لوڈ چاہیے؟
+            </h4>
+            <p className="text-xs text-slate-600 font-nafees">
+              واٹس ایپ پر فوری تیار میسج بھیج کر یا کال کر کے بات کریں
+            </p>
+          </div>
+          <div className="flex items-center gap-2.5 w-full sm:w-auto">
+            <a
+              href={driverWhatsAppInquiryUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20ba59] text-white py-2.5 px-4 rounded-xl font-bold text-sm shadow-sm transition active:scale-95"
+            >
+              <MessageSquare className="w-5 h-5 fill-white" />
+              <span>WhatsApp پر پوچھیں</span>
+            </a>
+            <a
+              href={`tel:${sanitizePhoneForCall(currentSlip.primaryPhone)}`}
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-[#123A6D] hover:bg-[#0D2D57] text-white py-2.5 px-4 rounded-xl font-bold text-sm shadow-sm transition active:scale-95"
+            >
+              <PhoneCall className="w-5 h-5 text-emerald-300" />
+              <span>کال کریں</span>
+            </a>
+          </div>
+        </div>
+
         <h3 className="text-base font-bold text-[#08284F] border-b border-slate-100 pb-2">
           شیئرنگ کے اختیارات
         </h3>

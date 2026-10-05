@@ -5,6 +5,7 @@ const STORAGE_KEYS = {
   SLIPS: 'pkcargolink_slips_v3',
   PERMANENT_USER_SLIPS: 'pkcargolink_permanent_user_slips_v3',
   DELETED_SLIP_IDS: 'pkcargolink_deleted_slip_ids_v3',
+  DELETED_USER_IDS: 'pkcargolink_deleted_user_ids_v3',
   PENDING_SYNC_SLIPS: 'pkcargolink_pending_sync_slips_v3',
   GROUPS: 'pkcargolink_groups_v3',
   IS_LOGGED_IN: 'pkcargolink_is_logged_in_v3',
@@ -92,12 +93,30 @@ export const StorageService = {
   // -------------------------------------------------------------
   // User Accounts & Authentication (Persistent & Real)
   // -------------------------------------------------------------
+  getDeletedUserIds(): string[] {
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.DELETED_USER_IDS);
+      if (data) return JSON.parse(data);
+    } catch {}
+    return [];
+  },
+
+  isUserDeleted(idOrPhone: string): boolean {
+    if (!idOrPhone) return false;
+    const deleted = this.getDeletedUserIds();
+    const clean = idOrPhone.trim();
+    const cleanDigits = clean.replace(/[^0-9]/g, '');
+    return deleted.includes(clean) || (cleanDigits.length > 0 && deleted.includes(cleanDigits));
+  },
+
   getUsers(): UserAccount[] {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.USERS);
       if (data) {
         const users: UserAccount[] = JSON.parse(data);
-        return users.map((u) => this.checkUserSubscriptionStatus(u));
+        return users
+          .filter((u) => !this.isUserDeleted(u.id) && !this.isUserDeleted(u.phone))
+          .map((u) => this.checkUserSubscriptionStatus(u));
       }
     } catch (e) {
       console.error('Error reading users', e);
@@ -112,7 +131,7 @@ export const StorageService = {
         const map = new Map<string, UserAccount>();
         // Add existing local users
         localUsers.forEach((u) => {
-          if (u && u.phone) {
+          if (u && u.phone && !this.isUserDeleted(u.id) && !this.isUserDeleted(u.phone)) {
             map.set(u.phone.replace(/[^0-9]/g, ''), u);
           }
         });
@@ -127,6 +146,11 @@ export const StorageService = {
             if (Array.isArray(serverUsers)) {
               serverUsers.forEach((u) => {
                 if (u && u.phone) {
+                  if (this.isUserDeleted(u.id) || this.isUserDeleted(u.phone)) {
+                    // Purge from server in background if it resurrected
+                    fetch(`/api/users/${encodeURIComponent(u.id || u.phone)}`, { method: 'DELETE' }).catch(() => {});
+                    return;
+                  }
                   const k = u.phone.replace(/[^0-9]/g, '');
                   map.set(k, { ...(map.get(k) || {}), ...u });
                 }
@@ -137,7 +161,9 @@ export const StorageService = {
           // Graceful fallback to local cached users
         }
 
-        const merged = Array.from(map.values()).map((u) => this.checkUserSubscriptionStatus(u));
+        const merged = Array.from(map.values())
+          .filter((u) => !this.isUserDeleted(u.id) && !this.isUserDeleted(u.phone))
+          .map((u) => this.checkUserSubscriptionStatus(u));
         try {
           localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(merged));
         } catch {}
@@ -181,6 +207,14 @@ export const StorageService = {
     const clean = phone.replace(/[^0-9]/g, '');
     const users = this.getUsers();
     return users.find((u) => u.phone.replace(/[^0-9]/g, '') === clean) || null;
+  },
+
+  getUserById(id: string): UserAccount | null {
+    if (!id) return null;
+    const clean = id.trim();
+    const cleanDigits = clean.replace(/[^0-9]/g, '');
+    const users = this.getUsers();
+    return users.find((u) => u.id === clean || (cleanDigits.length > 0 && u.phone?.replace(/[^0-9]/g, '') === cleanDigits)) || null;
   },
 
   checkUserSubscriptionStatus(user: UserAccount): UserAccount {
@@ -396,9 +430,58 @@ export const StorageService = {
     }
   },
 
-  async deleteUser(userId: string): Promise<void> {
-    const users = this.getUsers().filter((u) => u.id !== userId);
-    await this.saveUsers(users);
+  async deleteUser(userId: string): Promise<UserAccount[]> {
+    const cleanId = (userId || '').trim();
+    if (!cleanId) return this.getUsers();
+
+    // 1. Record in deletedUserIds
+    try {
+      const deleted = this.getDeletedUserIds();
+      if (!deleted.includes(cleanId)) deleted.push(cleanId);
+      const targetUser = this.getUserById(cleanId);
+      if (targetUser && targetUser.phone) {
+        const cleanPhone = targetUser.phone.replace(/[^0-9]/g, '');
+        if (cleanPhone && !deleted.includes(cleanPhone)) deleted.push(cleanPhone);
+      }
+      localStorage.setItem(STORAGE_KEYS.DELETED_USER_IDS, JSON.stringify(deleted));
+    } catch {}
+
+    // 2. Filter from local storage
+    const targetUser = this.getUserById(cleanId);
+    const targetPhoneDigits = targetUser?.phone ? targetUser.phone.replace(/[^0-9]/g, '') : '';
+    const users = this.getUsers().filter((u) => {
+      const uPhoneDigits = (u.phone || '').replace(/[^0-9]/g, '');
+      return u.id !== cleanId && u.phone !== cleanId && (!targetPhoneDigits || uPhoneDigits !== targetPhoneDigits);
+    });
+    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+
+    // 3. Clear current user if it was this user
+    const current = this.getCurrentUser();
+    if (current && (current.id === cleanId || current.phone === cleanId || (targetPhoneDigits && current.phone?.replace(/[^0-9]/g, '') === targetPhoneDigits))) {
+      this.setCurrentUser(null);
+      this.setLoggedIn(false);
+    }
+
+    // 4. Call server DELETE endpoint
+    if (typeof fetch !== 'undefined') {
+      try {
+        await fetch(`/api/users/${encodeURIComponent(cleanId)}`, {
+          method: 'DELETE',
+          signal: AbortSignal.timeout(3500),
+        });
+      } catch {}
+
+      try {
+        await fetch('/api/users-sync?replace=true', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ replaceAll: true, users }),
+          signal: AbortSignal.timeout(3500),
+        });
+      } catch {}
+    }
+
+    return users;
   },
 
   // -------------------------------------------------------------

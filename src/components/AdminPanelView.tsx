@@ -58,6 +58,10 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
   // Users state
   const [users, setUsers] = useState<UserAccount[]>(StorageService.getUsers());
   const [selectedScreenshot, setSelectedScreenshot] = useState<string | null>(null);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  const [userDeleteSuccess, setUserDeleteSuccess] = useState<string | null>(null);
+  const [deletingSlipId, setDeletingSlipId] = useState<string | null>(null);
+  const [slipDeleteSuccess, setSlipDeleteSuccess] = useState<string | null>(null);
 
   // AI & Payment Subscriptions state
   const [subscriptionsList, setSubscriptionsList] = useState<any[]>([]);
@@ -135,11 +139,26 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
     setUsers(updated);
   };
 
-  const handleDeleteUser = async (userId: string) => {
-    if (confirm('کیا آپ واقعی اس صارف کا اکاؤنٹ ڈیلیٹ کرنا چاہتے ہیں؟')) {
-      await StorageService.deleteUser(userId);
-      const updated = await StorageService.syncUsersWithServer();
-      setUsers(updated);
+  const confirmDeleteUser = async (userId: string) => {
+    try {
+      const remaining = await StorageService.deleteUser(userId);
+      setUsers(remaining);
+      setDeletingUserId(null);
+      setUserDeleteSuccess('صارف کا اکاؤنٹ کامیابی سے ہمیشہ کے لیے ڈیلیٹ کر دیا گیا ہے۔');
+      setTimeout(() => setUserDeleteSuccess(null), 3500);
+    } catch (err) {
+      console.error('Error deleting user', err);
+    }
+  };
+
+  const confirmDeleteSlip = async (slipId: string) => {
+    try {
+      onDeleteSlip(slipId);
+      setDeletingSlipId(null);
+      setSlipDeleteSuccess(`لوڈ سلپ (${slipId}) کامیابی سے ڈیلیٹ کر دی گئی ہے۔`);
+      setTimeout(() => setSlipDeleteSuccess(null), 3500);
+    } catch (err) {
+      console.error('Error deleting slip', err);
     }
   };
 
@@ -393,6 +412,13 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
             </div>
           </div>
 
+          {userDeleteSuccess && (
+            <div className="bg-emerald-50 border border-emerald-300 text-emerald-800 px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+              <span>{userDeleteSuccess}</span>
+            </div>
+          )}
+
           {filteredUsers.length === 0 ? (
             <div className="py-12 text-center text-slate-400 space-y-2">
               <Users className="w-10 h-10 mx-auto opacity-40" />
@@ -505,13 +531,31 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
                             +30 دن
                           </button>
 
-                          <button
-                            onClick={() => handleDeleteUser(u.id)}
-                            className="text-red-500 hover:text-red-700 p-1 rounded transition"
-                            title="ڈیلیٹ کریں"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {deletingUserId === u.id ? (
+                            <div className="flex items-center gap-1.5 bg-red-50 p-1 rounded-xl border border-red-200">
+                              <span className="text-[11px] text-red-700 font-bold px-1">ڈیلیٹ؟</span>
+                              <button
+                                onClick={() => confirmDeleteUser(u.id)}
+                                className="bg-red-600 hover:bg-red-700 text-white px-2 py-0.5 rounded-lg text-xs font-bold transition shadow-2xs"
+                              >
+                                ہاں
+                              </button>
+                              <button
+                                onClick={() => setDeletingUserId(null)}
+                                className="bg-slate-200 hover:bg-slate-300 text-slate-700 px-2 py-0.5 rounded-lg text-xs transition"
+                              >
+                                منسوخ
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setDeletingUserId(u.id)}
+                              className="text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 transition"
+                              title="اکاؤنٹ ڈیلیٹ کریں"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -846,6 +890,13 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
             />
           </div>
 
+          {slipDeleteSuccess && (
+            <div className="bg-emerald-50 border border-emerald-300 text-emerald-800 px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+              <span>{slipDeleteSuccess}</span>
+            </div>
+          )}
+
           {filteredSlips.length === 0 ? (
             <div className="py-12 text-center text-slate-400">
               کوئی لوڈ سلپ نہیں ملی۔
@@ -871,12 +922,31 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
                     >
                       {s.status === 'active' ? 'فعال' : 'غیر فعال'}
                     </button>
-                    <button
-                      onClick={() => onDeleteSlip(s.id)}
-                      className="text-red-500 hover:text-red-700 p-1"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {deletingSlipId === s.id ? (
+                      <div className="flex items-center gap-1.5 bg-red-50 p-1 rounded-xl border border-red-200">
+                        <span className="text-[11px] text-red-700 font-bold px-1">ڈیلیٹ؟</span>
+                        <button
+                          onClick={() => confirmDeleteSlip(s.id)}
+                          className="bg-red-600 hover:bg-red-700 text-white px-2 py-0.5 rounded-lg text-xs font-bold transition shadow-2xs"
+                        >
+                          ہاں
+                        </button>
+                        <button
+                          onClick={() => setDeletingSlipId(null)}
+                          className="bg-slate-200 hover:bg-slate-300 text-slate-700 px-2 py-0.5 rounded-lg text-xs transition"
+                        >
+                          منسوخ
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setDeletingSlipId(s.id)}
+                        className="text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 transition"
+                        title="سلپ ڈیلیٹ کریں"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}

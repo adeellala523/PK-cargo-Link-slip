@@ -14,7 +14,8 @@ import {
   Building2,
   ShieldCheck,
   Globe,
-  Info
+  Info,
+  Phone
 } from 'lucide-react';
 import { LoadSlip, WhatsAppGroup } from '../types';
 import { 
@@ -39,6 +40,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 }) => {
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedText, setCopiedText] = useState(false);
+  const [includeContact, setIncludeContact] = useState(false); // Default OFF per privacy rule
 
   // Ensure DOM OpenGraph meta tags are immediately updated for this specific slip and Adda
   React.useEffect(() => {
@@ -47,7 +49,10 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 
   const cleanId = slip.id.replace(/[^a-zA-Z0-9]/g, '');
   const publicUrl = `${OFFICIAL_WEBSITE_URL}/slip/${cleanId}`;
-  const whatsappText = formatWhatsAppMessage(slip);
+  const whatsappText = formatWhatsAppMessage({
+    ...slip,
+    includeContactsInWhatsApp: includeContact,
+  });
   const addaPhoto = slip.addaLogo && !slip.addaLogo.includes('icon-512.png') ? slip.addaLogo : null;
 
   const handleCopyLink = async () => {
@@ -170,6 +175,23 @@ export const ShareModal: React.FC<ShareModalProps> = ({
             {/* 2. Text Summary */}
             <div className="bg-white/70 p-3 rounded-xl border border-[#d1efbc] text-xs text-slate-800 leading-relaxed whitespace-pre-line font-nafees">
               {whatsappText}
+            </div>
+
+            {/* Privacy Rule: Contact numbers are preview-only data */}
+            <div className="bg-white p-3 rounded-xl border border-emerald-300 flex items-center justify-between text-xs">
+              <span className="font-bold text-slate-700 flex items-center gap-1.5">
+                <Phone className="w-3.5 h-3.5 text-emerald-600" />
+                <span>فون نمبر پرائیویسی (Preview-Only):</span>
+              </span>
+              <label className="flex items-center gap-2 cursor-pointer select-none text-[11px] font-bold text-slate-700 hover:text-emerald-800">
+                <span>میسج میں نمبر شامل کریں (اختیاری)</span>
+                <input 
+                  type="checkbox"
+                  checked={includeContact}
+                  onChange={(e) => setIncludeContact(e.target.checked)}
+                  className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                />
+              </label>
             </div>
 
             {/* Gallery notice tag */}

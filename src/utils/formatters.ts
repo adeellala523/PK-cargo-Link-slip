@@ -24,46 +24,87 @@ export function generateSlipId(): string {
   return `PKCL${dateStr}${randomNum}`;
 }
 
+export function getCommodityEmoji(goods: string): string {
+  const g = (goods || '').toLowerCase();
+  if (g.includes('مکئی') || g.includes('corn') || g.includes('makai')) return '🌽';
+  if (g.includes('گندم') || g.includes('wheat') || g.includes('gandum')) return '🌾';
+  if (g.includes('چاول') || g.includes('rice') || g.includes('chawal')) return '🍚';
+  if (g.includes('کپاس') || g.includes('روئی') || g.includes('cotton')) return '⚪';
+  if (g.includes('کھاد') || g.includes('fertilizer')) return '🧪';
+  if (g.includes('سیمنٹ') || g.includes('cement')) return '🧱';
+  if (g.includes('لوہا') || g.includes('سٹیل') || g.includes('سریا') || g.includes('steel')) return '🏗️';
+  if (g.includes('فروٹ') || g.includes('سبزی') || g.includes('fruit')) return '🍎';
+  return '📦';
+}
+
 /**
  * Builds the exact WhatsApp formatted text according to PK Cargo Link specifications:
- * - Phone numbers are viewable on the official website slip preview link
- * - Supports multi-load items per slip
+ * - Contact phone numbers are PREVIEW-ONLY and strictly excluded by default
+ * - Supports multi-load items per slip with clean emoji headers & arrows
+ * - Single load uses concise single-load layout
  */
 export function formatWhatsAppMessage(slip: LoadSlip): string {
   const cleanId = slip.id.replace(/[^a-zA-Z0-9]/g, '');
   const slipUrl = `${OFFICIAL_WEBSITE_URL}/slip/${cleanId}`;
   
-  const hasMultipleLoads = slip.additionalLoads && slip.additionalLoads.length > 0;
+  const hasMultipleLoads = Boolean(slip.additionalLoads && slip.additionalLoads.length > 0);
 
-  let loadsContent = '';
+  let loadsBlock = '';
 
   if (hasMultipleLoads) {
     // Primary Load 1
-    loadsContent += `📦 **لوڈ 1:**\n📍 ${slip.loadingCity} ${slip.loadingLocation ? `(${slip.loadingLocation})` : ''} تا ${slip.destinationCity}\n🚛 ${slip.goods} (${slip.quantity || slip.weight || 'حسبِ ضرورت'}) — ${slip.vehicleType}\n\n`;
+    const emoji1 = getCommodityEmoji(slip.goods);
+    const goods1 = slip.goods.includes('لوڈنگ') ? slip.goods : `${slip.goods} لوڈنگ`;
+    loadsBlock += `🟢 LOAD 1\n${emoji1} ${goods1}\n📍 ${slip.loadingCity} → ${slip.destinationCity}\n`;
+    if (slip.quantity || slip.weight) {
+      loadsBlock += `🔢 مقدار: ${slip.quantity || slip.weight}\n`;
+    }
+    if (slip.vehicleType && slip.vehicleType !== 'Other') {
+      loadsBlock += `🚚 گاڑی: ${slip.vehicleType}\n`;
+    }
+    loadsBlock += '\n';
 
     // Additional Loads
     slip.additionalLoads!.forEach((al, idx) => {
-      loadsContent += `📦 **لوڈ ${idx + 2}:**\n📍 ${al.loadingCity} تا ${al.destinationCity}\n🚛 ${al.goods} (${al.quantity || al.weight || 'حسبِ ضرورت'})${al.vehicleType ? ` — ${al.vehicleType}` : ''}\n\n`;
+      const emojiN = getCommodityEmoji(al.goods);
+      const goodsN = al.goods.includes('لوڈنگ') ? al.goods : `${al.goods} لوڈنگ`;
+      loadsBlock += `🟢 LOAD ${idx + 2}\n${emojiN} ${goodsN}\n📍 ${al.loadingCity} → ${al.destinationCity}\n`;
+      if (al.quantity || al.weight) {
+        loadsBlock += `🔢 مقدار: ${al.quantity || al.weight}\n`;
+      }
+      if (al.vehicleType && al.vehicleType !== 'Other') {
+        loadsBlock += `🚚 گاڑی: ${al.vehicleType}\n`;
+      }
+      loadsBlock += '\n';
     });
   } else {
-    loadsContent = `📍 پک اپ:\n${slip.loadingCity} ${slip.loadingLocation ? `(${slip.loadingLocation})` : ''}\n\n📍 ڈیلیوری:\n${slip.destinationCity}\n\n📦 سامان:\n${slip.goods}\n\n🔢 مقدار:\n${slip.quantity || slip.weight || 'حسبِ ضرورت'}\n\n🚚 گاڑی:\n${slip.vehicleType} (${slip.bodyType})\n\n`;
+    const emoji = getCommodityEmoji(slip.goods);
+    const goods = slip.goods.includes('لوڈنگ') ? slip.goods : `${slip.goods} لوڈنگ`;
+    loadsBlock += `${emoji} ${goods}\n📍 ${slip.loadingCity} → ${slip.destinationCity}\n`;
+    if (slip.quantity || slip.weight) {
+      loadsBlock += `🔢 مقدار: ${slip.quantity || slip.weight}\n`;
+    }
+    if (slip.vehicleType && slip.vehicleType !== 'Other') {
+      loadsBlock += `🚚 گاڑی: ${slip.vehicleType}${slip.bodyType ? ` (${slip.bodyType})` : ''}\n`;
+    }
+    loadsBlock += '\n';
   }
 
-  const dateStr = slip.createdAt ? new Date(slip.createdAt).toLocaleDateString('ur-PK') : 'آج';
+  // Privacy Rule: Phone numbers are strictly preview-only data.
+  // Never included unless explicit includeContactsInWhatsApp flag is true (default is false).
+  let contactSection = '';
+  if (slip.includeContactsInWhatsApp && slip.primaryPhone) {
+    contactSection = `📞 رابطہ: ${slip.primaryPhone}\n`;
+  }
 
-  return `اَلسَلامُ عَلَيْكُم وَرَحْمَةُاَللهِ وَبَرَكاتُهُ
-ایاک.نعبدواياك.نستعین
+  return `🫡 السلام علیکم ورحمۃ اللہ وبرکاتہ 🫡
+ایاک نعبد و ایاک نستعین
 
-🚛 PK CARGO LOAD SLIP
+🚛 PK CARGO LINK — LOAD SLIP 🚛
 
-${loadsContent}📅 تاریخ: ${dateStr}
-
-🏢 ${slip.addaName} (${slip.addaCity})
-${slip.managerName ? `👤 ${slip.managerName}\n` : ''}
-📞 رابطہ و تمام فون نمبرز دیکھنے کیلئے آن لائن سلپ لنک کھولیں:
-🔗 ${slipUrl}
-
-Powered by PK Cargo Link`;
+${loadsBlock}🏢 ${slip.addaName}${slip.addaCity ? ` (${slip.addaCity})` : ''}
+${contactSection}🚛 رابطہ، فون نمبرز اور کال کے لیے لنک کھولیں:
+🔗 ${slipUrl}`;
 }
 
 /**
