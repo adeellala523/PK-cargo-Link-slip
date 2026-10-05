@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, Send, Mic, Volume2, VolumeX } from 'lucide-react';
+import { MessageCircle, X, Send, Mic, Volume2, VolumeX, Phone, PhoneOff } from 'lucide-react';
 
 interface ChatMessage {
   id: number;
@@ -109,22 +109,98 @@ export function AiChatbotWidget() {
   const [busy, setBusy] = useState(false);
   const [listening, setListening] = useState(false);
   const [muted, setMuted] = useState(false);
+  const [callMode, setCallMode] = useState(false);
   const recognitionRef = useRef<any>(null);
+  const callModeRef = useRef(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  const setCallModeBoth = (v: boolean) => {
+    callModeRef.current = v;
+    setCallMode(v);
+  };
+
+  const afterSpeak = () => {
+    // In call mode, automatically listen again after the bot finishes speaking
+    if (callModeRef.current) {
+      window.setTimeout(() => {
+        if (callModeRef.current) beginCallListening();
+      }, 400);
+    }
+  };
+
   const speak = (text: string) => {
-    if (muted) return;
     try {
       const synth = window.speechSynthesis;
-      if (!synth) return;
+      if (!synth || muted) { afterSpeak(); return; }
       synth.cancel();
       const clean = text.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}]/gu, '').trim();
-      if (!clean) return;
+      if (!clean) { afterSpeak(); return; }
       const utter = new SpeechSynthesisUtterance(clean);
       utter.lang = 'ur-PK';
       utter.rate = 0.95;
+      utter.onend = () => afterSpeak();
+      utter.onerror = () => afterSpeak();
       synth.speak(utter);
-    } catch { /* voice not available */ }
+    } catch { afterSpeak(); }
+  };
+
+  const beginCallListening = () => {
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) {
+      setCallModeBoth(false);
+      pushBot('معذرت! آپ کے براؤزر میں آواز کی سہولت موجود نہیں۔');
+      return;
+    }
+    try {
+      try { recognitionRef.current?.abort(); } catch { /* ignore */ }
+      const rec = new SR();
+      rec.lang = 'ur-PK';
+      rec.interimResults = false;
+      rec.maxAlternatives = 1;
+      rec.onresult = (e: any) => {
+        const transcript = e.results?.[0]?.[0]?.transcript || '';
+        setListening(false);
+        if (transcript.trim()) {
+          handleText(transcript.trim());
+        } else if (callModeRef.current) {
+          beginCallListening();
+        }
+      };
+      rec.onerror = (e: any) => {
+        setListening(false);
+        const err = e?.error || '';
+        if (err === 'not-allowed' || err === 'service-not-allowed') {
+          setCallModeBoth(false);
+          pushBot('مائیکروفون کی اجازت نہیں ملی۔ براہ کرم اجازت دیں اور دوبارہ کال بٹن دبائیں۔');
+        } else if (callModeRef.current) {
+          window.setTimeout(() => { if (callModeRef.current) beginCallListening(); }, 1000);
+        }
+      };
+      rec.onend = () => setListening(false);
+      recognitionRef.current = rec;
+      rec.start();
+      setListening(true);
+    } catch {
+      setListening(false);
+    }
+  };
+
+  const startCall = () => {
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) {
+      pushBot('معذرت! آپ کے براؤزر میں آواز کی سہولت موجود نہیں۔ براہ کرم لکھ کر جواب دیں۔');
+      return;
+    }
+    setMuted(false);
+    setCallModeBoth(true);
+    pushBot('کال شروع ہو گئی ہے 🎙️ میں سن رہا ہوں، بولیں...');
+  };
+
+  const endCall = () => {
+    setCallModeBoth(false);
+    try { recognitionRef.current?.abort(); } catch { /* ignore */ }
+    try { window.speechSynthesis?.cancel(); } catch { /* ignore */ }
+    setListening(false);
   };
 
   const pushBot = (text: string, options?: string[], delay = 500) => {
@@ -141,6 +217,7 @@ export function AiChatbotWidget() {
   };
 
   const toggleListening = () => {
+    if (callModeRef.current) return; // call mode has its own listening loop
     if (listening) {
       try { recognitionRef.current?.stop(); } catch { /* ignore */ }
       setListening(false);
@@ -536,9 +613,7 @@ export function AiChatbotWidget() {
                 </button>
                 <button
                   onClick={() => {
-                    try { window.speechSynthesis?.cancel(); } catch { /* ignore */ }
-                    try { recognitionRef.current?.stop(); } catch { /* ignore */ }
-                    setListening(false);
+                    endCall();
                     setOpen(false);
                   }}
                   aria-label="بند کریں"
@@ -591,6 +666,17 @@ export function AiChatbotWidget() {
             </div>
 
             <div className="shrink-0 border-t border-slate-200 bg-white px-3 py-2.5 flex items-center gap-2">
+              <button
+                onClick={callMode ? endCall : startCall}
+                aria-label={callMode ? 'کال بند کریں' : 'وائس کال شروع کریں'}
+                className={`w-11 h-11 shrink-0 rounded-full flex items-center justify-center active:scale-95 transition ${
+                  callMode
+                    ? 'bg-red-500 text-white animate-pulse'
+                    : 'bg-green-600 text-white hover:bg-green-700'
+                }`}
+              >
+                {callMode ? <PhoneOff className="w-5 h-5" /> : <Phone className="w-5 h-5" />}
+              </button>
               <button
                 onClick={toggleListening}
                 aria-label={listening ? 'سننا بند کریں' : 'بول کر جواب دیں'}
