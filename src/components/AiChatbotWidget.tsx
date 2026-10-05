@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, Send } from 'lucide-react';
+import { MessageCircle, X, Send, Mic, Volume2, VolumeX } from 'lucide-react';
 
 interface ChatMessage {
   id: number;
@@ -107,18 +107,68 @@ export function AiChatbotWidget() {
   const [input, setInput] = useState('');
   const [flow, setFlow] = useState<FlowState>({ ...initialFlow });
   const [busy, setBusy] = useState(false);
+  const [listening, setListening] = useState(false);
+  const [muted, setMuted] = useState(false);
+  const recognitionRef = useRef<any>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  const speak = (text: string) => {
+    if (muted) return;
+    try {
+      const synth = window.speechSynthesis;
+      if (!synth) return;
+      synth.cancel();
+      const clean = text.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}]/gu, '').trim();
+      if (!clean) return;
+      const utter = new SpeechSynthesisUtterance(clean);
+      utter.lang = 'ur-PK';
+      utter.rate = 0.95;
+      synth.speak(utter);
+    } catch { /* voice not available */ }
+  };
 
   const pushBot = (text: string, options?: string[], delay = 500) => {
     setBusy(true);
     window.setTimeout(() => {
       setMessages((prev) => [...prev, { id: nextId(), from: 'bot', text, options }]);
       setBusy(false);
+      speak(text);
     }, delay);
   };
 
   const pushUser = (text: string) => {
     setMessages((prev) => [...prev, { id: nextId(), from: 'user', text }]);
+  };
+
+  const toggleListening = () => {
+    if (listening) {
+      try { recognitionRef.current?.stop(); } catch { /* ignore */ }
+      setListening(false);
+      return;
+    }
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) {
+      pushBot('معذرت! آپ کے براؤزر میں آواز کی سہولت موجود نہیں۔ براہ کرم لکھ کر جواب دیں۔');
+      return;
+    }
+    try {
+      const rec = new SR();
+      rec.lang = 'ur-PK';
+      rec.interimResults = false;
+      rec.maxAlternatives = 1;
+      rec.onresult = (e: any) => {
+        const transcript = e.results?.[0]?.[0]?.transcript || '';
+        setListening(false);
+        if (transcript.trim()) handleText(transcript.trim());
+      };
+      rec.onerror = () => setListening(false);
+      rec.onend = () => setListening(false);
+      recognitionRef.current = rec;
+      rec.start();
+      setListening(true);
+    } catch {
+      pushBot('مائیکروفون شروع نہیں ہو سکا۔ براہ کرم لکھ کر جواب دیں۔');
+    }
   };
 
   const startConversation = () => {
@@ -476,9 +526,27 @@ export function AiChatbotWidget() {
                   <div className="text-xs text-green-100">آن لائن ✅</div>
                 </div>
               </div>
-              <button onClick={() => setOpen(false)} aria-label="بند کریں" className="p-1.5 rounded-full hover:bg-white/20">
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setMuted((m) => !m)}
+                  aria-label={muted ? 'آواز آن کریں' : 'آواز بند کریں'}
+                  className="p-1.5 rounded-full hover:bg-white/20"
+                >
+                  {muted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                </button>
+                <button
+                  onClick={() => {
+                    try { window.speechSynthesis?.cancel(); } catch { /* ignore */ }
+                    try { recognitionRef.current?.stop(); } catch { /* ignore */ }
+                    setListening(false);
+                    setOpen(false);
+                  }}
+                  aria-label="بند کریں"
+                  className="p-1.5 rounded-full hover:bg-white/20"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto px-3 py-4 space-y-3 bg-slate-50">
@@ -523,6 +591,17 @@ export function AiChatbotWidget() {
             </div>
 
             <div className="shrink-0 border-t border-slate-200 bg-white px-3 py-2.5 flex items-center gap-2">
+              <button
+                onClick={toggleListening}
+                aria-label={listening ? 'سننا بند کریں' : 'بول کر جواب دیں'}
+                className={`w-11 h-11 shrink-0 rounded-full flex items-center justify-center active:scale-95 transition ${
+                  listening
+                    ? 'bg-red-500 text-white animate-pulse'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                <Mic className="w-5 h-5" />
+              </button>
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
