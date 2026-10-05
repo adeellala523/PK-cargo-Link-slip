@@ -287,6 +287,7 @@ export default function App() {
       })
       .catch(() => {});
     StorageService.syncUsersWithServer().catch(() => {});
+    StorageService.syncDriversWithServer().catch(() => {});
 
     // Periodic auto-sync every 8 seconds so newly posted loads appear live without refreshing
     const syncInterval = setInterval(() => {
