@@ -102,7 +102,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 currentTab === 'search' ? 'bg-[#08284F] text-white' : 'text-slate-200 hover:bg-white/10'
               }`}
             >
-              لوڈ تلاش کریں
+              📦 مال / لوڈ تلاش کریں
             </button>
             <button
               onClick={() => setCurrentTab('trucks')}
@@ -110,7 +110,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 currentTab === 'trucks' || currentTab === 'available-trucks' ? 'bg-[#19A974] text-white font-bold shadow-xs' : 'text-slate-200 hover:bg-white/10'
               }`}
             >
-              دستیاب گاڑیاں
+              🚚 دستیاب گاڑیاں
             </button>
             <button
               onClick={() => setCurrentTab('verify')}
@@ -249,7 +249,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                 currentTab === 'search' ? 'bg-[#19A974] text-white' : 'text-slate-200 hover:bg-white/5'
               }`}
             >
-              🔎 لوڈ تلاش کریں
+              📦 کارگو لوڈز (مال کی سلپس)
+            </button>
+            <button
+              onClick={() => { setCurrentTab('trucks'); setMenuOpen(false); }}
+              className={`w-full text-right px-3 py-2.5 rounded-xl text-base font-medium min-h-[44px] flex items-center ${
+                currentTab === 'trucks' ? 'bg-[#19A974] text-white' : 'text-slate-200 hover:bg-white/5'
+              }`}
+            >
+              🚚 دستیاب گاڑیاں (خالی ٹرک)
             </button>
             <button
               onClick={() => { setCurrentTab('verify'); setMenuOpen(false); }}
@@ -269,14 +277,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="bg-emerald-500/30 text-emerald-200 text-xs px-2 py-0.5 rounded-full font-nafees">
                 ڈرائیور
               </span>
-            </button>
-            <button
-              onClick={() => { setCurrentTab('trucks'); setMenuOpen(false); }}
-              className={`w-full text-right px-3 py-2.5 rounded-xl text-base font-medium min-h-[44px] flex items-center ${
-                currentTab === 'trucks' ? 'bg-[#19A974] text-white' : 'text-slate-200 hover:bg-white/5'
-              }`}
-            >
-              🚚 دستیاب گاڑیاں
             </button>
             <button
               onClick={() => { setCurrentTab('about'); setMenuOpen(false); }}

@@ -1732,6 +1732,29 @@ export const StorageService = {
     return [];
   },
 
+  async syncTrucksWithServer(): Promise<AvailableTruck[]> {
+    try {
+      const res = await fetch('/api/trucks');
+      if (res.ok) {
+        const serverTrucks = await res.json();
+        if (Array.isArray(serverTrucks)) {
+          const localTrucks = this.getAvailableTrucks();
+          const map = new Map<string, AvailableTruck>();
+          serverTrucks.forEach((t: AvailableTruck) => {
+            if (t && t.id) map.set(t.id, t);
+          });
+          localTrucks.forEach((t) => {
+            if (t && t.id && !map.has(t.id)) map.set(t.id, t);
+          });
+          const merged = Array.from(map.values());
+          localStorage.setItem(STORAGE_KEYS.AVAILABLE_TRUCKS, JSON.stringify(merged));
+          return merged;
+        }
+      }
+    } catch {}
+    return this.getAvailableTrucks();
+  },
+
   saveAvailableTruck(truck: AvailableTruck): void {
     const list = this.getAvailableTrucks();
     let filtered: AvailableTruck[];
@@ -1746,7 +1769,7 @@ export const StorageService = {
         return true;
       });
     } else {
-      // Adda Manager can add multiple trucks (only filter out exact ID on update)
+      // Adda Manager or Admin can add multiple trucks
       filtered = list.filter((t) => t.id !== truck.id);
     }
 
@@ -1754,6 +1777,13 @@ export const StorageService = {
     try {
       localStorage.setItem(STORAGE_KEYS.AVAILABLE_TRUCKS, JSON.stringify(filtered));
     } catch {}
+
+    // Async push to server
+    fetch('/api/trucks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(truck),
+    }).catch(() => {});
   },
 
   deleteAvailableTruck(id: string): void {
@@ -1762,6 +1792,27 @@ export const StorageService = {
     try {
       localStorage.setItem(STORAGE_KEYS.AVAILABLE_TRUCKS, JSON.stringify(filtered));
     } catch {}
+
+    // Async delete from server
+    fetch(`/api/trucks/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    }).catch(() => {});
+  },
+
+  updateTruckStatus(id: string, status: 'available' | 'booked'): void {
+    const list = this.getAvailableTrucks();
+    const target = list.find((t) => t.id === id);
+    if (target) {
+      target.status = status;
+      try {
+        localStorage.setItem(STORAGE_KEYS.AVAILABLE_TRUCKS, JSON.stringify(list));
+      } catch {}
+      fetch(`/api/trucks/${encodeURIComponent(id)}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      }).catch(() => {});
+    }
   },
 
   // -------------------------------------------------------------

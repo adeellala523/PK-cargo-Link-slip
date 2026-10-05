@@ -23,9 +23,17 @@ import {
   ChevronRight,
   RefreshCw,
   Megaphone,
-  Sparkles
+  Sparkles,
+  Phone,
+  MessageSquare,
+  Plus,
+  Share2,
+  Copy,
+  MapPin,
+  RotateCcw,
+  X
 } from 'lucide-react';
-import { LoadSlip, AdminStats, AddaProfile, UserAccount, PaymentSettings } from '../types';
+import { LoadSlip, AdminStats, AddaProfile, UserAccount, PaymentSettings, AvailableTruck } from '../types';
 import { StorageService } from '../services/storage';
 import { AdConfig, AdService } from '../services/adService';
 import { AdPlaceholder } from './AdPlaceholder';
@@ -38,6 +46,7 @@ interface AdminPanelViewProps {
   onToggleSlipStatus: (slip: LoadSlip) => void;
   currentProfile: AddaProfile;
   onSlipCreated?: (slip: LoadSlip) => void;
+  onViewSlip?: (slip: LoadSlip) => void;
 }
 
 export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
@@ -46,14 +55,36 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
   onDeleteSlip,
   onToggleSlipStatus,
   onSlipCreated,
+  onViewSlip,
 }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState(false);
   const [showPin, setShowPin] = useState(false);
   const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
-  const [activeTab, setActiveTab] = useState<'users' | 'quick_slip' | 'slips' | 'payment_settings' | 'subscriptions' | 'ads' | 'backup'>('quick_slip');
+  const [activeTab, setActiveTab] = useState<'trucks' | 'slips' | 'quick_slip' | 'users' | 'subscriptions' | 'payment_settings' | 'ads' | 'backup'>('trucks');
   const [searchFilter, setSearchFilter] = useState('');
+
+  // -------------------------------------------------------------
+  // TRUCKS / VEHICLES MANAGEMENT STATE (GAARI CONTROL)
+  // -------------------------------------------------------------
+  const [trucksList, setTrucksList] = useState<AvailableTruck[]>(() => StorageService.getAvailableTrucks());
+  const [truckSearchFilter, setTruckSearchFilter] = useState('');
+  const [truckCityFilter, setTruckCityFilter] = useState('تمام');
+  const [isAddTruckModalOpen, setIsAddTruckModalOpen] = useState(false);
+  const [deletingTruckId, setDeletingTruckId] = useState<string | null>(null);
+  const [truckActionSuccess, setTruckActionSuccess] = useState<string | null>(null);
+
+  // New Truck Form Fields
+  const [newTruckOwner, setNewTruckOwner] = useState('');
+  const [newTruckPhone, setNewTruckPhone] = useState('');
+  const [newTruckCity, setNewTruckCity] = useState('لاہور');
+  const [newTruckLocation, setNewTruckLocation] = useState('');
+  const [newTruckVehicleType, setNewTruckVehicleType] = useState('22 Wheeler');
+  const [newTruckBodyType, setNewTruckBodyType] = useState('اوپن');
+  const [newTruckPlate, setNewTruckPlate] = useState('');
+  const [newTruckRoute, setNewTruckRoute] = useState('تمام پاکستان');
+  const [newTruckStatus, setNewTruckStatus] = useState<'available' | 'booked'>('available');
 
   // Users state
   const [users, setUsers] = useState<UserAccount[]>(StorageService.getUsers());
@@ -83,6 +114,61 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
     } else {
       setPinError(true);
     }
+  };
+
+  const handleCreateTruckByAdmin = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanPhoneDigits = newTruckPhone.replace(/[^0-9]/g, '');
+    if (!cleanPhoneDigits || cleanPhoneDigits.length < 10) {
+      alert('براہ کرم ڈرائیور یا مالک کا درست 11 ہندسوں کا موبائل فون نمبر درج کریں۔');
+      return;
+    }
+
+    let formattedPhone = cleanPhoneDigits;
+    if (formattedPhone.startsWith('92')) formattedPhone = '0' + formattedPhone.substring(2);
+    if (!formattedPhone.startsWith('0') && formattedPhone.length === 10) formattedPhone = '0' + formattedPhone;
+
+    const newTruck: AvailableTruck = {
+      id: `truck_${Date.now()}_${Math.floor(100 + Math.random() * 900)}`,
+      driverOrOwnerName: newTruckOwner.trim() || 'ڈرائیور / مالک',
+      phone: formattedPhone,
+      whatsappNumber: formattedPhone,
+      vehicleType: newTruckVehicleType,
+      bodyType: newTruckBodyType,
+      vehicleNumber: newTruckPlate.trim() || undefined,
+      currentCity: newTruckCity,
+      locationDetails: newTruckLocation.trim() || `${newTruckCity} اڈا پوائنٹ`,
+      preferredRoute: newTruckRoute.trim() || 'تمام پاکستان',
+      createdAt: new Date().toISOString(),
+      userRole: 'admin',
+      status: newTruckStatus,
+    };
+
+    StorageService.saveAvailableTruck(newTruck);
+    setTrucksList((prev) => [newTruck, ...prev.filter((t) => t.id !== newTruck.id)]);
+    setIsAddTruckModalOpen(false);
+    setNewTruckOwner('');
+    setNewTruckPhone('');
+    setNewTruckLocation('');
+    setNewTruckPlate('');
+    setTruckActionSuccess(`گاڑی #${newTruck.id} (${newTruck.vehicleType} - ${newTruck.currentCity}) کامیابی سے سسٹم میں لسٹ ہو گئی ہے!`);
+    setTimeout(() => setTruckActionSuccess(null), 4000);
+  };
+
+  const handleDeleteTruckByAdmin = (id: string) => {
+    StorageService.deleteAvailableTruck(id);
+    setTrucksList((prev) => prev.filter((t) => t.id !== id));
+    setDeletingTruckId(null);
+    setTruckActionSuccess('گاڑی کامیابی سے لسٹ سے ہٹا دی گئی ہے۔');
+    setTimeout(() => setTruckActionSuccess(null), 3000);
+  };
+
+  const handleToggleTruckStatusByAdmin = (truck: AvailableTruck) => {
+    const nextStatus: 'available' | 'booked' = (truck.status === 'booked' ? 'available' : 'booked');
+    StorageService.updateTruckStatus(truck.id, nextStatus);
+    setTrucksList((prev) => prev.map((t) => t.id === truck.id ? { ...t, status: nextStatus } : t));
+    setTruckActionSuccess(nextStatus === 'available' ? 'گاڑی کی حیثیت تبدیل کر کے "دستیاب / خالی گاڑی" کر دی گئی ہے۔' : 'گاڑی کی حیثیت تبدیل کر کے "بک ہو چکی ہے" کر دی گئی ہے۔');
+    setTimeout(() => setTruckActionSuccess(null), 3000);
   };
 
   const handleSavePaymentSettings = (e: React.FormEvent) => {
@@ -272,80 +358,559 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
 
       {/* Navigation Tabs */}
       <div className="flex flex-wrap gap-2 p-1.5 bg-slate-100 rounded-2xl border border-slate-200 text-xs sm:text-sm font-bold">
+        {/* 1. GAARI / TRUCKS CONTROL */}
+        <button
+          onClick={() => setActiveTab('trucks')}
+          className={`flex-1 min-w-[140px] py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 ${
+            activeTab === 'trucks' 
+              ? 'bg-[#19A974] text-white shadow-lg font-bold' 
+              : 'text-emerald-950 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300'
+          }`}
+        >
+          <Truck className="w-4 h-4 text-emerald-400 stroke-[2.5]" />
+          <span>🚚 دستیاب گاڑیاں ({trucksList.length})</span>
+        </button>
+
+        {/* 2. SLIPS CONTROL */}
+        <button
+          onClick={() => setActiveTab('slips')}
+          className={`flex-1 min-w-[140px] py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 ${
+            activeTab === 'slips' 
+              ? 'bg-[#0B2545] text-white shadow-lg font-bold' 
+              : 'text-slate-700 bg-white hover:bg-slate-50 border border-slate-300'
+          }`}
+        >
+          <FileText className="w-4 h-4 text-sky-400 stroke-[2.5]" />
+          <span>📦 کارگو لوڈ سلپس ({slips.length})</span>
+        </button>
+
+        {/* 3. QUICK SLIP CREATOR */}
         <button
           onClick={() => setActiveTab('quick_slip')}
-          className={`flex-1 py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 ${
+          className={`flex-1 min-w-[130px] py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 ${
             activeTab === 'quick_slip' 
-              ? 'bg-emerald-600 text-white shadow-lg font-bold' 
-              : 'text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300'
-          }`}
-        >
-          <Sparkles className="w-4 h-4 text-emerald-400" />
-          <span>ایڈمن کوئیک سلپ میکر (واٹس ایپ پوسٹر)</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('users')}
-          className={`flex-1 py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 ${
-            activeTab === 'users' ? 'bg-[#0B2545] text-white shadow' : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          <Users className="w-4 h-4" />
-          <span>رجسٹرڈ اڈا اکاؤنٹس ({users.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('payment_settings')}
-          className={`flex-1 py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 ${
-            activeTab === 'payment_settings' ? 'bg-[#0B2545] text-white shadow' : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          <CreditCard className="w-4 h-4" />
-          <span>ماہانہ فیس و پیمنٹ سیٹنگز</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('subscriptions')}
-          className={`flex-1 py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 ${
-            activeTab === 'subscriptions' 
               ? 'bg-amber-600 text-white shadow-lg font-bold' 
               : 'text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-300'
           }`}
         >
-          <CheckCircle2 className="w-4 h-4 text-amber-500" />
-          <span>💳 AI و فیس منظوری ({subscriptionsList.filter(s => s.status === 'pending').length})</span>
+          <Sparkles className="w-4 h-4 text-amber-400" />
+          <span>⚡ فوری لوڈ میکر</span>
         </button>
 
+        {/* 4. USERS */}
         <button
-          onClick={() => setActiveTab('slips')}
-          className={`flex-1 py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 ${
-            activeTab === 'slips' ? 'bg-[#0B2545] text-white shadow' : 'text-slate-600 hover:text-slate-900'
+          onClick={() => setActiveTab('users')}
+          className={`flex-1 min-w-[120px] py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 ${
+            activeTab === 'users' ? 'bg-[#0B2545] text-white shadow' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <FileText className="w-4 h-4" />
-          <span>تمام لوڈ سلپس ({slips.length})</span>
+          <Users className="w-4 h-4" />
+          <span>رجسٹرڈ اکاؤنٹس ({users.length})</span>
         </button>
 
+        {/* 5. SUBSCRIPTIONS */}
         <button
-          onClick={() => setActiveTab('ads')}
-          className={`flex-1 py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 ${
-            activeTab === 'ads' ? 'bg-[#0B2545] text-white shadow' : 'text-slate-600 hover:text-slate-900'
+          onClick={() => setActiveTab('subscriptions')}
+          className={`flex-1 min-w-[110px] py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 ${
+            activeTab === 'subscriptions' 
+              ? 'bg-purple-600 text-white shadow-lg font-bold' 
+              : 'text-purple-900 bg-purple-50 hover:bg-purple-100 border border-purple-200'
           }`}
         >
-          <Megaphone className="w-4 h-4" />
-          <span>اشتہارات سیٹنگز (Ads)</span>
+          <CreditCard className="w-4 h-4 text-purple-400" />
+          <span>💳 AI و فیس ({subscriptionsList.filter(s => s.status === 'pending').length})</span>
+        </button>
+
+        {/* 6. SETTINGS & BACKUP */}
+        <button
+          onClick={() => setActiveTab('payment_settings')}
+          className={`py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 ${
+            activeTab === 'payment_settings' ? 'bg-[#0B2545] text-white shadow' : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <span>سیٹنگز</span>
         </button>
 
         <button
           onClick={() => setActiveTab('backup')}
-          className={`flex-1 py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 ${
+          className={`py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 ${
             activeTab === 'backup' ? 'bg-[#0B2545] text-white shadow' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
           <Download className="w-4 h-4" />
-          <span>ڈیٹا بیک اپ و بحالی</span>
+          <span>بیک اپ</span>
         </button>
       </div>
+
+      {/* ======================================================== */}
+      {/* TAB 1: GAARI / AVAILABLE TRUCKS CONTROL (VEHICLES TAB)  */}
+      {/* ======================================================== */}
+      {activeTab === 'trucks' && (
+        <div className="space-y-6">
+          {/* Header & Stats Banner */}
+          <div className="bg-gradient-to-r from-[#0B2545] to-[#134074] rounded-3xl p-5 sm:p-6 text-white shadow-md space-y-4 font-nafees">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="p-2 bg-emerald-500/20 text-emerald-400 rounded-xl border border-emerald-500/30">
+                    <Truck className="w-6 h-6 stroke-[2.5]" />
+                  </span>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white font-nafees">
+                        دستیاب گاڑیاں کنٹرول (صرف خالی ٹرک)
+                      </h2>
+                      <span className="bg-emerald-500/30 text-emerald-300 text-[11px] font-bold px-2 py-0.5 rounded-full border border-emerald-400/30">
+                        گاڑی حاضر ہے • مال چاہیے
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-300 mt-1">
+                      یہ سیکشن <strong>صرف خالی و دستیاب گاڑیوں</strong> کے لیے ہے جہاں ڈرائیورز یا ٹرانسپورٹرز کے پاس گاڑی حاضر ہو اور انہیں مال درکار ہو۔
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsAddTruckModalOpen(true)}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-xl text-sm font-bold shadow-lg transition active:scale-95 flex-shrink-0 cursor-pointer"
+              >
+                <Plus className="w-4 h-4 stroke-[3]" />
+                <span>+ نئی خالی گاڑی لسٹ کریں</span>
+              </button>
+            </div>
+
+            {/* Quick Metrics Bar */}
+            <div className="grid grid-cols-3 gap-3 pt-2 border-t border-white/10">
+              <div className="bg-white/10 backdrop-blur-xs rounded-xl p-3 text-center">
+                <span className="text-xs text-slate-300 block">کل گاڑیاں</span>
+                <span className="text-lg sm:text-2xl font-bold font-mono text-white">{trucksList.length}</span>
+              </div>
+              <div className="bg-emerald-500/20 border border-emerald-500/30 rounded-xl p-3 text-center">
+                <span className="text-xs text-emerald-200 block">خالی / دستیاب</span>
+                <span className="text-lg sm:text-2xl font-bold font-mono text-emerald-300">
+                  {trucksList.filter((t) => t.status !== 'booked').length}
+                </span>
+              </div>
+              <div className="bg-amber-500/20 border border-amber-500/30 rounded-xl p-3 text-center">
+                <span className="text-xs text-amber-200 block">لوڈ شدہ / بک</span>
+                <span className="text-lg sm:text-2xl font-bold font-mono text-amber-300">
+                  {trucksList.filter((t) => t.status === 'booked').length}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Success Notification Alert */}
+          {truckActionSuccess && (
+            <div className="bg-emerald-50 border border-emerald-300 text-emerald-800 px-4 py-3 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 shadow-xs">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+              <span>{truckActionSuccess}</span>
+            </div>
+          )}
+
+          {/* Filter & Search Bar */}
+          <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={truckSearchFilter}
+                  onChange={(e) => setTruckSearchFilter(e.target.value)}
+                  placeholder="ڈرائیور کا نام، موبائل نمبر، گاڑی کی قسم یا شہر سے تلاش کریں..."
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl pr-9 pl-3 py-2 text-xs sm:text-sm text-slate-900 outline-none focus:border-emerald-500 focus:bg-white transition"
+                />
+              </div>
+
+              {truckSearchFilter && (
+                <button
+                  onClick={() => setTruckSearchFilter('')}
+                  className="text-xs text-slate-500 hover:text-slate-700 px-2 py-1"
+                >
+                  فلٹر ختم کریں
+                </button>
+              )}
+            </div>
+
+            {/* City Badges */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+              <span className="text-slate-400 text-[11px] font-bold pl-1 flex-shrink-0">شہر:</span>
+              {['تمام', 'لاہور', 'کراچی', 'ملتان', 'فیصل آباد', 'راولپنڈی', 'گوجرانوالہ', 'پشاور', 'کوئٹہ', 'ساہیوال'].map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setTruckCityFilter(c)}
+                  className={`px-2.5 py-1 rounded-lg font-bold transition flex-shrink-0 ${
+                    truckCityFilter === c
+                      ? 'bg-[#0B2545] text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* ADD TRUCK MODAL */}
+          {isAddTruckModalOpen && (
+            <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+              <div className="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200 space-y-4 my-8 max-h-[90vh] overflow-y-auto font-nafees">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="p-2 bg-emerald-100 text-emerald-700 rounded-xl">
+                      <Truck className="w-5 h-5 stroke-[2.5]" />
+                    </span>
+                    <h3 className="font-bold text-base sm:text-lg text-slate-900 font-nafees">
+                      نئی گاڑی لسٹ کریں (ایڈمن پورٹل)
+                    </h3>
+                  </div>
+                  <button
+                    onClick={() => setIsAddTruckModalOpen(false)}
+                    className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <form onSubmit={handleCreateTruckByAdmin} className="space-y-4 text-xs">
+                  {/* Driver Name & Phone */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-700 block">ڈرائیور یا مالک کا نام *</label>
+                      <input
+                        type="text"
+                        required
+                        value={newTruckOwner}
+                        onChange={(e) => setNewTruckOwner(e.target.value)}
+                        placeholder="مثلاً استاد اسلم / ملک قیصر"
+                        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900 outline-none focus:bg-white focus:border-emerald-500"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-700 block">موبائل فون نمبر (WhatsApp) *</label>
+                      <input
+                        type="tel"
+                        required
+                        value={newTruckPhone}
+                        onChange={(e) => setNewTruckPhone(e.target.value)}
+                        placeholder="03001234567"
+                        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-mono outline-none focus:bg-white focus:border-emerald-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* City & Specific Location */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-700 block">موجودہ شہر *</label>
+                      <input
+                        type="text"
+                        required
+                        value={newTruckCity}
+                        onChange={(e) => setNewTruckCity(e.target.value)}
+                        placeholder="مثلاً لاہور، کراچی، ملتان"
+                        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900 outline-none focus:bg-white focus:border-emerald-500"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-700 block">اڈا یا لوکیشن کی تفصیل</label>
+                      <input
+                        type="text"
+                        value={newTruckLocation}
+                        onChange={(e) => setNewTruckLocation(e.target.value)}
+                        placeholder="مثلاً بادامی باغ، سپر ہائی وے وغیرہ"
+                        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900 outline-none focus:bg-white focus:border-emerald-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Vehicle Type & Body Type */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-700 block">گاڑی کی قسم *</label>
+                      <select
+                        value={newTruckVehicleType}
+                        onChange={(e) => setNewTruckVehicleType(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900 outline-none focus:bg-white focus:border-emerald-500 font-sans"
+                      >
+                        <option value="22 Wheeler">22 Wheeler (بڑا ٹریلر)</option>
+                        <option value="10 Wheeler">10 Wheeler (دس وہیلر)</option>
+                        <option value="Shahzor">Shahzor (شہزور)</option>
+                        <option value="Mazda">Mazda (مزدا)</option>
+                        <option value="40 Foot Container">40 Foot Container (کنٹینر)</option>
+                        <option value="16 Foot">16 Foot (سولہ فٹ)</option>
+                        <option value="اوپن ٹریلر">اوپن ٹریلر</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-700 block">باڈی کی قسم *</label>
+                      <select
+                        value={newTruckBodyType}
+                        onChange={(e) => setNewTruckBodyType(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900 outline-none focus:bg-white focus:border-emerald-500 font-sans"
+                      >
+                        <option value="اوپن">اوپن (Open)</option>
+                        <option value="فل باڈی">فل باڈی (Full Body)</option>
+                        <option value="ہاف باڈی">ہاف باڈی (Half Body)</option>
+                        <option value="کنٹینر">کنٹینر (Container)</option>
+                        <option value="پھٹا">پھٹا</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Truck Number & Preferred Route */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-700 block">گاڑی کا نمبر پلیٹ (اختیاری)</label>
+                      <input
+                        type="text"
+                        value={newTruckPlate}
+                        onChange={(e) => setNewTruckPlate(e.target.value)}
+                        placeholder="مثلاً LES-7860"
+                        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-mono outline-none focus:bg-white focus:border-emerald-500"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-bold text-slate-700 block">پسندیدہ روٹ / منزل</label>
+                      <input
+                        type="text"
+                        value={newTruckRoute}
+                        onChange={(e) => setNewTruckRoute(e.target.value)}
+                        placeholder="مثلاً لاہور تا کراچی یا تمام پاکستان"
+                        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900 outline-none focus:bg-white focus:border-emerald-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Status selection */}
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-700 block">دستیابی کی حیثیت</label>
+                    <div className="flex items-center gap-3">
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="truckStatus"
+                          value="available"
+                          checked={newTruckStatus === 'available'}
+                          onChange={() => setNewTruckStatus('available')}
+                        />
+                        <span className="text-emerald-700 font-bold">🟢 خالی گاڑی دستیاب ہے</span>
+                      </label>
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="truckStatus"
+                          value="booked"
+                          checked={newTruckStatus === 'booked'}
+                          onChange={() => setNewTruckStatus('booked')}
+                        />
+                        <span className="text-slate-600 font-bold">🔵 بک ہو چکی ہے</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => setIsAddTruckModalOpen(false)}
+                      className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+                    >
+                      منسوخ کریں
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition shadow-md cursor-pointer"
+                    >
+                      گاڑی لسٹ کریں
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* TRUCKS LISTING */}
+          {(() => {
+            const filtered = trucksList.filter((t) => {
+              if (truckCityFilter !== 'تمام' && !t.currentCity.includes(truckCityFilter)) return false;
+              if (!truckSearchFilter) return true;
+              const q = truckSearchFilter.toLowerCase();
+              return (
+                (t.driverOrOwnerName || '').toLowerCase().includes(q) ||
+                (t.phone || '').includes(q) ||
+                (t.vehicleType || '').toLowerCase().includes(q) ||
+                (t.currentCity || '').toLowerCase().includes(q) ||
+                (t.vehicleNumber || '').toLowerCase().includes(q) ||
+                (t.preferredRoute || '').toLowerCase().includes(q)
+              );
+            });
+
+            if (filtered.length === 0) {
+              return (
+                <div className="bg-white rounded-3xl p-10 text-center border border-slate-200 shadow-sm space-y-3 font-nafees">
+                  <Truck className="w-12 h-12 text-slate-300 mx-auto" />
+                  <div className="font-bold text-slate-700">کوئی گاڑی نہیں ملی۔</div>
+                  <p className="text-xs text-slate-400">نئی گاڑی لسٹ کرنے کے لیے اوپر دیے گئے بٹن پر کلک کریں۔</p>
+                  <button
+                    onClick={() => setIsAddTruckModalOpen(true)}
+                    className="px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl shadow-xs cursor-pointer"
+                  >
+                    + نئی گاڑی لسٹ کریں
+                  </button>
+                </div>
+              );
+            }
+
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                {filtered.map((t) => {
+                  const cleanPhone = (t.phone || '').replace(/[^0-9]/g, '');
+                  const isBooked = t.status === 'booked';
+
+                  return (
+                    <div
+                      key={t.id}
+                      className={`bg-white rounded-2xl p-4 border transition hover:shadow-md space-y-3 font-nafees ${
+                        isBooked ? 'border-slate-200 opacity-80 bg-slate-50/50' : 'border-emerald-200/80 shadow-xs'
+                      }`}
+                    >
+                      {/* Top Row: Vehicle Type, Body & Status */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-bold text-slate-900 text-sm font-nafees">
+                              {t.vehicleType}
+                            </span>
+                            <span className="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full font-bold">
+                              {t.bodyType}
+                            </span>
+                            {t.vehicleNumber && (
+                              <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-mono font-bold">
+                                {t.vehicleNumber}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-1 text-xs text-slate-600 mt-1">
+                            <MapPin className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                            <span className="font-bold text-emerald-800">{t.currentCity}</span>
+                            {t.locationDetails && (
+                              <span className="text-slate-500">({t.locationDetails})</span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Status Badge */}
+                        <div className="flex-shrink-0">
+                          {isBooked ? (
+                            <span className="inline-flex items-center gap-1 bg-slate-200 text-slate-700 text-[11px] font-bold px-2.5 py-1 rounded-full">
+                              <span className="w-2 h-2 rounded-full bg-slate-500"></span>
+                              <span>بک ہو چکی ہے</span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2.5 py-1 rounded-full animate-pulse">
+                              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                              <span>خالی گاڑی دستیاب</span>
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Middle: Driver Name & Preferred Route */}
+                      <div className="text-xs text-slate-600 space-y-1 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">ڈرائیور / مالک:</span>
+                          <span className="font-bold text-slate-900">{t.driverOrOwnerName}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">مطلوبہ روٹ:</span>
+                          <span className="font-bold text-emerald-700">{t.preferredRoute || 'تمام پاکستان'}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">رابطہ فون:</span>
+                          <span className="font-mono text-slate-800">{t.phone}</span>
+                        </div>
+                      </div>
+
+                      {/* Actions Row */}
+                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100">
+                        <div className="flex items-center gap-1.5">
+                          <a
+                            href={`tel:${t.phone}`}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-bold transition"
+                            title="براہ راست کال کریں"
+                          >
+                            <Phone className="w-3.5 h-3.5" />
+                            <span>کال</span>
+                          </a>
+
+                          <a
+                            href={`https://wa.me/92${cleanPhone.replace(/^0/, '')}?text=${encodeURIComponent(`السلام علیکم! میں نے PK Cargo Link پر آپ کی گاڑی (${t.vehicleType} - ${t.currentCity}) لسٹ دیکھی ہے۔ کیا یہ دستیاب ہے؟`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition"
+                            title="واٹس ایپ پر رابطہ کریں"
+                          >
+                            <MessageSquare className="w-3.5 h-3.5" />
+                            <span>واٹس ایپ</span>
+                          </a>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          {/* Toggle Status Button */}
+                          <button
+                            type="button"
+                            onClick={() => handleToggleTruckStatusByAdmin(t)}
+                            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                              isBooked 
+                                ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' 
+                                : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+                            }`}
+                            title="گاڑی کی دستیابی اسٹیٹس تبدیل کریں"
+                          >
+                            {isBooked ? 'دستیاب کریں' : 'بک مارک کریں'}
+                          </button>
+
+                          {/* Delete Button */}
+                          {deletingTruckId === t.id ? (
+                            <div className="flex items-center gap-1 bg-red-50 p-0.5 rounded-lg border border-red-200">
+                              <span className="text-[10px] text-red-700 font-bold px-1">ڈیلیٹ؟</span>
+                              <button
+                                onClick={() => handleDeleteTruckByAdmin(t.id)}
+                                className="bg-red-600 hover:bg-red-700 text-white px-2 py-0.5 rounded text-[11px] font-bold cursor-pointer"
+                              >
+                                ہاں
+                              </button>
+                              <button
+                                onClick={() => setDeletingTruckId(null)}
+                                className="bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded text-[11px] cursor-pointer"
+                              >
+                                نہیں
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setDeletingTruckId(t.id)}
+                              className="text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 transition cursor-pointer"
+                              title="گاڑی ڈیلیٹ کریں"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+        </div>
+      )}
 
       {/* ======================================================== */}
       {/* TAB 0: QUICK SLIP CREATOR (ANY ADDA / WHATSAPP PARSER) */}
@@ -876,17 +1441,71 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
       {/* TAB 3: SLIPS MANAGEMENT */}
       {/* ======================================================== */}
       {activeTab === 'slips' && (
-        <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-200 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
-            <h2 className="text-base sm:text-lg font-bold text-slate-900">
-              سسٹم کی تمام لوڈ سلپس ({slips.length})
-            </h2>
+        <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-200 space-y-5 font-nafees">
+          {/* Header & Stats Banner */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="p-2 bg-blue-100 text-[#0B2545] rounded-xl">
+                  <FileText className="w-5 h-5 stroke-[2.5]" />
+                </span>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg sm:text-xl font-bold text-slate-900">
+                      کارگو لوڈ سلپس (صرف مال / لوڈ) ({slips.length})
+                    </h2>
+                    <span className="bg-sky-100 text-sky-800 text-[11px] font-bold px-2 py-0.5 rounded-full border border-sky-300">
+                      مال موجود ہے • گاڑی چاہیے
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    یہ سیکشن <strong>صرف کارگو مال و لوڈز</strong> کے لیے ہے جہاں کسٹمر یا اڈے کے پاس مال موجود ہو اور اسے گاڑی کی ضرورت ہو۔
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setActiveTab('quick_slip')}
+                className="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1.5 cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>+ نیا کارگو مال (لوڈ سلپ) بنائیں</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Quick Metrics */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-center">
+              <span className="text-[11px] text-slate-500 block">کل سلپس</span>
+              <span className="text-base sm:text-lg font-bold font-mono text-slate-900">{slips.length}</span>
+            </div>
+            <div className="bg-emerald-50 p-2.5 rounded-xl border border-emerald-200 text-center">
+              <span className="text-[11px] text-emerald-700 block">فعال لوڈز (Active)</span>
+              <span className="text-base sm:text-lg font-bold font-mono text-emerald-800">
+                {slips.filter((s) => s.status === 'active').length}
+              </span>
+            </div>
+            <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-center">
+              <span className="text-[11px] text-slate-500 block">مکمل / غیر فعال</span>
+              <span className="text-base sm:text-lg font-bold font-mono text-slate-600">
+                {slips.filter((s) => s.status !== 'active').length}
+              </span>
+            </div>
+          </div>
+
+          {/* Search bar */}
+          <div className="relative">
+            <Search className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchFilter}
               onChange={(e) => setSearchFilter(e.target.value)}
-              placeholder="سلپ تلاش کریں..."
-              className="w-full sm:w-64 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none"
+              placeholder="روٹ، شہر، مال، اڈا نام یا سلپ نمبر سے تلاش کریں..."
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl pr-9 pl-3 py-2 text-xs sm:text-sm text-slate-900 outline-none focus:bg-white focus:border-blue-500 transition"
             />
           </div>
 
@@ -898,58 +1517,119 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
           )}
 
           {filteredSlips.length === 0 ? (
-            <div className="py-12 text-center text-slate-400">
-              کوئی لوڈ سلپ نہیں ملی۔
+            <div className="py-12 text-center text-slate-400 space-y-2">
+              <FileText className="w-10 h-10 text-slate-300 mx-auto" />
+              <div>کوئی لوڈ سلپ نہیں ملی۔</div>
             </div>
           ) : (
             <div className="divide-y divide-slate-100">
-              {filteredSlips.map((s) => (
-                <div key={s.id} className="py-3 flex items-center justify-between gap-3 text-xs">
-                  <div>
-                    <div className="font-bold text-slate-900 text-sm">
-                      {s.loadingCity} ➔ {s.destinationCity} ({s.goods})
-                    </div>
-                    <div className="text-slate-500">
-                      اڈا: {s.addaName} | گاڑی: {s.vehicleType} | وزن: {s.weight} | آئی ڈی: <span className="font-mono text-emerald-700">{s.id}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => onToggleSlipStatus(s)}
-                      className={`px-2.5 py-1 rounded-lg font-bold ${
-                        s.status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
-                      }`}
-                    >
-                      {s.status === 'active' ? 'فعال' : 'غیر فعال'}
-                    </button>
-                    {deletingSlipId === s.id ? (
-                      <div className="flex items-center gap-1.5 bg-red-50 p-1 rounded-xl border border-red-200">
-                        <span className="text-[11px] text-red-700 font-bold px-1">ڈیلیٹ؟</span>
-                        <button
-                          onClick={() => confirmDeleteSlip(s.id)}
-                          className="bg-red-600 hover:bg-red-700 text-white px-2 py-0.5 rounded-lg text-xs font-bold transition shadow-2xs"
-                        >
-                          ہاں
-                        </button>
-                        <button
-                          onClick={() => setDeletingSlipId(null)}
-                          className="bg-slate-200 hover:bg-slate-300 text-slate-700 px-2 py-0.5 rounded-lg text-xs transition"
-                        >
-                          منسوخ
-                        </button>
+              {filteredSlips.map((s) => {
+                const cleanPhone = (s.primaryPhone || '').replace(/[^0-9]/g, '');
+                const slipUrl = `https://pkcargolink.com/slip/${s.id}`;
+                const shareText = `*📋 PK Cargo Link لوڈ سلپ #${s.id}*\n📍 روٹ: ${s.loadingCity} ➔ ${s.destinationCity}\n📦 مال: ${s.goods} (${s.weight || s.quantity})\n🚚 گاڑی: ${s.vehicleType} (${s.bodyType})\n🏢 اڈا: ${s.addaName}\n📞 رابطہ: ${s.primaryPhone}\n\n🔗 ڈیجیٹل سلپ دیکھیں:\n${slipUrl}`;
+
+                return (
+                  <div key={s.id} className="py-4 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-bold text-slate-900 text-sm sm:text-base font-nafees">
+                          {s.loadingCity} ➔ {s.destinationCity}
+                        </span>
+                        <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-md font-bold text-[11px]">
+                          {s.goods}
+                        </span>
+                        <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md text-[11px]">
+                          {s.vehicleType} ({s.bodyType})
+                        </span>
+                        <span className="font-mono text-blue-700 bg-blue-50 px-2 py-0.5 rounded text-[11px] font-bold">
+                          #{s.id}
+                        </span>
                       </div>
-                    ) : (
-                      <button
-                        onClick={() => setDeletingSlipId(s.id)}
-                        className="text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 transition"
-                        title="سلپ ڈیلیٹ کریں"
+
+                      <div className="text-slate-500 text-xs flex items-center gap-2 flex-wrap">
+                        <span>اڈا: <strong>{s.addaName}</strong></span>
+                        <span>•</span>
+                        <span>رابطہ: <strong className="font-mono">{s.primaryPhone}</strong></span>
+                        {s.weight && (
+                          <>
+                            <span>•</span>
+                            <span>وزن: <strong>{s.weight}</strong></span>
+                          </>
+                        )}
+                        <span>•</span>
+                        <span>تاریخ: {new Date(s.createdAt).toLocaleDateString('ur-PK')}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-wrap flex-shrink-0">
+                      {/* Direct Slip Online Link */}
+                      <a
+                        href={`/slip/${s.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg font-bold transition text-xs"
+                        title="سلپ آن لائن دیکھیں"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>آن لائن دیکھیں</span>
+                      </a>
+
+                      {/* WhatsApp Share Button */}
+                      <a
+                        href={`https://wa.me/?text=${encodeURIComponent(shareText)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold transition text-xs"
+                        title="واٹس ایپ پر شیئر کریں"
+                      >
+                        <Share2 className="w-3.5 h-3.5" />
+                        <span>شیئر</span>
+                      </a>
+
+                      {/* Status Toggle */}
+                      <button
+                        type="button"
+                        onClick={() => onToggleSlipStatus(s)}
+                        className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer text-xs ${
+                          s.status === 'active' 
+                            ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' 
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                      >
+                        {s.status === 'active' ? '🟢 فعال' : '⚪ غیر فعال'}
                       </button>
-                    )}
+
+                      {/* Delete */}
+                      {deletingSlipId === s.id ? (
+                        <div className="flex items-center gap-1.5 bg-red-50 p-1 rounded-xl border border-red-200">
+                          <span className="text-[11px] text-red-700 font-bold px-1">ڈیلیٹ؟</span>
+                          <button
+                            onClick={() => confirmDeleteSlip(s.id)}
+                            className="bg-red-600 hover:bg-red-700 text-white px-2 py-0.5 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer"
+                          >
+                            ہاں
+                          </button>
+                          <button
+                            onClick={() => setDeletingSlipId(null)}
+                            className="bg-slate-200 hover:bg-slate-300 text-slate-700 px-2 py-0.5 rounded-lg text-xs transition cursor-pointer"
+                          >
+                            منسوخ
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setDeletingSlipId(s.id)}
+                          className="text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 transition cursor-pointer"
+                          title="سلپ ڈیلیٹ کریں"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

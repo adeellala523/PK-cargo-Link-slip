@@ -40,6 +40,25 @@ if (strpos($uri, '/api/slips') === 0) {
     }
 }
 
+if (strpos($uri, '/api/trucks') === 0) {
+    preg_match('#^/api/trucks/([^/?]+)#', $uri, $m);
+    if (!empty($m[1]) && !isset($_GET['id'])) {
+        $_GET['id'] = $m[1];
+    }
+    if (file_exists(__DIR__ . '/api/trucks.php')) {
+        require __DIR__ . '/api/trucks.php';
+        exit;
+    }
+    if (file_exists(__DIR__ . '/dist/api/trucks.php')) {
+        require __DIR__ . '/dist/api/trucks.php';
+        exit;
+    }
+    if (file_exists(__DIR__ . '/public/api/trucks.php')) {
+        require __DIR__ . '/public/api/trucks.php';
+        exit;
+    }
+}
+
 if (strpos($uri, '/api/users-sync') === 0) {
     if (file_exists(__DIR__ . '/api/users.php')) {
         require __DIR__ . '/api/users.php';

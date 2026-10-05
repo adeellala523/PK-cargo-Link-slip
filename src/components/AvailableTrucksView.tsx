@@ -94,9 +94,14 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
     return null;
   }, [trucksList, isDriverLoggedIn, currentDriver]);
 
-  // Refresh trucks on mount
+  // Refresh trucks on mount and sync with server
   useEffect(() => {
     setTrucksList(StorageService.getAvailableTrucks());
+    StorageService.syncTrucksWithServer().then((latest) => {
+      if (Array.isArray(latest) && latest.length > 0) {
+        setTrucksList(latest);
+      }
+    });
   }, []);
 
   // Prefill when adding truck

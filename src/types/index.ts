@@ -288,7 +288,8 @@ export interface AvailableTruck {
   createdAt: string;
   userId?: string;
   createdByPhone?: string;
-  userRole?: 'driver' | 'adda_manager';
+  userRole?: 'driver' | 'adda_manager' | 'admin';
+  status?: 'available' | 'booked';
 }
 
 export interface AiVoiceSubscription {

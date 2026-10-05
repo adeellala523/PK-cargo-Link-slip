@@ -667,6 +667,7 @@ export default function App() {
             onToggleSlipStatus={handleToggleSlipStatus}
             currentProfile={profile}
             onSlipCreated={handleSlipCreated}
+            onViewSlip={(s) => navigateTo('slip-detail', { slip: s })}
           />
         )}
 

@@ -736,6 +736,86 @@ app.delete('/api/users', async (req: Request, res: Response) => {
 });
 
 // -------------------------------------------------------------
+// Available Trucks / Vehicles Management API
+// -------------------------------------------------------------
+const TRUCKS_FILE = path.join(DATA_DIR, 'trucks.json');
+
+function getStoredTrucks(): any[] {
+  try {
+    if (fs.existsSync(TRUCKS_FILE)) {
+      const data = fs.readFileSync(TRUCKS_FILE, 'utf-8');
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch {}
+  return [];
+}
+
+function saveStoredTrucks(trucks: any[]) {
+  try {
+    fs.writeFileSync(TRUCKS_FILE, JSON.stringify(trucks, null, 2));
+  } catch (err) {
+    console.error('Error saving trucks', err);
+  }
+}
+
+app.get('/api/trucks', (_req: Request, res: Response) => {
+  res.json(getStoredTrucks());
+});
+
+app.post('/api/trucks', (req: Request, res: Response) => {
+  try {
+    const truck = req.body;
+    if (!truck || !truck.id) {
+      res.status(400).json({ error: 'Missing truck id' });
+      return;
+    }
+    const trucks = getStoredTrucks();
+    const idx = trucks.findIndex((t: any) => t.id === truck.id);
+    if (idx !== -1) {
+      trucks[idx] = { ...trucks[idx], ...truck };
+    } else {
+      trucks.unshift(truck);
+    }
+    saveStoredTrucks(trucks);
+    console.log(`[API:Trucks] POST /api/trucks -> Saved truck ${truck.id} (${truck.driverOrOwnerName || truck.phone})`);
+    res.json({ success: true, truck });
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message });
+  }
+});
+
+app.delete('/api/trucks/:id', (req: Request, res: Response) => {
+  try {
+    const id = req.params.id;
+    const trucks = getStoredTrucks().filter((t: any) => t.id !== id);
+    saveStoredTrucks(trucks);
+    console.log(`[API:Trucks] DELETE /api/trucks/${id} -> Removed truck`);
+    res.json({ success: true, remaining: trucks.length });
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message });
+  }
+});
+
+app.patch('/api/trucks/:id/status', (req: Request, res: Response) => {
+  try {
+    const id = req.params.id;
+    const { status } = req.body;
+    const trucks = getStoredTrucks();
+    const target = trucks.find((t: any) => t.id === id);
+    if (target) {
+      target.status = status;
+      saveStoredTrucks(trucks);
+      res.json({ success: true, truck: target });
+    } else {
+      res.status(404).json({ error: 'Truck not found' });
+    }
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message });
+  }
+});
+
+// -------------------------------------------------------------
 // Server-Authoritative Payment & Subscription Management
 // -------------------------------------------------------------
 const SUBSCRIPTIONS_FILE = path.join(DATA_DIR, 'subscriptions.json');
