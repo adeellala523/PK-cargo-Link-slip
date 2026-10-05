@@ -132,16 +132,27 @@ ${currentSlip.goods ? `📦 مال: ${currentSlip.goods}\n` : ''}${currentSlip.q
     }
   };
 
-  const handleWhatsAppTextShare = async () => {
+  const handleDirectWhatsAppShare = async (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    const dynamicMessage = formatWhatsAppMessage(currentSlip);
+
     try {
-      await navigator.clipboard.writeText(whatsappText);
-      setCopiedText(true);
-      setTimeout(() => setCopiedText(false), 2500);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(dynamicMessage);
+        setCopiedText(true);
+        setTimeout(() => setCopiedText(false), 3000);
+      }
     } catch {}
 
-    const url = getWhatsAppShareUrl(whatsappText);
-    window.open(url, '_blank');
+    try {
+      StorageService.incrementSlipShares(currentSlip.id);
+    } catch {}
+
+    const deepLinkUrl = getWhatsAppShareUrl(dynamicMessage);
+    window.open(deepLinkUrl, '_blank');
   };
+
+  const handleWhatsAppTextShare = handleDirectWhatsAppShare;
 
   const handleDownloadImage = async () => {
     if (!slipRef.current) return;
@@ -536,6 +547,42 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
         </div>
       </div>
       )}
+
+      {/* ============================================================== */}
+      {/* DIRECT SHARE TO WHATSAPP ACTION HERO BANNER */}
+      {/* ============================================================== */}
+      <div className="no-print bg-gradient-to-r from-emerald-600 via-[#25D366] to-teal-700 text-white p-4 sm:p-5 rounded-3xl shadow-lg border border-emerald-400 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5 w-full sm:w-auto text-right">
+          <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center flex-shrink-0 shadow-inner">
+            <MessageSquare className="w-7 h-7 text-white fill-white" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="bg-white/25 text-white text-[10px] font-black px-2 py-0.5 rounded-full font-mono uppercase">
+                DIRECT WHATSAPP SHARE
+              </span>
+              <span className="text-emerald-100 text-xs font-bold">
+                📍 {currentSlip.loadingCity} ➔ {currentSlip.destinationCity}
+              </span>
+            </div>
+            <h3 className="text-base sm:text-lg font-black font-nafees text-white mt-0.5">
+              براہِ راست واٹس ایپ پر لوڈ شیئر کریں
+            </h3>
+            <p className="text-xs text-emerald-100/90 font-nafees">
+              مکمل تفصیلات (مال، روٹ، گاڑی، وزن) اور غیر پوشیدہ رابطہ فون نمبرز کے ساتھ
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleDirectWhatsAppShare}
+          className="w-full sm:w-auto flex items-center justify-center gap-2.5 bg-white hover:bg-emerald-50 active:scale-95 text-emerald-800 transition-all py-3.5 px-6 rounded-2xl font-black text-sm sm:text-base shadow-md font-nafees flex-shrink-0 cursor-pointer"
+        >
+          <MessageSquare className="w-5 h-5 text-[#25D366] fill-[#25D366]" />
+          <span>{copiedText ? 'میسج کاپی ہو گیا! واٹس ایپ کھل رہا ہے...' : 'واٹس ایپ پر شیئر کریں (Share to WhatsApp)'}</span>
+        </button>
+      </div>
 
       {/* ============================================================== */}
       {/* SECTION 11: THE PROFESSIONAL DIGITAL LOAD SLIP */}
@@ -1001,14 +1048,14 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
             <span>{isGeneratingImage ? 'تصویر تیار ہو رہی ہے...' : 'PNG/JPG شیئر کریں'}</span>
           </button>
 
-          {/* Button 2: 💬 WhatsApp Text شیئر کریں */}
+          {/* Button 2: 💬 Share to WhatsApp */}
           <button
             type="button"
-            onClick={handleWhatsAppTextShare}
-            className="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20ba59] text-white py-3.5 px-4 rounded-2xl font-bold text-sm sm:text-base shadow-sm active:scale-95 transition min-h-[48px]"
+            onClick={handleDirectWhatsAppShare}
+            className="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20ba59] text-white py-3.5 px-4 rounded-2xl font-bold text-sm sm:text-base shadow-sm active:scale-95 transition min-h-[48px] cursor-pointer"
           >
-            <MessageSquare className="w-5 h-5" />
-            <span>{copiedText ? 'ٹیکسٹ کاپی ہوگیا!' : 'WhatsApp Text شیئر کریں'}</span>
+            <MessageSquare className="w-5 h-5 fill-white" />
+            <span>{copiedText ? 'میسج کاپی ہو گیا! واٹس ایپ کھل رہا ہے...' : 'واٹس ایپ پر شیئر کریں (Share to WhatsApp)'}</span>
           </button>
 
           {/* Button 3: 🔗 سلپ لنک کاپی کریں */}

@@ -1,4 +1,4 @@
-import { LoadSlip } from '../types';
+import { LoadSlip } from '../types/index.ts';
 
 export const OFFICIAL_WEBSITE_URL = 'https://pkcargolink.com';
 export const APP_BASE_URL = OFFICIAL_WEBSITE_URL;
@@ -38,10 +38,10 @@ export function getCommodityEmoji(goods: string): string {
 }
 
 /**
- * Builds the exact WhatsApp formatted text according to PK Cargo Link specifications:
- * - Contact phone numbers are PREVIEW-ONLY and strictly excluded by default
- * - Supports multi-load items per slip with clean emoji headers & arrows
- * - Single load uses concise single-load layout
+ * Builds the exact WhatsApp formatted text with complete details and unhidden phone numbers:
+ * - Dynamically includes origin, destination, vehicle, weight/quantity, and cargo
+ * - Unhides all primary and secondary phone numbers with manager/contact names
+ * - Includes direct deep link to the verified load slip
  */
 export function formatWhatsAppMessage(slip: LoadSlip): string {
   const cleanId = slip.id.replace(/[^a-zA-Z0-9]/g, '');
@@ -55,12 +55,21 @@ export function formatWhatsAppMessage(slip: LoadSlip): string {
     // Primary Load 1
     const emoji1 = getCommodityEmoji(slip.goods);
     const goods1 = slip.goods.includes('لوڈنگ') ? slip.goods : `${slip.goods} لوڈنگ`;
-    loadsBlock += `🟢 LOAD 1\n${emoji1} ${goods1}\n📍 ${slip.loadingCity} → ${slip.destinationCity}\n`;
+    loadsBlock += `🟢 لوڈ نمبر 1\n${emoji1} مال: ${goods1}\n📍 روٹ: ${slip.loadingCity} ➔ ${slip.destinationCity}\n`;
+    if (slip.loadingLocation && slip.loadingLocation !== slip.loadingCity) {
+      loadsBlock += `📌 روانگی مقام: ${slip.loadingLocation}\n`;
+    }
+    if (slip.destinationLocation && slip.destinationLocation !== slip.destinationCity) {
+      loadsBlock += `📌 ان لوڈنگ: ${slip.destinationLocation}\n`;
+    }
     if (slip.quantity || slip.weight) {
-      loadsBlock += `🔢 مقدار: ${slip.quantity || slip.weight}\n`;
+      loadsBlock += `⚖️ وزن / مقدار: ${slip.quantity || slip.weight}\n`;
     }
     if (slip.vehicleType && slip.vehicleType !== 'Other') {
-      loadsBlock += `🚚 گاڑی: ${slip.vehicleType}\n`;
+      loadsBlock += `🚚 گاڑی: ${slip.vehicleType}${slip.bodyType ? ` (${slip.bodyType})` : ''}\n`;
+    }
+    if (slip.fareOffer) {
+      loadsBlock += `💰 کرایہ پیشکش: ${slip.fareOffer}\n`;
     }
     loadsBlock += '\n';
 
@@ -68,9 +77,9 @@ export function formatWhatsAppMessage(slip: LoadSlip): string {
     slip.additionalLoads!.forEach((al, idx) => {
       const emojiN = getCommodityEmoji(al.goods);
       const goodsN = al.goods.includes('لوڈنگ') ? al.goods : `${al.goods} لوڈنگ`;
-      loadsBlock += `🟢 LOAD ${idx + 2}\n${emojiN} ${goodsN}\n📍 ${al.loadingCity} → ${al.destinationCity}\n`;
+      loadsBlock += `🟢 لوڈ نمبر ${idx + 2}\n${emojiN} مال: ${goodsN}\n📍 روٹ: ${al.loadingCity} ➔ ${al.destinationCity}\n`;
       if (al.quantity || al.weight) {
-        loadsBlock += `🔢 مقدار: ${al.quantity || al.weight}\n`;
+        loadsBlock += `⚖️ وزن / مقدار: ${al.quantity || al.weight}\n`;
       }
       if (al.vehicleType && al.vehicleType !== 'Other') {
         loadsBlock += `🚚 گاڑی: ${al.vehicleType}\n`;
@@ -80,31 +89,66 @@ export function formatWhatsAppMessage(slip: LoadSlip): string {
   } else {
     const emoji = getCommodityEmoji(slip.goods);
     const goods = slip.goods.includes('لوڈنگ') ? slip.goods : `${slip.goods} لوڈنگ`;
-    loadsBlock += `${emoji} ${goods}\n📍 ${slip.loadingCity} → ${slip.destinationCity}\n`;
+    loadsBlock += `${emoji} مال: ${goods}\n📍 روٹ: ${slip.loadingCity} ➔ ${slip.destinationCity}\n`;
+    if (slip.loadingLocation && slip.loadingLocation !== slip.loadingCity) {
+      loadsBlock += `📌 لوڈنگ پوائنٹ: ${slip.loadingLocation}\n`;
+    }
+    if (slip.destinationLocation && slip.destinationLocation !== slip.destinationCity) {
+      loadsBlock += `📌 اترائی پوائنٹ: ${slip.destinationLocation}\n`;
+    }
     if (slip.quantity || slip.weight) {
-      loadsBlock += `🔢 مقدار: ${slip.quantity || slip.weight}\n`;
+      loadsBlock += `⚖️ وزن / مقدار: ${slip.quantity || slip.weight}\n`;
     }
     if (slip.vehicleType && slip.vehicleType !== 'Other') {
-      loadsBlock += `🚚 گاڑی: ${slip.vehicleType}${slip.bodyType ? ` (${slip.bodyType})` : ''}\n`;
+      loadsBlock += `🚚 مطلوبہ گاڑی: ${slip.vehicleType}${slip.bodyType ? ` (${slip.bodyType})` : ''}\n`;
+    }
+    if (slip.vehicleNumber) {
+      loadsBlock += `🔢 گاڑی نمبر: ${slip.vehicleNumber}\n`;
+    }
+    if (slip.fareOffer) {
+      loadsBlock += `💰 کرایہ پیشکش: ${slip.fareOffer}\n`;
+    }
+    if (slip.specialInstructions) {
+      loadsBlock += `📝 ہدایات / نوٹ: ${slip.specialInstructions}\n`;
     }
     loadsBlock += '\n';
   }
 
-  // Privacy Rule: Phone numbers are strictly preview-only data.
-  // Never included unless explicit includeContactsInWhatsApp flag is true (default is false).
+  // Unhide all contact phone numbers clearly
   let contactSection = '';
-  if (slip.includeContactsInWhatsApp && slip.primaryPhone) {
-    contactSection = `📞 رابطہ: ${slip.primaryPhone}\n`;
+  if (slip.primaryPhone) {
+    const mgr = slip.managerName ? ` (${slip.managerName})` : '';
+    contactSection += `📞 رابطہ نمبر${mgr}: ${slip.primaryPhone}\n`;
+  }
+  if (slip.whatsappNumber && slip.whatsappNumber !== slip.primaryPhone) {
+    contactSection += `💬 واٹس ایپ نمبر: ${slip.whatsappNumber}\n`;
+  }
+  if (slip.namedContacts && slip.namedContacts.length > 0) {
+    slip.namedContacts.forEach((c) => {
+      if (c && c.number && c.number !== slip.primaryPhone && c.number !== slip.whatsappNumber) {
+        contactSection += `📞 رابطہ ${c.name ? `(${c.name})` : ''}: ${c.number}\n`;
+      }
+    });
+  } else if (slip.additionalContacts && slip.additionalContacts.length > 0) {
+    slip.additionalContacts.forEach((num, idx) => {
+      if (num && num !== slip.primaryPhone && num !== slip.whatsappNumber) {
+        contactSection += `📞 رابطہ نمبر ${idx + 2}: ${num}\n`;
+      }
+    });
   }
 
   return `🫡 السلام علیکم ورحمۃ اللہ وبرکاتہ 🫡
 ایاک نعبد و ایاک نستعین
 
-🚛 PK CARGO LINK — LOAD SLIP 🚛
+🚛 PK CARGO LINK — لائیو لوڈ سلپ 🚛
+📋 سلپ نمبر: #${slip.id}
 
-${loadsBlock}🏢 ${slip.addaName}${slip.addaCity ? ` (${slip.addaCity})` : ''}
-${contactSection}🚛 رابطہ، فون نمبرز اور کال کے لیے لنک کھولیں:
-🔗 ${slipUrl}`;
+${loadsBlock}🏢 اڈا / کمپنی: ${slip.addaName}${slip.addaCity ? ` (${slip.addaCity})` : ''}
+${contactSection}
+🔗 مکمل ڈیجیٹل سلپ آن لائن دیکھیں:
+${slipUrl}
+
+✨ تصدیق شدہ پاکستان ڈیجیٹل لوڈ نیٹ ورک ✨`;
 }
 
 /**

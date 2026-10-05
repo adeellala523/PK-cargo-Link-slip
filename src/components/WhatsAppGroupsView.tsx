@@ -8,9 +8,12 @@ import {
   ShieldAlert, 
   ExternalLink,
   Sparkles,
+  Copy,
+  Check,
+  Globe
 } from 'lucide-react';
 import { WhatsAppGroup, LoadSlip } from '../types';
-import { getWhatsAppShareUrl, formatWhatsAppMessage } from '../utils/formatters';
+import { getWhatsAppShareUrl, formatWhatsAppMessage, OFFICIAL_WEBSITE_URL } from '../utils/formatters';
 import { StorageService } from '../services/storage';
 
 interface WhatsAppGroupsViewProps {
@@ -29,10 +32,23 @@ export const WhatsAppGroupsView: React.FC<WhatsAppGroupsViewProps> = ({
   onReloadGroups,
 }) => {
   const [showAddForm, setShowAddForm] = useState(false);
+  const [copiedWebhook, setCopiedWebhook] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [routeHint, setRouteHint] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [description, setDescription] = useState('');
+
+  const webhookUrl = `${OFFICIAL_WEBSITE_URL}/api/whatsapp-webhook`;
+
+  const handleCopyWebhook = async () => {
+    try {
+      await navigator.clipboard.writeText(webhookUrl);
+      setCopiedWebhook(true);
+      setTimeout(() => setCopiedWebhook(false), 2500);
+    } catch {
+      prompt('WhatsApp Webhook API URL:', webhookUrl);
+    }
+  };
 
   const handleAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,6 +117,46 @@ export const WhatsAppGroupsView: React.FC<WhatsAppGroupsViewProps> = ({
             <p className="leading-relaxed">
               PK Cargo Link واٹس ایپ کی پالیسیوں کا مکمل احترام کرتا ہے۔ ہم کوئی غیر قانونی بلک میسجنگ یا روبوٹ سپیمنگ نہیں کرتے۔ شیئرنگ ہمیشہ واٹس ایپ کے آفیشل طریقہ کار کے مطابق محفوظ طریقے سے ہوتی ہے۔
             </p>
+          </div>
+        </div>
+
+        {/* Live Hosting WhatsApp Webhook API Card */}
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-950 via-[#072448] to-slate-900 border border-emerald-500/40 text-white space-y-2.5 shadow-md">
+          <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-2">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-[#25D366] text-white flex items-center justify-center flex-shrink-0">
+                <Globe className="w-4 h-4 text-white" />
+              </div>
+              <span className="font-bold text-sm text-emerald-300">
+                آفیشل واٹس ایپ آٹومیشن API / ویب ہک (Hosting Website)
+              </span>
+            </div>
+            <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-mono px-2 py-0.5 rounded-full border border-emerald-400/30">
+              LIVE & READY
+            </span>
+          </div>
+
+          <p className="text-xs text-slate-300 leading-relaxed">
+            کسی بھی واٹس ایپ بوٹ، میٹا کلاؤڈ API، Twilio، گرین API یا واٹس ایپ گیٹ وے سے براہِ راست لوڈ پوسٹ کرنے کے لیے یہ لائیو ہوسٹنگ لنک استعمال کریں:
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-black/40 p-2.5 rounded-xl border border-white/15">
+            <code className="text-xs text-emerald-300 font-mono flex-1 select-all break-all text-left dir-ltr pl-1">
+              {webhookUrl}
+            </code>
+            <button
+              type="button"
+              onClick={handleCopyWebhook}
+              className="inline-flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#20ba59] text-white px-3.5 py-1.5 rounded-lg text-xs font-bold transition shadow-xs flex-shrink-0 cursor-pointer"
+            >
+              {copiedWebhook ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+              <span>{copiedWebhook ? 'کاپی ہوگیا!' : 'API لنک کاپی کریں'}</span>
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
+            <span>طریقہ: <strong className="text-white font-mono">POST</strong> (یا ٹیسٹ کے لیے <strong className="text-white font-mono">GET</strong>)</span>
+            <span>فارمیٹ: <strong className="text-emerald-300 font-mono">{`{"text": "لاہور تا کراچی حاضر لوڈ..."}`}</strong></span>
           </div>
         </div>
       </div>

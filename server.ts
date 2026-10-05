@@ -237,21 +237,16 @@ app.post('/api/whatsapp-webhook', async (req: Request, res: Response) => {
       return;
     }
 
-    const text = rawText;
-    let detectedAdda = '';
-    let fromCity = '';
-    let toCity = '';
+    const text = rawText.trim();
+
+    // -------------------------------------------------------------
+    // 1. STRICT FILTER: VALID CONTACT PHONE NUMBER REQUIRED
+    // Casual chat, conversation, jokes, greetings never have Pakistani phone numbers.
+    // -------------------------------------------------------------
+    const phoneMatches = text.match(/(?:(?:\+92|92|0)?3\d{2}[- ]?\d{7})/g);
     let detectedPhone = '';
     let additionalPhones: string[] = [];
-    let detectedGoods = 'حاضر مال / جنرل کارگو';
-    let detectedWeight = '';
-    let detectedQty = '';
-    let detectedVehicle = '22 Wheeler';
-    let detectedBody = 'اوپن';
-    let contactPerson = '';
 
-    // 1. Phone numbers: 03xx-xxxxxxx, 03xxxxxxxxx, +923xxxxxxxxx
-    const phoneMatches = text.match(/(?:(?:\+92|92|0)?3\d{2}[- ]?\d{7})/g);
     if (phoneMatches && phoneMatches.length > 0) {
       const cleanPhones = Array.from(new Set(phoneMatches.map((m) => {
         let p = m.replace(/[^0-9]/g, '');
@@ -265,6 +260,66 @@ app.post('/api/whatsapp-webhook', async (req: Request, res: Response) => {
         additionalPhones = cleanPhones.slice(1);
       }
     }
+
+    if (!detectedPhone) {
+      console.log(`[API:WhatsAppWebhook] ⏭️ Ignored casual chat (No contact phone): "${text.slice(0, 50)}..."`);
+      res.json({
+        success: false,
+        ignored: true,
+        reason: 'عام چیٹ کو نظرانداز کر دیا گیا ہے (کوئی رابطہ فون نمبر موجود نہیں تھا)۔',
+        replies: [] // Silent - no return message sent to WhatsApp group
+      });
+      return;
+    }
+
+    // -------------------------------------------------------------
+    // 2. STRICT FILTER: MUST CONTAIN TRANSPORT / LOAD KEYWORDS
+    // -------------------------------------------------------------
+    const LOAD_KEYWORDS_REGEX = /(?:لوڈ|load|مال|گاڑی|گاڑیاں|ٹرک|وہیلر|wheeler|ٹرائلر|trailer|ٹریلر|شہزور|shahzor|مزدا|mazda|ٹن|ton|tons|ٹنز|کنٹینر|container|بوریاں|تھیلے|کارٹن|کاٹن|حاضر\s*مال|تیار\s*مال|کرایہ|فریٹ|ان لوڈنگ|لوڈنگ)/i;
+    if (!LOAD_KEYWORDS_REGEX.test(text)) {
+      console.log(`[API:WhatsAppWebhook] ⏭️ Ignored casual chat (No load keywords): "${text.slice(0, 50)}..."`);
+      res.json({
+        success: false,
+        ignored: true,
+        reason: 'عام بات چیت کو نظرانداز کر دیا گیا ہے (لوڈ یا گاڑی کا کوئی کی ورڈ نہیں تھا)۔',
+        replies: [] // Silent - no return message sent to WhatsApp group
+      });
+      return;
+    }
+
+    // -------------------------------------------------------------
+    // 3. STRICT FILTER: PURE CASUAL GREETINGS
+    // -------------------------------------------------------------
+    const CASUAL_GREETINGS = [
+      'کیا حال ہے',
+      'کیسے ہو',
+      'جمعہ مبارک',
+      'صبح بخیر',
+      'گڈ مارننگ',
+      'وعلیکم السلام',
+      'اوکے بھائی',
+      'ٹھیک ہے'
+    ];
+    if (text.length < 35 && CASUAL_GREETINGS.some((g) => text.includes(g))) {
+      console.log(`[API:WhatsAppWebhook] ⏭️ Ignored casual greeting: "${text}"`);
+      res.json({
+        success: false,
+        ignored: true,
+        reason: 'عام دعا سلام / مختصر چیٹ نظر انداز کر دی گئی ہے۔',
+        replies: []
+      });
+      return;
+    }
+
+    let detectedAdda = '';
+    let fromCity = '';
+    let toCity = '';
+    let detectedGoods = 'حاضر مال / جنرل کارگو';
+    let detectedWeight = '';
+    let detectedQty = '';
+    let detectedVehicle = '22 Wheeler';
+    let detectedBody = 'اوپن';
+    let contactPerson = '';
 
     // 2. City Dictionary with Canonical Urdu & Roman Urdu aliases
     const CITY_DICT = [
@@ -353,6 +408,18 @@ app.post('/api/whatsapp-webhook', async (req: Request, res: Response) => {
       } else if (matchedCanonical.length === 1) {
         fromCity = matchedCanonical[0];
       }
+    }
+
+    // Must have at least one recognized city/location to be a real load
+    if (!fromCity && !toCity) {
+      console.log(`[API:WhatsAppWebhook] ⏭️ Ignored non-load message (No cities detected): "${text.slice(0, 50)}..."`);
+      res.json({
+        success: false,
+        ignored: true,
+        reason: 'عام چیٹ نظر انداز کر دی گئی ہے (کوئی روانگی یا منزل کا شہر نہیں ملا)۔',
+        replies: []
+      });
+      return;
     }
 
     // 3. Weight & Quantity
@@ -463,10 +530,21 @@ app.post('/api/whatsapp-webhook', async (req: Request, res: Response) => {
     slips.unshift(newSlip);
     saveStoredSlips(slips);
 
-    console.log(`[API:WhatsAppWebhook] ✅ New load automatically created from WhatsApp: ${newSlip.id} (${newSlip.loadingCity} -> ${newSlip.destinationCity})`);
+    console.log(`[API:WhatsAppWebhook] ✅ Verified cargo load slip created and published on website: ${newSlip.id} (${newSlip.loadingCity} -> ${newSlip.destinationCity})`);
+
+    // The user explicitly requested: "Wapsi group mein msg na jye sirf website pr slip post ho"
+    // By returning an empty <Response></Response> or empty replies: [], WhatsApp bots & AutoResponder
+    // will strictly post the slip to pkcargolink.com and remain 100% SILENT in the WhatsApp group.
+    if (req.headers['user-agent']?.includes('Twilio') || req.query.twilio === '1') {
+      res.type('text/xml').send(`<?xml version="1.0" encoding="UTF-8"?><Response></Response>`);
+      return;
+    }
+
     res.json({
       success: true,
-      message: 'لوڈ کامیابی سے واٹس ایپ میسج سے تیار کر کے لائیو پوسٹ کر دیا گیا ہے!',
+      message: 'لوڈ سلپ کامیابی سے ویب سائٹ پر لائیو کر دی گئی ہے (واٹس ایپ گروپ میں کوئی واپسی میسج نہیں بھیجا جائے گا)۔',
+      silentMode: true,
+      replies: [], // Empty array tells AutoResponder / bot NOT to reply in the WhatsApp group
       slip: newSlip
     });
   } catch (err: any) {
