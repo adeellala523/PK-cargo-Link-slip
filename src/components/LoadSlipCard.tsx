@@ -767,7 +767,7 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
             <div className="bg-emerald-50/80 p-3.5 rounded-xl border border-emerald-200 flex flex-col justify-between">
               <span className="text-[11px] font-semibold text-emerald-800 block mb-1">گاڑی کی قسم</span>
               <span className="text-sm sm:text-base font-bold text-emerald-950 block truncate">
-                {currentSlip.vehicleType}
+                <bdi>{currentSlip.vehicleType}</bdi>
               </span>
             </div>
 
@@ -836,7 +836,7 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
                     </div>
                     {al.vehicleType && (
                       <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-3 py-1 rounded-lg border border-emerald-300/60 self-start sm:self-auto">
-                        🚚 {al.vehicleType}
+                        🚚 <bdi>{al.vehicleType}</bdi>
                       </span>
                     )}
                   </div>
