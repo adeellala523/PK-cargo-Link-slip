@@ -363,7 +363,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                     : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
                 }`}
               >
-                {v}
+                <bdi>{v}</bdi>
               </button>
             ))}
           </div>
@@ -450,7 +450,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
 
                 <div className="flex items-center gap-2 self-start sm:self-auto">
                   <span className="bg-emerald-100 text-emerald-900 text-xs font-bold px-3 py-1 rounded-full border border-emerald-300">
-                    {truck.vehicleType}
+                    <bdi>{truck.vehicleType}</bdi>
                   </span>
                   <span className="bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-full">
                     {truck.bodyType}
@@ -882,7 +882,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                         truckVehicleType === v ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-slate-100 text-slate-700 border-slate-200'
                       }`}
                     >
-                      {v}
+                      <bdi>{v}</bdi>
                     </button>
                   ))}
                 </div>
