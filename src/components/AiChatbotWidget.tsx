@@ -571,7 +571,7 @@ export function AiChatbotWidget() {
                           onClick={() => handleOption(opt)}
                           className="px-3.5 py-2 rounded-full bg-green-50 border border-green-300 text-green-800 text-sm font-semibold hover:bg-green-100 active:scale-95 transition"
                         >
-                          {opt}
+                          <bdi>{opt}</bdi>
                         </button>
                       ))}
                     </div>
