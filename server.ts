@@ -129,13 +129,6 @@ app.get('/api/slips', async (_req: Request, res: Response) => {
   // Instant response if local slips exist
   if (Array.isArray(fileSlips) && fileSlips.length > 0) {
     res.json(fileSlips);
-    if (process.env.SQL_HOST) {
-      getDbSlips().then((dbSlips) => {
-        if (Array.isArray(dbSlips) && dbSlips.length > fileSlips.length) {
-          saveStoredSlips(dbSlips);
-        }
-      }).catch(() => {});
-    }
     return;
   }
 

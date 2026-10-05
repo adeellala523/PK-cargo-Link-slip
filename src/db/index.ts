@@ -8,7 +8,7 @@ declare global {
   var _dbCooldownUntil: number | undefined;
 }
 
-const DB_COOLDOWN_MS = 60000; // 1 minute cooldown if instance is sleeping or unreachable
+const DB_COOLDOWN_MS = 300000; // 5 minute cooldown if instance is sleeping or unreachable
 
 export const isDbInCooldown = (): boolean => {
   if (!global._dbCooldownUntil) return false;
@@ -17,10 +17,8 @@ export const isDbInCooldown = (): boolean => {
   return false;
 };
 
-export const markDbUnavailable = (reason?: any) => {
+export const markDbUnavailable = (_reason?: any) => {
   global._dbCooldownUntil = Date.now() + DB_COOLDOWN_MS;
-  const msg = reason?.message || String(reason || 'connection down');
-  console.warn(`[CloudSQL:Status] Database is sleeping or disconnected (${msg}). Local backup is actively handling all data operations.`);
 };
 
 // Function to create or retrieve the connection pool (Object Method)
