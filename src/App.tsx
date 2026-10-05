@@ -276,16 +276,50 @@ export default function App() {
     };
 
     handleUrlRoute();
+    
+    // Immediate initial sync
     StorageService.syncWithServer()
       .then((synced) => {
-        if (Array.isArray(synced)) {
+        if (Array.isArray(synced) && synced.length > 0) {
           setSlips(synced);
         }
       })
       .catch(() => {});
     StorageService.syncUsersWithServer().catch(() => {});
+
+    // Periodic auto-sync every 8 seconds so newly posted loads appear live without refreshing
+    const syncInterval = setInterval(() => {
+      StorageService.syncWithServer()
+        .then((synced) => {
+          if (Array.isArray(synced) && synced.length > 0) {
+            setSlips(synced);
+          }
+        })
+        .catch(() => {});
+    }, 8000);
+
+    // Refresh when user returns to window or tab
+    const handleFocusSync = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        StorageService.syncWithServer()
+          .then((synced) => {
+            if (Array.isArray(synced) && synced.length > 0) {
+              setSlips(synced);
+            }
+          })
+          .catch(() => {});
+      }
+    };
+    window.addEventListener('focus', handleFocusSync);
+    document.addEventListener('visibilitychange', handleFocusSync);
+
     window.addEventListener('popstate', handleUrlRoute);
-    return () => window.removeEventListener('popstate', handleUrlRoute);
+    return () => {
+      clearInterval(syncInterval);
+      window.removeEventListener('focus', handleFocusSync);
+      document.removeEventListener('visibilitychange', handleFocusSync);
+      window.removeEventListener('popstate', handleUrlRoute);
+    };
   }, []);
 
   // Whenever login state changes, ensure profile is strictly in sync with logged-in user

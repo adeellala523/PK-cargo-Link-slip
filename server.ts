@@ -124,11 +124,26 @@ function saveStoredUsers(users: any[]) {
 // API Routes
 // -------------------------------------------------------------
 app.get('/api/slips', async (_req: Request, res: Response) => {
+  const fileSlips = getStoredSlips();
+
+  // Instant response if local slips exist
+  if (Array.isArray(fileSlips) && fileSlips.length > 0) {
+    res.json(fileSlips);
+    if (process.env.SQL_HOST) {
+      getDbSlips().then((dbSlips) => {
+        if (Array.isArray(dbSlips) && dbSlips.length > fileSlips.length) {
+          saveStoredSlips(dbSlips);
+        }
+      }).catch(() => {});
+    }
+    return;
+  }
+
+  // Fallback to DB if file is empty
   if (process.env.SQL_HOST) {
     try {
       const dbSlips = await getDbSlips();
       console.log(`[API:Slips:DB] GET /api/slips -> Returning ${dbSlips.length} slips from PostgreSQL`);
-      // Keep local file in sync as backup
       saveStoredSlips(dbSlips);
       res.json(dbSlips);
       return;
@@ -137,9 +152,8 @@ app.get('/api/slips', async (_req: Request, res: Response) => {
     }
   }
 
-  const slips = getStoredSlips();
-  console.log(`[API:Slips] GET /api/slips -> Returning ${slips.length} slips`);
-  res.json(slips);
+  console.log(`[API:Slips] GET /api/slips -> Returning ${fileSlips.length} slips`);
+  res.json(fileSlips);
 });
 
 app.post('/api/slips', async (req: Request, res: Response) => {

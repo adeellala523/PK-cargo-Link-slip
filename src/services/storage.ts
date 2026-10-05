@@ -40,8 +40,299 @@ export const DEFAULT_ADDA: AddaProfile = {
   updatedAt: new Date().toISOString(),
 };
 
-// Zero demo slips (clean state, demo data removed as requested)
-export const INITIAL_SLIPS: LoadSlip[] = [];
+// Verified Active Real-time Slips
+export const INITIAL_SLIPS: LoadSlip[] = [
+  {
+    id: 'PKCL202610050701',
+    addaId: 'user_jeeway_bhakkar_03044980373',
+    addaName: 'جیوے بکھر میاں والی قائد آباد گڈز ٹرانسپورٹ شیخوپورہ لودھراں',
+    addaCity: 'شیخوپورہ',
+    addaAddress: 'شیخوپورہ و لودھراں، پنجاب، پاکستان',
+    managerName: 'محمد سجاد علی',
+    primaryPhone: '03044980373',
+    whatsappNumber: '03044980373',
+    additionalContacts: ['03087517036'],
+    namedContacts: [
+      { name: 'محمد سجاد علی', number: '03044980373' },
+      { name: 'محمد ندیم چوہان', number: '03087517036' }
+    ],
+    loadingCity: 'نوشہرہ ورکاں',
+    loadingLocation: 'نوشہروکرکا',
+    destinationCity: 'فروز وٹواں',
+    destinationLocation: 'فروز وٹواں',
+    goods: 'حاضر مال',
+    weight: '15/20 ٹن',
+    quantity: '10 گاڑیوں کا مال (گاڑی 1 تا 3)',
+    vehicleType: 'اوپن ٹریلر',
+    bodyType: 'اوپن',
+    specialInstructions: 'حاضر لوڈنگ - اوپن ٹریلر گاڑیوں والے فوری رابطہ کریں۔ رابطہ: محمد سجاد علی (03044980373) / محمد ندیم چوہان (03087517036)',
+    status: 'active',
+    viewsCount: 1,
+    sharesCount: 0,
+    createdAt: '2026-10-05T04:00:00.000Z',
+  },
+  {
+    id: 'PKCL202610050702',
+    addaId: 'user_jeeway_bhakkar_03044980373',
+    addaName: 'جیوے بکھر میاں والی قائد آباد گڈز ٹرانسپورٹ شیخوپورہ لودھراں',
+    addaCity: 'شیخوپورہ',
+    addaAddress: 'شیخوپورہ و لودھراں، پنجاب، پاکستان',
+    managerName: 'محمد سجاد علی',
+    primaryPhone: '03044980373',
+    whatsappNumber: '03044980373',
+    additionalContacts: ['03087517036'],
+    namedContacts: [
+      { name: 'محمد سجاد علی', number: '03044980373' },
+      { name: 'محمد ندیم چوہان', number: '03087517036' }
+    ],
+    loadingCity: 'نوشہرہ ورکاں',
+    loadingLocation: 'نوشہروکرکا',
+    destinationCity: 'فروز وٹواں',
+    destinationLocation: 'فروز وٹواں',
+    goods: 'حاضر مال',
+    weight: '15/20 ٹن',
+    quantity: '10 گاڑیوں کا مال (گاڑی 4 تا 7)',
+    vehicleType: 'اوپن ٹریلر',
+    bodyType: 'اوپن',
+    specialInstructions: 'حاضر لوڈنگ - اوپن ٹریلر گاڑیوں والے فوری رابطہ کریں۔ رابطہ: محمد سجاد علی (03044980373) / محمد ندیم چوہان (03087517036)',
+    status: 'active',
+    viewsCount: 1,
+    sharesCount: 0,
+    createdAt: '2026-10-05T04:01:00.000Z',
+  },
+  {
+    id: 'PKCL202610050703',
+    addaId: 'user_jeeway_bhakkar_03044980373',
+    addaName: 'جیوے بکھر میاں والی قائد آباد گڈز ٹرانسپورٹ شیخوپورہ لودھراں',
+    addaCity: 'شیخوپورہ',
+    addaAddress: 'شیخوپورہ و لودھراں، پنجاب، پاکستان',
+    managerName: 'محمد سجاد علی',
+    primaryPhone: '03044980373',
+    whatsappNumber: '03044980373',
+    additionalContacts: ['03087517036'],
+    namedContacts: [
+      { name: 'محمد سجاد علی', number: '03044980373' },
+      { name: 'محمد ندیم چوہان', number: '03087517036' }
+    ],
+    loadingCity: 'نوشہرہ ورکاں',
+    loadingLocation: 'نوشہروکرکا',
+    destinationCity: 'فروز وٹواں',
+    destinationLocation: 'فروز وٹواں',
+    goods: 'حاضر مال',
+    weight: '15/20 ٹن',
+    quantity: '10 گاڑیوں کا مال (گاڑی 8 تا 10)',
+    vehicleType: 'اوپن ٹریلر',
+    bodyType: 'اوپن',
+    specialInstructions: 'حاضر لوڈنگ - اوپن ٹریلر گاڑیوں والے فوری رابطہ کریں۔ رابطہ: محمد سجاد علی (03044980373) / محمد ندیم چوہان (03087517036)',
+    status: 'active',
+    viewsCount: 1,
+    sharesCount: 0,
+    createdAt: '2026-10-05T04:02:00.000Z',
+  },
+  {
+    id: 'PKCL202610050704',
+    addaId: 'user_jeeway_bhakkar_03044980373',
+    addaName: 'جیوے بکھر میاں والی قائد آباد گڈز ٹرانسپورٹ شیخوپورہ لودھراں',
+    addaCity: 'شیخوپورہ',
+    addaAddress: 'شیخوپورہ و لودھراں، پنجاب، پاکستان',
+    managerName: 'محمد سجاد علی',
+    primaryPhone: '03044980373',
+    whatsappNumber: '03044980373',
+    additionalContacts: ['03087517036'],
+    namedContacts: [
+      { name: 'محمد سجاد علی', number: '03044980373' },
+      { name: 'محمد ندیم چوہان', number: '03087517036' }
+    ],
+    loadingCity: 'باغ چوک',
+    loadingLocation: 'باغ چوک',
+    destinationCity: 'فروز وٹواں',
+    destinationLocation: 'فروز وٹواں',
+    goods: 'حاضر مال',
+    weight: '15/20 ٹن',
+    quantity: 'حاضر مال (لوڈ 1)',
+    vehicleType: 'اوپن ٹریلر',
+    bodyType: 'اوپن',
+    specialInstructions: 'حاضر لوڈنگ - اوپن ٹریلر گاڑیوں والے فوری رابطہ کریں۔ رابطہ: محمد سجاد علی (03044980373) / محمد ندیم چوہان (03087517036)',
+    status: 'active',
+    viewsCount: 1,
+    sharesCount: 0,
+    createdAt: '2026-10-05T04:03:00.000Z',
+  },
+  {
+    id: 'PKCL202610050705',
+    addaId: 'user_jeeway_bhakkar_03044980373',
+    addaName: 'جیوے بکھر میاں والی قائد آباد گڈز ٹرانسپورٹ شیخوپورہ لودھراں',
+    addaCity: 'شیخوپورہ',
+    addaAddress: 'شیخوپورہ و لودھراں، پنجاب، پاکستان',
+    managerName: 'محمد سجاد علی',
+    primaryPhone: '03044980373',
+    whatsappNumber: '03044980373',
+    additionalContacts: ['03087517036'],
+    namedContacts: [
+      { name: 'محمد سجاد علی', number: '03044980373' },
+      { name: 'محمد ندیم چوہان', number: '03087517036' }
+    ],
+    loadingCity: 'باغ چوک',
+    loadingLocation: 'باغ چوک',
+    destinationCity: 'فروز وٹواں',
+    destinationLocation: 'فروز وٹواں',
+    goods: 'حاضر مال',
+    weight: '15/20 ٹن',
+    quantity: 'حاضر مال (لوڈ 2)',
+    vehicleType: 'اوپن ٹریلر',
+    bodyType: 'اوپن',
+    specialInstructions: 'حاضر لوڈنگ - اوپن ٹریلر گاڑیوں والے فوری رابطہ کریں۔ رابطہ: محمد سجاد علی (03044980373) / محمد ندیم چوہان (03087517036)',
+    status: 'active',
+    viewsCount: 1,
+    sharesCount: 0,
+    createdAt: '2026-10-05T04:04:00.000Z',
+  },
+  {
+    id: 'PKCL202610050706',
+    addaId: 'user_jeeway_bhakkar_03044980373',
+    addaName: 'جیوے بکھر میاں والی قائد آباد گڈز ٹرانسپورٹ شیخوپورہ لودھراں',
+    addaCity: 'شیخوپورہ',
+    addaAddress: 'شیخوپورہ و لودھراں، پنجاب، پاکستان',
+    managerName: 'محمد سجاد علی',
+    primaryPhone: '03044980373',
+    whatsappNumber: '03044980373',
+    additionalContacts: ['03087517036'],
+    namedContacts: [
+      { name: 'محمد سجاد علی', number: '03044980373' },
+      { name: 'محمد ندیم چوہان', number: '03087517036' }
+    ],
+    loadingCity: 'بیگ پور',
+    loadingLocation: 'بیگ پور',
+    destinationCity: 'جوئیاں والے موڑ',
+    destinationLocation: 'جوئیاں والے موڑ',
+    goods: 'حاضر مال',
+    weight: '15/20 ٹن',
+    quantity: '7 گاڑیوں کا مال (گاڑی 1 تا 3)',
+    vehicleType: 'اوپن ٹریلر',
+    bodyType: 'اوپن',
+    specialInstructions: 'حاضر لوڈنگ - اوپن ٹریلر گاڑیوں والے فوری رابطہ کریں۔ رابطہ: محمد سجاد علی (03044980373) / محمد ندیم چوہان (03087517036)',
+    status: 'active',
+    viewsCount: 1,
+    sharesCount: 0,
+    createdAt: '2026-10-05T04:05:00.000Z',
+  },
+  {
+    id: 'PKCL202610050707',
+    addaId: 'user_jeeway_bhakkar_03044980373',
+    addaName: 'جیوے بکھر میاں والی قائد آباد گڈز ٹرانسپورٹ شیخوپورہ لودھراں',
+    addaCity: 'شیخوپورہ',
+    addaAddress: 'شیخوپورہ و لودھراں، پنجاب، پاکستان',
+    managerName: 'محمد سجاد علی',
+    primaryPhone: '03044980373',
+    whatsappNumber: '03044980373',
+    additionalContacts: ['03087517036'],
+    namedContacts: [
+      { name: 'محمد سجاد علی', number: '03044980373' },
+      { name: 'محمد ندیم چوہان', number: '03087517036' }
+    ],
+    loadingCity: 'بیگ پور',
+    loadingLocation: 'بیگ پور',
+    destinationCity: 'جوئیاں والے موڑ',
+    destinationLocation: 'جوئیاں والے موڑ',
+    goods: 'حاضر مال',
+    weight: '15/20 ٹن',
+    quantity: '7 گاڑیوں کا مال (گاڑی 4 تا 7)',
+    vehicleType: 'اوپن ٹریلر',
+    bodyType: 'اوپن',
+    specialInstructions: 'حاضر لوڈنگ - اوپن ٹریلر گاڑیوں والے فوری رابطہ کریں۔ رابطہ: محمد سجاد علی (03044980373) / محمد ندیم چوہان (03087517036)',
+    status: 'active',
+    viewsCount: 1,
+    sharesCount: 0,
+    createdAt: '2026-10-05T04:06:00.000Z',
+  },
+  {
+    id: 'PKCL202610050708',
+    addaId: 'user_jeeway_bhakkar_03044980373',
+    addaName: 'جیوے بکھر میاں والی قائد آباد گڈز ٹرانسپورٹ شیخوپورہ لودھراں',
+    addaCity: 'شیخوپورہ',
+    addaAddress: 'شیخوپورہ و لودھراں، پنجاب، پاکستان',
+    managerName: 'محمد سجاد علی',
+    primaryPhone: '03044980373',
+    whatsappNumber: '03044980373',
+    additionalContacts: ['03087517036'],
+    namedContacts: [
+      { name: 'محمد سجاد علی', number: '03044980373' },
+      { name: 'محمد ندیم چوہان', number: '03087517036' }
+    ],
+    loadingCity: 'بیگ پور',
+    loadingLocation: 'بیگ پورے',
+    destinationCity: 'فروز وٹواں',
+    destinationLocation: 'فروز وٹواں',
+    goods: 'حاضر مال',
+    weight: '15/20 ٹن',
+    quantity: 'حاضر مال',
+    vehicleType: 'اوپن ٹریلر',
+    bodyType: 'اوپن',
+    specialInstructions: 'حاضر لوڈنگ - اوپن ٹریلر گاڑیوں والے فوری رابطہ کریں۔ رابطہ: محمد سجاد علی (03044980373) / محمد ندیم چوہان (03087517036)',
+    status: 'active',
+    viewsCount: 1,
+    sharesCount: 0,
+    createdAt: '2026-10-05T04:07:00.000Z',
+  },
+  {
+    id: 'PKCL202610050709',
+    addaId: 'user_jeeway_bhakkar_03044980373',
+    addaName: 'جیوے بکھر میاں والی قائد آباد گڈز ٹرانسپورٹ شیخوپورہ لودھراں',
+    addaCity: 'شیخوپورہ',
+    addaAddress: 'شیخوپورہ و لودھراں، پنجاب، پاکستان',
+    managerName: 'محمد سجاد علی',
+    primaryPhone: '03044980373',
+    whatsappNumber: '03044980373',
+    additionalContacts: ['03087517036'],
+    namedContacts: [
+      { name: 'محمد سجاد علی', number: '03044980373' },
+      { name: 'محمد ندیم چوہان', number: '03087517036' }
+    ],
+    loadingCity: 'شاہ کوٹ',
+    loadingLocation: 'شاہ کوٹ',
+    destinationCity: 'فروز وٹواں',
+    destinationLocation: 'فروز وٹواں',
+    goods: 'حاضر مال',
+    weight: '15/20 ٹن',
+    quantity: 'حاضر مال',
+    vehicleType: 'اوپن ٹریلر',
+    bodyType: 'اوپن',
+    specialInstructions: 'حاضر لوڈنگ - اوپن ٹریلر گاڑیوں والے فوری رابطہ کریں۔ رابطہ: محمد سجاد علی (03044980373) / محمد ندیم چوہان (03087517036)',
+    status: 'active',
+    viewsCount: 1,
+    sharesCount: 0,
+    createdAt: '2026-10-05T04:08:00.000Z',
+  },
+  {
+    id: 'PKCL202610050710',
+    addaId: 'user_jeeway_bhakkar_03044980373',
+    addaName: 'جیوے بکھر میاں والی قائد آباد گڈز ٹرانسپورٹ شیخوپورہ لودھراں',
+    addaCity: 'شیخوپورہ',
+    addaAddress: 'شیخوپورہ و لودھراں، پنجاب، پاکستان',
+    managerName: 'محمد سجاد علی',
+    primaryPhone: '03044980373',
+    whatsappNumber: '03044980373',
+    additionalContacts: ['03087517036'],
+    namedContacts: [
+      { name: 'محمد سجاد علی', number: '03044980373' },
+      { name: 'محمد ندیم چوہان', number: '03087517036' }
+    ],
+    loadingCity: 'ننکانہ صاحب',
+    loadingLocation: 'ننکانہ صاحب',
+    destinationCity: 'فروز وٹواں',
+    destinationLocation: 'فروز وٹواں',
+    goods: 'حاضر مال',
+    weight: '15/20 ٹن',
+    quantity: 'حاضر مال',
+    vehicleType: 'اوپن ٹریلر',
+    bodyType: 'اوپن',
+    specialInstructions: 'حاضر لوڈنگ - اوپن ٹریلر گاڑیوں والے فوری رابطہ کریں۔ رابطہ: محمد سجاد علی (03044980373) / محمد ندیم چوہان (03087517036)',
+    status: 'active',
+    viewsCount: 1,
+    sharesCount: 0,
+    createdAt: '2026-10-05T04:09:00.000Z',
+  },
+];
 
 // Default Payment Settings
 export const DEFAULT_PAYMENT_SETTINGS: PaymentSettings = {
@@ -863,45 +1154,61 @@ export const StorageService = {
   getAllSlips(): LoadSlip[] {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.SLIPS);
+      let parsed: LoadSlip[] = [];
       if (data) {
-        const parsed: LoadSlip[] = JSON.parse(data);
-        if (Array.isArray(parsed)) {
-          const validSlips: LoadSlip[] = [];
-          const expiredIds: string[] = [];
+        try {
+          const raw = JSON.parse(data);
+          if (Array.isArray(raw)) parsed = raw;
+        } catch {}
+      }
 
-          parsed.forEach((s) => {
-            if (!s || !s.id || this.isSlipDeleted(s.id)) return;
-            if (this.isSlipOlderThan7Days(s)) {
-              expiredIds.push(s.id);
-            } else {
-              validSlips.push({
-                ...s,
-                addaLogo: (s.addaLogo && !s.addaLogo.includes('adda-logo.png')) ? s.addaLogo : '',
-                viewsCount: typeof s.viewsCount === 'number' ? s.viewsCount : 0,
-              });
-            }
-          });
-
-          // Sort latest slips on top always (Newest created first)
-          validSlips.sort((a, b) => {
-            const timeA = new Date(a.createdAt || a.id).getTime() || 0;
-            const timeB = new Date(b.createdAt || b.id).getTime() || 0;
-            return timeB - timeA;
-          });
-
-          // If any slips expired past 7 days, trigger background cleanup
-          if (expiredIds.length > 0) {
-            localStorage.setItem(STORAGE_KEYS.SLIPS, JSON.stringify(validSlips));
-            expiredIds.forEach((id) => this.deleteSlipAsync(id).catch(() => {}));
-          }
-
-          return validSlips;
+      // Merge INITIAL_SLIPS if missing from local storage and not explicitly deleted
+      const existingIds = new Set(parsed.map((s) => s.id));
+      for (const initSlip of INITIAL_SLIPS) {
+        if (!existingIds.has(initSlip.id) && !this.isSlipDeleted(initSlip.id)) {
+          parsed.unshift(initSlip);
         }
+      }
+
+      if (parsed.length > 0) {
+        const validSlips: LoadSlip[] = [];
+        const expiredIds: string[] = [];
+
+        parsed.forEach((s) => {
+          if (!s || !s.id || this.isSlipDeleted(s.id)) return;
+          if (this.isSlipOlderThan7Days(s)) {
+            expiredIds.push(s.id);
+          } else {
+            validSlips.push({
+              ...s,
+              addaLogo: (s.addaLogo && !s.addaLogo.includes('adda-logo.png')) ? s.addaLogo : '',
+              viewsCount: typeof s.viewsCount === 'number' ? s.viewsCount : 0,
+            });
+          }
+        });
+
+        // Sort latest slips on top always (Newest created first)
+        validSlips.sort((a, b) => {
+          const timeA = new Date(a.createdAt || a.id).getTime() || 0;
+          const timeB = new Date(b.createdAt || b.id).getTime() || 0;
+          return timeB - timeA;
+        });
+
+        try {
+          localStorage.setItem(STORAGE_KEYS.SLIPS, JSON.stringify(validSlips));
+        } catch {}
+
+        // If any slips expired past 7 days, trigger background cleanup
+        if (expiredIds.length > 0) {
+          expiredIds.forEach((id) => this.deleteSlipAsync(id).catch(() => {}));
+        }
+
+        return validSlips;
       }
     } catch (e) {
       console.error('[StorageService] Failed reading local slips', e);
     }
-    return [];
+    return INITIAL_SLIPS.filter((s) => !this.isSlipDeleted(s.id));
   },
 
   recordSlipView(slipId: string): void {
@@ -1199,7 +1506,7 @@ export const StorageService = {
       let serverSlips: LoadSlip[] | null = null;
       try {
         const res = await fetch('/api/slips', {
-          signal: AbortSignal.timeout(4500),
+          signal: AbortSignal.timeout(8000),
         });
         if (res.ok) {
           const data = await res.json().catch(() => null);
