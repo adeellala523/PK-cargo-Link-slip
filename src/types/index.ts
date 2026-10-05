@@ -122,6 +122,18 @@ export interface LoadSlip {
   driverAssignedName?: string;
   driverAssignedPhone?: string;
   lastDriverUpdateAt?: string;
+
+  // Multi-Load Support (Allow 2 or more loads per slip)
+  additionalLoads?: Array<{
+    goods: string;
+    loadingCity: string;
+    destinationCity: string;
+    weight?: string;
+    quantity?: string;
+    vehicleType?: string;
+    bodyType?: string;
+    fareOffer?: string;
+  }>;
 }
 
 export interface WhatsAppGroup {

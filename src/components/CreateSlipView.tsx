@@ -88,6 +88,16 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
   const [fareOffer, setFareOffer] = useState(prefillSlip?.fareOffer || '');
   const [specialInstructions, setSpecialInstructions] = useState(prefillSlip?.specialInstructions || '');
 
+  // Multi-Load Support (Allow 2nd or 3rd load in single slip)
+  const [additionalLoads, setAdditionalLoads] = useState<Array<{
+    goods: string;
+    loadingCity: string;
+    destinationCity: string;
+    weight?: string;
+    quantity?: string;
+    vehicleType?: string;
+  }>>(() => prefillSlip?.additionalLoads || []);
+
   // 5 Additional Contacts with Name and Mobile Phone Number
   const [namedContacts, setNamedContacts] = useState<NamedContact[]>(() => {
     if (prefillSlip?.namedContacts && prefillSlip.namedContacts.length > 0) {
@@ -208,6 +218,7 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
       viewsCount: 0,
       sharesCount: 0,
       driverTripStatus: 'not_started',
+      additionalLoads: additionalLoads.filter(al => al.goods.trim().length > 0),
     };
 
     onSlipCreated(newSlip);
@@ -416,6 +427,106 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
               />
             </div>
 
+          </div>
+
+          {/* ============================================================== */}
+          {/* MULTI-LOAD SECTION (ایک سے زائد لوڈ شامل کریں) */}
+          {/* ============================================================== */}
+          <div className="bg-emerald-50/70 p-4 sm:p-5 rounded-2xl border border-emerald-200/90 space-y-4">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <h3 className="font-extrabold text-sm sm:text-base text-[#08284F] flex items-center gap-1.5">
+                  <Package className="w-4 h-4 text-[#19A974]" />
+                  <span>ایک سے زائد لوڈ شامل کریں (Multi-Load)</span>
+                </h3>
+                <p className="text-xs text-slate-500">
+                  اگر اس سلپ یا واٹس ایپ میسج میں 2 یا زائد گندم/مکئی/چاول کے لوڈز ہیں تو یہاں بٹن سے شامل کریں۔
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setAdditionalLoads([
+                    ...additionalLoads,
+                    { goods: '', loadingCity: loadingCity || 'بہاولپور', destinationCity: destinationCity || 'کراچی', quantity: '', vehicleType: '22 Wheeler' }
+                  ]);
+                }}
+                className="bg-[#19A974] hover:bg-[#169163] text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-xs flex items-center gap-1.5 transition active:scale-95"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ دوسرا لوڈ (2nd Load) شامل کریں</span>
+              </button>
+            </div>
+
+            {additionalLoads.map((al, idx) => (
+              <div key={idx} className="bg-white p-4 rounded-xl border-2 border-emerald-400/50 space-y-3 relative shadow-2xs">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                  <span className="font-extrabold text-xs text-emerald-900 bg-emerald-100 px-3 py-1 rounded-full">
+                    لوڈ نمبر {idx + 2}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAdditionalLoads(additionalLoads.filter((_, i) => i !== idx));
+                    }}
+                    className="text-red-600 hover:text-red-800 text-xs font-bold flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-red-50 transition"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>حذف کریں</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-700 block mb-1">سامان کا نام (مثال: گندم، مکئی، چاول)</label>
+                    <input
+                      type="text"
+                      required
+                      value={al.goods}
+                      onChange={(e) => {
+                        const updated = [...additionalLoads];
+                        updated[idx].goods = e.target.value;
+                        setAdditionalLoads(updated);
+                      }}
+                      placeholder="مثال: مکئی لوڈنگ / گندم"
+                      className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:bg-white outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-700 block mb-1">پک اپ شہر</label>
+                    <input
+                      type="text"
+                      required
+                      value={al.loadingCity}
+                      onChange={(e) => {
+                        const updated = [...additionalLoads];
+                        updated[idx].loadingCity = e.target.value;
+                        setAdditionalLoads(updated);
+                      }}
+                      placeholder="مثال: بہاولپور / کبیروالا"
+                      className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:bg-white outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-700 block mb-1">ڈیلیوری شہر</label>
+                    <input
+                      type="text"
+                      required
+                      value={al.destinationCity}
+                      onChange={(e) => {
+                        const updated = [...additionalLoads];
+                        updated[idx].destinationCity = e.target.value;
+                        setAdditionalLoads(updated);
+                      }}
+                      placeholder="مثال: کراچی"
+                      className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:bg-white outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* MULTIPLE VEHICLE SELECTION & CUSTOM TYPING */}

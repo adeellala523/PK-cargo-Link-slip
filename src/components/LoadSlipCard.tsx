@@ -751,6 +751,42 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
             </div>
           )}
 
+          {/* ============================================================== */}
+          {/* ADDITIONAL LOADS DISPLAY ON WEBSITE SLIP PREVIEW */}
+          {/* ============================================================== */}
+          {currentSlip.additionalLoads && currentSlip.additionalLoads.length > 0 && (
+            <div className="bg-emerald-50/70 rounded-2xl p-4 border border-emerald-200/90 space-y-3">
+              <div className="flex items-center gap-2 text-emerald-900 font-extrabold text-xs sm:text-sm border-b border-emerald-200/60 pb-2">
+                <Truck className="w-4 h-4 text-[#19A974]" />
+                <span>شامل اضافی لوڈز کی تفصیلات ({currentSlip.additionalLoads.length + 1} لوڈز شامل)</span>
+              </div>
+              <div className="grid grid-cols-1 gap-2.5">
+                {currentSlip.additionalLoads.map((al, idx) => (
+                  <div key={idx} className="bg-white p-3.5 rounded-xl border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-2xs">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-extrabold text-xs text-white bg-[#123A6D] px-2.5 py-0.5 rounded-md">
+                          لوڈ {idx + 2}
+                        </span>
+                        <span className="font-extrabold text-sm text-[#08284F]">
+                          {al.loadingCity} تا {al.destinationCity}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-600 font-medium">
+                        📦 سامان: <strong className="text-slate-900">{al.goods}</strong> ({al.quantity || al.weight || 'حسبِ ضرورت'})
+                      </p>
+                    </div>
+                    {al.vehicleType && (
+                      <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-3 py-1 rounded-lg border border-emerald-300/60 self-start sm:self-auto">
+                        🚚 {al.vehicleType}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* QR Code & Verification (Section 11) */}
           <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
             <div className="flex items-center gap-3">

@@ -390,15 +390,16 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
                   موبائل نمبر (Mobile Phone) <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
+                  <Phone className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
                   <input
                     type="tel"
                     required
                     value={loginPhone}
                     onChange={(e) => setLoginPhone(e.target.value)}
                     placeholder="03001234567"
-                    className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-900 focus:bg-white focus:border-[#123A6D] outline-none min-h-[48px] font-mono ltr-content"
+                    className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 focus:bg-white focus:border-[#123A6D] outline-none min-h-[48px] font-mono text-left"
+                    style={{ direction: 'ltr', textAlign: 'left' }}
                   />
-                  <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
               </div>
 
@@ -421,18 +422,19 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
                   </a>
                 </div>
                 <div className="relative">
+                  <Lock className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
                     placeholder="پاس ورڈ درج کریں"
-                    className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-900 focus:bg-white focus:border-[#123A6D] outline-none min-h-[48px]"
+                    className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl pr-10 pl-10 py-3 text-sm text-slate-900 focus:bg-white focus:border-[#123A6D] outline-none min-h-[48px]"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 z-10"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>

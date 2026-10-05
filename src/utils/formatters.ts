@@ -25,62 +25,43 @@ export function generateSlipId(): string {
 }
 
 /**
- * Builds the exact WhatsApp formatted text according to PK Cargo Link Section 13 specifications
+ * Builds the exact WhatsApp formatted text according to PK Cargo Link specifications:
+ * - Phone numbers are viewable on the official website slip preview link
+ * - Supports multi-load items per slip
  */
 export function formatWhatsAppMessage(slip: LoadSlip): string {
   const cleanId = slip.id.replace(/[^a-zA-Z0-9]/g, '');
   const slipUrl = `${OFFICIAL_WEBSITE_URL}/slip/${cleanId}`;
   
-  let contactLines = slip.primaryPhone;
-  if (slip.whatsappNumber && slip.whatsappNumber !== slip.primaryPhone) {
-    contactLines += ` (WhatsApp: ${slip.whatsappNumber})`;
-  }
-  
-  // Format named contacts if available
-  if (slip.namedContacts && slip.namedContacts.length > 0) {
-    const extra = slip.namedContacts
-      .filter((c) => c && c.number)
-      .map((c) => c.name ? `${c.number} (${c.name})` : c.number)
-      .join(' / ');
-    if (extra) {
-      contactLines += ` / ${extra}`;
-    }
-  } else if (slip.additionalContacts && slip.additionalContacts.length > 0) {
-    contactLines += ` / ${slip.additionalContacts.slice(0, 3).join(' / ')}`;
+  const hasMultipleLoads = slip.additionalLoads && slip.additionalLoads.length > 0;
+
+  let loadsContent = '';
+
+  if (hasMultipleLoads) {
+    // Primary Load 1
+    loadsContent += `📦 **لوڈ 1:**\n📍 ${slip.loadingCity} ${slip.loadingLocation ? `(${slip.loadingLocation})` : ''} تا ${slip.destinationCity}\n🚛 ${slip.goods} (${slip.quantity || slip.weight || 'حسبِ ضرورت'}) — ${slip.vehicleType}\n\n`;
+
+    // Additional Loads
+    slip.additionalLoads!.forEach((al, idx) => {
+      loadsContent += `📦 **لوڈ ${idx + 2}:**\n📍 ${al.loadingCity} تا ${al.destinationCity}\n🚛 ${al.goods} (${al.quantity || al.weight || 'حسبِ ضرورت'})${al.vehicleType ? ` — ${al.vehicleType}` : ''}\n\n`;
+    });
+  } else {
+    loadsContent = `📍 پک اپ:\n${slip.loadingCity} ${slip.loadingLocation ? `(${slip.loadingLocation})` : ''}\n\n📍 ڈیلیوری:\n${slip.destinationCity}\n\n📦 سامان:\n${slip.goods}\n\n🔢 مقدار:\n${slip.quantity || slip.weight || 'حسبِ ضرورت'}\n\n🚚 گاڑی:\n${slip.vehicleType} (${slip.bodyType})\n\n`;
   }
 
   const dateStr = slip.createdAt ? new Date(slip.createdAt).toLocaleDateString('ur-PK') : 'آج';
 
-  return `بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+  return `اَلسَلامُ عَلَيْكُم وَرَحْمَةُاَللهِ وَبَرَكاتُهُ
+ایاک.نعبدواياك.نستعین
 
-🚛 PK CARGO LOAD
+🚛 PK CARGO LOAD SLIP
 
-📍 پک اپ:
-${slip.loadingCity} (${slip.loadingLocation})
+${loadsContent}📅 تاریخ: ${dateStr}
 
-📍 ڈیلیوری:
-${slip.destinationCity}
-
-📦 سامان:
-${slip.goods}
-
-🔢 مقدار:
-${slip.quantity || slip.weight || 'حسبِ ضرورت'}
-
-🚚 گاڑی:
-${slip.vehicleType} (${slip.bodyType})
-
-📅 تاریخ:
-${dateStr}
-
-🏢 اڈا:
-${slip.addaName} (${slip.addaCity})
-
-📞 رابطہ:
-${contactLines}
-
-🔗 سلپ:
-${slipUrl}
+🏢 ${slip.addaName} (${slip.addaCity})
+${slip.managerName ? `👤 ${slip.managerName}\n` : ''}
+📞 رابطہ و تمام فون نمبرز دیکھنے کیلئے آن لائن سلپ لنک کھولیں:
+🔗 ${slipUrl}
 
 Powered by PK Cargo Link`;
 }
