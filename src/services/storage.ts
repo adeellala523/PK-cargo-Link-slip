@@ -1126,6 +1126,8 @@ export const StorageService = {
       try {
         localStorage.setItem(STORAGE_KEYS.REGISTERED_DRIVERS, JSON.stringify(merged));
       } catch { /* ignore */ }
+      // Push any local-only drivers up to the server so old accounts get saved too
+      this.syncDriversToServer(merged).catch(() => {});
       return merged;
     } catch {
       return this.getDrivers();
