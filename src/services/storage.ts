@@ -1027,6 +1027,109 @@ export const StorageService = {
     } catch (e) {
       console.error('Error saving drivers', e);
     }
+    // Also sync driver accounts to the central server so they are saved in the system
+    this.syncDriversToServer(drivers).catch(() => {});
+  },
+
+  // Push driver accounts to the server (users-sync), merged by phone number
+  async syncDriversToServer(drivers: DriverAccount[]): Promise<void> {
+    try {
+      if (typeof fetch === 'undefined') return;
+      const res = await fetch('/api/users-sync', { signal: AbortSignal.timeout(5000) });
+      const serverUsers: any[] = res.ok ? await res.json().catch(() => []) : [];
+      const map = new Map<string, any>();
+      (Array.isArray(serverUsers) ? serverUsers : []).forEach((u: any) => {
+        if (u && u.phone) map.set(String(u.phone).replace(/[^0-9]/g, ''), u);
+      });
+      drivers.forEach((d) => {
+        if (!d || !d.phone) return;
+        const key = String(d.phone).replace(/[^0-9]/g, '');
+        const existing = map.get(key) || {};
+        map.set(key, {
+          ...existing,
+          id: existing.id || d.id,
+          phone: d.phone,
+          password: (d as any).password || existing.password,
+          role: 'driver',
+          name: d.driverName,
+          managerName: d.driverName,
+          city: d.currentCity || existing.city || '',
+          whatsappNumber: d.whatsappNumber || d.phone,
+          driverDetails: {
+            vehicleType: d.vehicleType,
+            bodyType: d.bodyType || '',
+            vehicleNumber: d.vehicleNumber || '',
+            currentCity: d.currentCity,
+            preferredRoute: d.preferredRoute || '',
+          },
+          createdAt: existing.createdAt || (d as any).createdAt || new Date().toISOString(),
+        });
+      });
+      const merged = Array.from(map.values());
+      await fetch('/api/users-sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(merged),
+        signal: AbortSignal.timeout(8000),
+      }).catch(() => {});
+      // Also try the live host endpoint directly
+      await fetch('https://pkcargolink.com/api/users.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(merged),
+        signal: AbortSignal.timeout(8000),
+      }).catch(() => {});
+      try {
+        localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(merged));
+      } catch { /* ignore */ }
+    } catch { /* silent - local copy remains */ }
+  },
+
+  // Pull driver accounts from the server into local storage (for login on any device)
+  async syncDriversWithServer(): Promise<DriverAccount[]> {
+    try {
+      if (typeof fetch === 'undefined') return this.getDrivers();
+      const res = await fetch('/api/users-sync', { signal: AbortSignal.timeout(5000) });
+      if (!res.ok) return this.getDrivers();
+      const serverUsers: any[] = await res.json().catch(() => []);
+      if (!Array.isArray(serverUsers)) return this.getDrivers();
+      const serverDrivers: DriverAccount[] = serverUsers
+        .filter((u: any) => u && u.phone && u.role === 'driver')
+        .map((u: any) => {
+          const det = u.driverDetails || {};
+          return {
+            id: String(u.id || `driver_${String(u.phone).replace(/[^0-9]/g, '')}`),
+            driverName: u.managerName || u.name || 'ڈرائیور',
+            phone: String(u.phone),
+            password: u.password,
+            whatsappNumber: u.whatsappNumber || String(u.phone),
+            vehicleType: det.vehicleType || '22 Wheeler',
+            bodyType: det.bodyType || '',
+            vehicleNumber: det.vehicleNumber || '',
+            currentCity: det.currentCity || u.city || '',
+            preferredRoute: det.preferredRoute || '',
+            createdAt: u.createdAt,
+          } as DriverAccount;
+        });
+      if (serverDrivers.length === 0) return this.getDrivers();
+      // Merge: server drivers win by phone, keep local-only ones too
+      const map = new Map<string, DriverAccount>();
+      this.getDrivers().forEach((d) => {
+        if (d && d.phone) map.set(String(d.phone).replace(/[^0-9]/g, ''), d);
+      });
+      serverDrivers.forEach((d) => {
+        const key = String(d.phone).replace(/[^0-9]/g, '');
+        const local = map.get(key);
+        map.set(key, { ...(local || {}), ...d, password: (local as any)?.password || (d as any).password } as DriverAccount);
+      });
+      const merged = Array.from(map.values());
+      try {
+        localStorage.setItem(STORAGE_KEYS.REGISTERED_DRIVERS, JSON.stringify(merged));
+      } catch { /* ignore */ }
+      return merged;
+    } catch {
+      return this.getDrivers();
+    }
   },
 
   isDriverLoggedIn(): boolean {
