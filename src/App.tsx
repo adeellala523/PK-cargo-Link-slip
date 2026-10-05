@@ -24,7 +24,7 @@ import { NotificationCenterModal } from './components/NotificationCenterModal';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { AiVoiceSupportWidget } from './components/AiVoiceSupportWidget';
 import { AiChatbotWidget } from './components/AiChatbotWidget';
-import { GeminiLiveVoiceWidget } from './components/GeminiLiveVoiceWidget';
+// Old GeminiLiveVoiceWidget hidden per user request - replaced by AI chatbot
 import { VoiceLoadCreatorModal } from './components/VoiceLoadCreatorModal';
 import { PaymentSettings } from './components/PaymentSettings';
 import { StorageService } from './services/storage';
@@ -789,18 +789,7 @@ export default function App() {
       {/* PWA Install Banner */}
       <PWAInstallBanner />
 
-      {/* Primary Gemini Live Voice Assistant */}
-      <GeminiLiveVoiceWidget
-        slips={slips}
-        onNavigateToSearchWithQuery={(from, to) => {
-          setSearchInitialFilter({ from, to });
-          navigateTo('search');
-        }}
-        onOpenCreateSlip={() => handleOpenCreateModal()}
-        onNavigateToTrucks={() => navigateTo('trucks')}
-        onNavigateToDriverPortal={() => navigateTo('driver')}
-        onViewSlip={(slip) => viewSlipDetail(slip)}
-      />
+      {/* Old voice assistant hidden - replaced by AI chatbot widget */}
 
       {/* AI Chatbot Assistant */}
       <AiChatbotWidget />
