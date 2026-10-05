@@ -217,6 +217,285 @@ app.delete('/api/slips', async (req: Request, res: Response) => {
   res.json({ success: true, deleted: reqId, remainingCount: slips.length });
 });
 
+// -------------------------------------------------------------
+// WhatsApp Automated Webhook / Ingestion Endpoint
+// -------------------------------------------------------------
+app.get('/api/whatsapp-webhook', (_req: Request, res: Response) => {
+  res.json({
+    status: 'active',
+    endpoint: '/api/whatsapp-webhook',
+    method: 'POST',
+    description: 'PK Cargo Link automated WhatsApp load parser webhook is live and ready.',
+    acceptedPayloads: [
+      { text: 'لاہور تا کراچی حاضر لوڈ 22 وہیلر 35 ٹن رابطہ 03044980373' },
+      { message: 'Raw WhatsApp message string' },
+      { body: 'Twilio / WhatsApp gateway body string' }
+    ]
+  });
+});
+
+app.post('/api/whatsapp-webhook', async (req: Request, res: Response) => {
+  try {
+    let rawText = '';
+    if (typeof req.body === 'string') {
+      rawText = req.body;
+    } else if (req.body) {
+      rawText = (req.body.text || req.body.message || req.body.body || req.body.caption || req.body.content || '').trim();
+    }
+    if (!rawText && typeof req.query?.text === 'string') {
+      rawText = req.query.text.trim();
+    }
+
+    if (!rawText) {
+      res.status(400).json({
+        error: 'Missing message text',
+        hint: 'Send JSON with { "text": "لاہور تا کراچی حاضر مال 22 وہیلر 03001234567" }'
+      });
+      return;
+    }
+
+    const text = rawText;
+    let detectedAdda = '';
+    let fromCity = '';
+    let toCity = '';
+    let detectedPhone = '';
+    let additionalPhones: string[] = [];
+    let detectedGoods = 'حاضر مال / جنرل کارگو';
+    let detectedWeight = '';
+    let detectedQty = '';
+    let detectedVehicle = '22 Wheeler';
+    let detectedBody = 'اوپن';
+    let contactPerson = '';
+
+    // 1. Phone numbers: 03xx-xxxxxxx, 03xxxxxxxxx, +923xxxxxxxxx
+    const phoneMatches = text.match(/(?:(?:\+92|92|0)?3\d{2}[- ]?\d{7})/g);
+    if (phoneMatches && phoneMatches.length > 0) {
+      const cleanPhones = Array.from(new Set(phoneMatches.map((m) => {
+        let p = m.replace(/[^0-9]/g, '');
+        if (p.startsWith('92')) p = '0' + p.substring(2);
+        if (!p.startsWith('0') && p.length === 10) p = '0' + p;
+        return p;
+      }))).filter((p) => p.length === 11 && p.startsWith('03'));
+
+      if (cleanPhones.length > 0) {
+        detectedPhone = cleanPhones[0];
+        additionalPhones = cleanPhones.slice(1);
+      }
+    }
+
+    // 2. City Dictionary with Canonical Urdu & Roman Urdu aliases
+    const CITY_DICT = [
+      { canonical: 'لاہور', aliases: ['لاہور', 'lahore', 'lhr'] },
+      { canonical: 'کراچی', aliases: ['کراچی', 'karachi', 'khi'] },
+      { canonical: 'فیصل آباد', aliases: ['فیصل آباد', 'فیصلآباد', 'faisalabad', 'fsd'] },
+      { canonical: 'راولپنڈی', aliases: ['راولپنڈی', 'rawalpindi', 'pindi'] },
+      { canonical: 'اسلام آباد', aliases: ['اسلام آباد', 'islamabad', 'isb'] },
+      { canonical: 'ملتان', aliases: ['ملتان', 'multan', 'mux'] },
+      { canonical: 'پشاور', aliases: ['پشاور', 'peshawar', 'pew'] },
+      { canonical: 'کوئٹہ', aliases: ['کوئٹہ', 'quetta'] },
+      { canonical: 'گوجرانوالہ', aliases: ['گوجرانوالہ', 'gujranwala'] },
+      { canonical: 'سیالکوٹ', aliases: ['سیالکوٹ', 'sialkot'] },
+      { canonical: 'بہاولپور', aliases: ['بہاولپور', 'بہاول پور', 'bahawalpur', 'bhawalpur'] },
+      { canonical: 'سرگودھا', aliases: ['سرگودھا', 'sargodha'] },
+      { canonical: 'سکھر', aliases: ['سکھر', 'sukkur'] },
+      { canonical: 'جھنگ', aliases: ['جھنگ', 'jhang'] },
+      { canonical: 'شیخوپورہ', aliases: ['شیخوپورہ', 'sheikhupura'] },
+      { canonical: 'گجرات', aliases: ['گجرات', 'gujrat'] },
+      { canonical: 'رحیم یار خان', aliases: ['رحیم یار خان', 'رحیمیارخان', 'rahim yar khan', 'ryk'] },
+      { canonical: 'مردان', aliases: ['مردان', 'mardan'] },
+      { canonical: 'قصور', aliases: ['قصور', 'kasur'] },
+      { canonical: 'ڈیرہ غازی خان', aliases: ['ڈیرہ غازی خان', 'ڈی جی خان', 'dg khan'] },
+      { canonical: 'ساہیوال', aliases: ['ساہیوال', 'sahiwal'] },
+      { canonical: 'نواب شاہ', aliases: ['نواب شاہ', 'nawabshah'] },
+      { canonical: 'اوکاڑہ', aliases: ['اوکاڑہ', 'okara'] },
+      { canonical: 'خانیوال', aliases: ['خانیوال', 'khanewal'] },
+      { canonical: 'کوہاٹ', aliases: ['کوہاٹ', 'kohat'] },
+      { canonical: 'چنیوٹ', aliases: ['چنیوٹ', 'chiniot'] },
+      { canonical: 'میانوالی', aliases: ['میانوالی', 'mianwali'] },
+      { canonical: 'بھکر', aliases: ['بھکر', 'bhakkar'] },
+      { canonical: 'لودھراں', aliases: ['لودھراں', 'lodhran'] },
+      { canonical: 'حیدرآباد', aliases: ['حیدرآباد', 'hyderabad'] },
+      { canonical: 'نوشہرہ ورکاں', aliases: ['نوشہرہ ورکاں', 'نوشہروکرکا', 'nowshehra virkan'] },
+      { canonical: 'ننکانہ صاحب', aliases: ['ننکانہ صاحب', 'ننکانہ', 'nankana sahib', 'nankana'] },
+      { canonical: 'شاہ کوٹ', aliases: ['شاہ کوٹ', 'شاہکوٹ', 'shahkot'] },
+      { canonical: 'فروز وٹواں', aliases: ['فروز وٹواں', 'فروزوٹواں', 'feroze watwan'] },
+      { canonical: 'باغ چوک', aliases: ['باغ چوک', 'باغچوک', 'bagh chowk'] },
+      { canonical: 'بیگ پور', aliases: ['بیگ پور', 'بیگپور', 'baig pur'] },
+      { canonical: 'جوئیاں والے موڑ', aliases: ['جوئیاں والے موڑ', 'جوئیاں والا موڑ', 'جوئیاں والے', 'joyanwala mor'] },
+      { canonical: 'وہاڑی', aliases: ['وہاڑی', 'vehari'] },
+      { canonical: 'پتوکی', aliases: ['پتوکی', 'pattoki'] },
+      { canonical: 'بورے والا', aliases: ['بورے والا', 'burewala'] },
+      { canonical: 'حافظ آباد', aliases: ['حافظ آباد', 'hafizabad'] },
+      { canonical: 'مظفر گڑھ', aliases: ['مظفر گڑھ', 'muzaffargarh'] },
+      { canonical: 'فاروق آباد', aliases: ['فاروق آباد', 'farooqabad'] }
+    ];
+
+    // Find Route (e.g. City A to City B)
+    for (const c1 of CITY_DICT) {
+      for (const c2 of CITY_DICT) {
+        if (c1.canonical === c2.canonical) continue;
+        for (const a1 of c1.aliases) {
+          for (const a2 of c2.aliases) {
+            const pairRegex = new RegExp(`${a1}\\s*(?:تا|سے|to|-|➔|->)\\s*${a2}`, 'i');
+            if (pairRegex.test(text)) {
+              fromCity = c1.canonical;
+              toCity = c2.canonical;
+              break;
+            }
+          }
+          if (fromCity && toCity) break;
+        }
+        if (fromCity && toCity) break;
+      }
+      if (fromCity && toCity) break;
+    }
+
+    // Fallback City Search
+    if (!fromCity || !toCity) {
+      const matchedCanonical: string[] = [];
+      for (const c of CITY_DICT) {
+        for (const alias of c.aliases) {
+          const reg = new RegExp(`\\b${alias}\\b`, 'i');
+          if (reg.test(text) || text.includes(alias)) {
+            if (!matchedCanonical.includes(c.canonical)) {
+              matchedCanonical.push(c.canonical);
+            }
+            break;
+          }
+        }
+      }
+      if (matchedCanonical.length >= 2) {
+        fromCity = matchedCanonical[0];
+        toCity = matchedCanonical[1];
+      } else if (matchedCanonical.length === 1) {
+        fromCity = matchedCanonical[0];
+      }
+    }
+
+    // 3. Weight & Quantity
+    const weightMatch = text.match(/(\d+(?:\/\d+)?[\.\d]*\s*(?:ٹن|ton|tons|ٹنز|kg|کیلو))/i);
+    if (weightMatch) detectedWeight = weightMatch[1].trim();
+
+    const qtyMatch = text.match(/(\d+\s*(?:گاڑیوں\s*کا\s*مال|گاڑیاں|بوریاں|تھیلے|کارٹن|کاٹن|پیکٹ|بوری|ڈرم))/i);
+    if (qtyMatch) detectedQty = qtyMatch[1].trim();
+
+    // 4. Vehicle Type
+    if (/اوپن\s*ٹریلر|trailer|ٹریلر/i.test(text)) detectedVehicle = 'اوپن ٹریلر';
+    else if (/22\s*(?:وہیلر|wheeler)/i.test(text)) detectedVehicle = '22 Wheeler';
+    else if (/10\s*(?:وہیلر|wheeler)/i.test(text)) detectedVehicle = '10 Wheeler';
+    else if (/شہزور|shahzor/i.test(text)) detectedVehicle = 'Shahzor';
+    else if (/مزدا|mazda/i.test(text)) detectedVehicle = 'Mazda';
+    else if (/40\s*(?:فٹ|foot)/i.test(text)) detectedVehicle = '40 Foot Container';
+    else if (/16\s*(?:فٹ|foot)/i.test(text)) detectedVehicle = '16 Foot';
+
+    // 5. Body Type
+    if (/ہاف\s*باڈی/i.test(text)) detectedBody = 'ہاف باڈی';
+    else if (/فل\s*باڈی/i.test(text)) detectedBody = 'فل باڈی';
+    else if (/پھٹا/i.test(text)) detectedBody = 'پھٹا';
+    else if (/کنٹینر|container/i.test(text)) detectedBody = 'کنٹینر';
+
+    // 6. Goods / مال
+    const goodsRegex = /(?:مال|سامان|goods|آئٹم)[\s:—\-]+([^\n,،\r]+)/i;
+    const goodsMatch = text.match(goodsRegex);
+    if (goodsMatch && goodsMatch[1]) {
+      detectedGoods = goodsMatch[1].trim();
+    } else {
+      const COMMON_ITEMS = ['گندم', 'چاول', 'چینی', 'مکئی', 'کھاد', 'سریا', 'سیمنٹ', 'کاٹن', 'صابن', 'گھی', 'تیل', 'آلو', 'پیاز', 'میوہ', 'حاضر مال'];
+      for (const item of COMMON_ITEMS) {
+        if (text.includes(item)) {
+          detectedGoods = item;
+          break;
+        }
+      }
+    }
+
+    // 7. Contact Person Name
+    const nameMatch = text.match(/(?:رابطہ|نام|contact|name)[\s:—\-]+([^\d\n,،\r/]+)/i);
+    if (nameMatch && nameMatch[1]) {
+      const cand = nameMatch[1].trim();
+      if (cand.length >= 3 && cand.length <= 30) {
+        contactPerson = cand;
+      }
+    }
+
+    // 8. Adda / Transport Company Name
+    const lines = text.split('\n');
+    for (const line of lines) {
+      const trimmed = line.replace(/^[🏢🚚📦📍📞*\s_—\-]+/, '').trim();
+      if (/کارگو|گڈز|ٹرانسپورٹ|اڈا/i.test(trimmed)) {
+        detectedAdda = trimmed.substring(0, 50);
+        break;
+      }
+    }
+
+    const now = new Date();
+    const datePrefix = now.getFullYear().toString() +
+      String(now.getMonth() + 1).padStart(2, '0') +
+      String(now.getDate()).padStart(2, '0');
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    const slipId = `PKCL${datePrefix}${randomSuffix}`;
+
+    const namedContacts: any[] = [];
+    if (detectedPhone) {
+      namedContacts.push({ name: contactPerson || 'منیجر / بکنگ انچارج', number: detectedPhone });
+    }
+    additionalPhones.forEach((p, idx) => {
+      namedContacts.push({ name: `رابطہ نمبر ${idx + 2}`, number: p });
+    });
+
+    const newSlip: any = {
+      id: slipId,
+      addaId: `wa_${Date.now()}`,
+      addaName: detectedAdda || req.body.groupName || 'آل پاکستان ٹرانسپورٹ اڈا',
+      addaCity: fromCity || 'پنجاب',
+      addaAddress: `${fromCity || 'پنجاب'}، پاکستان`,
+      managerName: contactPerson || req.body.sender || 'واٹس ایپ ایڈمن',
+      primaryPhone: detectedPhone || '03000000000',
+      whatsappNumber: detectedPhone || '03000000000',
+      additionalContacts: additionalPhones,
+      namedContacts: namedContacts,
+      loadingCity: fromCity || 'نامعلوم روانگی مقام',
+      loadingLocation: fromCity || 'لوڈنگ پوائنٹ',
+      destinationCity: toCity || 'نامعلوم منزل',
+      destinationLocation: toCity || 'ان لوڈنگ پوائنٹ',
+      goods: detectedGoods,
+      weight: detectedWeight || '15/20 ٹن',
+      quantity: detectedQty || 'حاضر مال',
+      vehicleType: detectedVehicle,
+      bodyType: detectedBody,
+      specialInstructions: `واٹس ایپ گروپ سے خودکار موصول شدہ: ${rawText.slice(0, 120)}...`,
+      status: 'active',
+      viewsCount: 0,
+      sharesCount: 0,
+      createdAt: now.toISOString(),
+    };
+
+    // Save to DB
+    if (process.env.SQL_HOST) {
+      try {
+        await saveDbSlip(newSlip);
+      } catch (e) {
+        console.warn('[Webhook] DB save warning:', e);
+      }
+    }
+
+    // Save to File
+    const slips = getStoredSlips();
+    slips.unshift(newSlip);
+    saveStoredSlips(slips);
+
+    console.log(`[API:WhatsAppWebhook] ✅ New load automatically created from WhatsApp: ${newSlip.id} (${newSlip.loadingCity} -> ${newSlip.destinationCity})`);
+    res.json({
+      success: true,
+      message: 'لوڈ کامیابی سے واٹس ایپ میسج سے تیار کر کے لائیو پوسٹ کر دیا گیا ہے!',
+      slip: newSlip
+    });
+  } catch (err: any) {
+    console.error('[API:WhatsAppWebhook] ❌ Error processing WhatsApp webhook:', err);
+    res.status(500).json({ error: 'Failed processing WhatsApp message', details: err?.message });
+  }
+});
+
 app.delete('/api/slips/:id', async (req: Request, res: Response) => {
   const reqId = req.params.id;
 

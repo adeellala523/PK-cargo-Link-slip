@@ -1634,7 +1634,10 @@ export const StorageService = {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.GROUPS);
       if (data) {
-        return JSON.parse(data);
+        const parsed: WhatsAppGroup[] = JSON.parse(data);
+        if (Array.isArray(parsed)) {
+          return parsed.filter(g => !(g.inviteLink || '').includes('GTTrQNBXPTrAUXk1BZ1TJR') && g.id !== 'grp_official_pkcargolink');
+        }
       }
     } catch {}
     return [];
