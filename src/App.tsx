@@ -23,6 +23,7 @@ import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { NotificationCenterModal } from './components/NotificationCenterModal';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { AiVoiceSupportWidget } from './components/AiVoiceSupportWidget';
+import { AiChatbotWidget } from './components/AiChatbotWidget';
 import { GeminiLiveVoiceWidget } from './components/GeminiLiveVoiceWidget';
 import { VoiceLoadCreatorModal } from './components/VoiceLoadCreatorModal';
 import { PaymentSettings } from './components/PaymentSettings';
@@ -800,6 +801,9 @@ export default function App() {
         onNavigateToDriverPortal={() => navigateTo('driver')}
         onViewSlip={(slip) => viewSlipDetail(slip)}
       />
+
+      {/* AI Chatbot Assistant */}
+      <AiChatbotWidget />
 
       {/* General Site Footer */}
       <Footer
