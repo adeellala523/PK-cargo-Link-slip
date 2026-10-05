@@ -13,7 +13,6 @@ import {
   Copy,
   ExternalLink,
   Trash2,
-  Eye,
   CheckCircle2,
   RefreshCw,
   Phone,
@@ -499,11 +498,10 @@ export const AdminQuickSlipCreator: React.FC<AdminQuickSlipCreatorProps> = ({
         </div>
       </div>
 
-      {/* Main Creation Form & Live Preview Grid */}
-      <form onSubmit={handlePublishSlip} className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      {/* Main Creation Form */}
+      <form onSubmit={handlePublishSlip} className="space-y-6">
         
-        {/* Left Column: Form Fields */}
-        <div className="lg:col-span-8 bg-white rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200 space-y-6">
+        <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200 space-y-6">
           
           {/* STEP 2: Adda Profile Details */}
           <div className="space-y-4 border-b border-slate-100 pb-5">
@@ -818,12 +816,23 @@ export const AdminQuickSlipCreator: React.FC<AdminQuickSlipCreatorProps> = ({
             </div>
           </div>
 
+          {/* Quick Tips */}
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3.5 text-xs text-amber-900 space-y-1.5">
+            <div className="font-bold flex items-center gap-1.5 text-amber-950">
+              <AlertCircle className="w-4 h-4 text-amber-600" />
+              <span>ایڈمن کے لیے اہم نوٹ:</span>
+            </div>
+            <p className="leading-relaxed">
+              یہاں بنائی گئی تمام سلپس فوری طور پر لائیو ہوم پیج، ڈرائیور پورٹل اور سرچ میں سب کو دکھائی دیں گی۔ اڈا منیجر کا لاگ ان ہونا ضروری نہیں ہے۔
+            </p>
+          </div>
+
           {/* Action Submit Button */}
           <div className="flex items-center justify-end gap-3 pt-2">
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-emerald-600 via-teal-700 to-[#0B2545] hover:opacity-95 text-white rounded-2xl font-bold text-sm shadow-xl shadow-emerald-900/20 flex items-center justify-center gap-2 transition disabled:opacity-50"
+              className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-emerald-600 via-teal-700 to-[#0B2545] hover:opacity-95 text-white rounded-2xl font-bold text-sm shadow-xl shadow-emerald-900/20 flex items-center justify-center gap-2 transition disabled:opacity-50 cursor-pointer"
             >
               {isSubmitting ? (
                 <>
@@ -839,89 +848,6 @@ export const AdminQuickSlipCreator: React.FC<AdminQuickSlipCreatorProps> = ({
             </button>
           </div>
 
-        </div>
-
-        {/* Right Column: Real-time Live Preview Card */}
-        <div className="lg:col-span-4 space-y-4">
-          <div className="sticky top-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                <Eye className="w-4 h-4 text-emerald-600" />
-                <span>لائیو سلپ و واٹس ایپ پریویو کارڈ</span>
-              </h3>
-              <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
-                Real-Time
-              </span>
-            </div>
-
-            {/* WhatsApp Link Card Preview Simulation */}
-            <div className="bg-slate-900 rounded-3xl p-4 text-white shadow-xl border border-slate-800 space-y-3">
-              <div className="text-[10px] text-slate-400 font-mono">
-                WhatsApp Link Card Preview:
-              </div>
-
-              {/* Simulated Card Image */}
-              <div className="aspect-[1.91/1] w-full rounded-2xl overflow-hidden relative bg-gradient-to-br from-slate-950 via-[#0B2545] to-slate-900 border border-slate-700 p-3.5 flex flex-col justify-between shadow-md">
-                <div className="text-center text-xs font-bold text-emerald-300 font-nafees border-b border-emerald-500/20 pb-1.5 bg-black/20 -mx-3.5 -mt-3.5 pt-2">
-                  بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
-                </div>
-                <div className="flex items-center justify-between pt-1">
-                  <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-mono">
-                    PK CARGO LINK
-                  </span>
-                  {addaLogo ? (
-                    <img src={addaLogo} alt="Logo" className="w-8 h-8 rounded-lg object-contain bg-white/10 p-0.5" />
-                  ) : (
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-300 font-bold text-xs">
-                      اڈا
-                    </div>
-                  )}
-                </div>
-
-                <div className="text-center my-auto">
-                  <h4 className="text-base font-bold text-amber-300">
-                    {addaName || 'ٹرانسپورٹ اڈا کا نام'}
-                  </h4>
-                  <p className="text-xs text-white mt-0.5">
-                    {loadingCity} ➔ {destinationCity}
-                  </p>
-                  <p className="text-[11px] text-slate-300 mt-1">
-                    {goods} {weight ? `(${weight})` : ''} • {vehicleType}
-                  </p>
-                </div>
-
-                <div className="text-[10px] text-slate-400 flex items-center justify-between border-t border-slate-800 pt-1">
-                  <span>فون: {primaryPhone}</span>
-                  <span className="text-emerald-400">تصدیق شدہ سلپ</span>
-                </div>
-              </div>
-
-              {/* Link Details under Card */}
-              <div className="bg-slate-800/80 p-3 rounded-2xl border border-slate-700/80 space-y-1">
-                <p className="text-xs font-bold text-slate-200">
-                  {addaName || 'اڈا کا نام'} – دستیاب لوڈ: {loadingCity} تا {destinationCity}
-                </p>
-                <p className="text-[11px] text-slate-400">
-                  مال: {goods} {weight ? `(${weight})` : ''} | مطلوبہ گاڑی: {vehicleType} | اڈا: {addaName} ({addaCity})
-                </p>
-                <p className="text-[10px] text-emerald-400 font-mono">
-                  pkcargolink.com
-                </p>
-              </div>
-            </div>
-
-            {/* Quick Tips */}
-            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3.5 text-xs text-amber-900 space-y-1.5">
-              <div className="font-bold flex items-center gap-1.5 text-amber-950">
-                <AlertCircle className="w-4 h-4 text-amber-600" />
-                <span>ایڈمن کے لیے اہم نوٹ:</span>
-              </div>
-              <p className="leading-relaxed">
-                یہاں بنائی گئی تمام سلپس فوری طور پر لائیو ہوم پیج، ڈرائیور پورٹل اور سرچ میں سب کو دکھائی دیں گی۔ اڈا منیجر کا لاگ ان ہونا ضروری نہیں ہے۔
-              </p>
-            </div>
-
-          </div>
         </div>
 
       </form>
