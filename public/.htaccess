@@ -11,6 +11,9 @@
   # Map /api/upload to /api/upload.php
   RewriteRule ^api/upload/?$ api/upload.php [L,QSA]
 
+  # Map /api/whatsapp-webhook to /api/whatsapp-webhook.php
+  RewriteRule ^api/whatsapp-webhook/?$ api/whatsapp-webhook.php [L,QSA]
+
   # Map /api/slip-image to /api/slip-image.php
   RewriteRule ^api/slip-image/?$ api/slip-image.php [L,QSA]
 

@@ -73,6 +73,21 @@ if (strpos($uri, '/api/slip-image') === 0) {
     }
 }
 
+if (strpos($uri, '/api/whatsapp-webhook') === 0) {
+    if (file_exists(__DIR__ . '/api/whatsapp-webhook.php')) {
+        require __DIR__ . '/api/whatsapp-webhook.php';
+        exit;
+    }
+    if (file_exists(__DIR__ . '/dist/api/whatsapp-webhook.php')) {
+        require __DIR__ . '/dist/api/whatsapp-webhook.php';
+        exit;
+    }
+    if (file_exists(__DIR__ . '/public/api/whatsapp-webhook.php')) {
+        require __DIR__ . '/public/api/whatsapp-webhook.php';
+        exit;
+    }
+}
+
 // 3. If file exists in dist, serve directly
 if (!empty($uri) && $uri !== '/') {
     $targetFile = __DIR__ . '/dist' . $uri;
