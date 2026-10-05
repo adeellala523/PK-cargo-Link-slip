@@ -143,13 +143,13 @@ app.get('/api/slips', async (_req: Request, res: Response) => {
   if (process.env.SQL_HOST) {
     try {
       const dbSlips = await getDbSlips();
-      console.log(`[API:Slips:DB] GET /api/slips -> Returning ${dbSlips.length} slips from PostgreSQL`);
-      saveStoredSlips(dbSlips);
-      res.json(dbSlips);
-      return;
-    } catch (err) {
-      console.warn('[API:Slips:DB] Failed reading from database, using file backup:', err);
-    }
+      if (Array.isArray(dbSlips) && dbSlips.length > 0) {
+        console.log(`[API:Slips:DB] GET /api/slips -> Returning ${dbSlips.length} slips from PostgreSQL`);
+        saveStoredSlips(dbSlips);
+        res.json(dbSlips);
+        return;
+      }
+    } catch {}
   }
 
   console.log(`[API:Slips] GET /api/slips -> Returning ${fileSlips.length} slips`);
@@ -165,12 +165,7 @@ app.post('/api/slips', async (req: Request, res: Response) => {
   }
 
   if (process.env.SQL_HOST) {
-    try {
-      await saveDbSlip(newSlip);
-      console.log(`[API:Slips:DB] POST /api/slips -> Saved slip ${newSlip.id} to PostgreSQL`);
-    } catch (err) {
-      console.warn('[API:Slips:DB] Failed saving slip to database:', err);
-    }
+    saveDbSlip(newSlip).catch(() => {});
   }
 
   const slips = getStoredSlips();
@@ -198,12 +193,7 @@ app.delete('/api/slips', async (req: Request, res: Response) => {
   }
 
   if (process.env.SQL_HOST) {
-    try {
-      await deleteDbSlip(reqId);
-      console.log(`[API:Slips:DB] DELETE /api/slips?id=${reqId} -> Deleted from PostgreSQL`);
-    } catch (err) {
-      console.warn('[API:Slips:DB] Failed deleting from database:', err);
-    }
+    deleteDbSlip(reqId).catch(() => {});
   }
 
   const cleanId = reqId.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
@@ -472,11 +462,7 @@ app.post('/api/whatsapp-webhook', async (req: Request, res: Response) => {
 
     // Save to DB
     if (process.env.SQL_HOST) {
-      try {
-        await saveDbSlip(newSlip);
-      } catch (e) {
-        console.warn('[Webhook] DB save warning:', e);
-      }
+      saveDbSlip(newSlip).catch(() => {});
     }
 
     // Save to File
@@ -500,12 +486,7 @@ app.delete('/api/slips/:id', async (req: Request, res: Response) => {
   const reqId = req.params.id;
 
   if (process.env.SQL_HOST) {
-    try {
-      await deleteDbSlip(reqId);
-      console.log(`[API:Slips:DB] DELETE /api/slips/${reqId} -> Deleted from PostgreSQL`);
-    } catch (err) {
-      console.warn('[API:Slips:DB] Failed deleting from database:', err);
-    }
+    deleteDbSlip(reqId).catch(() => {});
   }
 
   const cleanId = reqId.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();

@@ -1,9 +1,13 @@
-import { db } from './index.ts';
+import { db, isDbInCooldown, markDbUnavailable } from './index.ts';
 import { slips } from './schema.ts';
 import { eq, desc } from 'drizzle-orm';
 import { LoadSlip, VehicleType, BodyType, SlipStatus } from '../types/index';
 
 export async function getDbSlips(): Promise<LoadSlip[]> {
+  if (isDbInCooldown() || !process.env.SQL_HOST) {
+    return [];
+  }
+
   try {
     const rows = await db.select().from(slips).orderBy(desc(slips.createdAt));
     return rows.map((r) => ({
@@ -34,13 +38,17 @@ export async function getDbSlips(): Promise<LoadSlip[]> {
       sharesCount: r.sharesCount || 0,
       createdAt: r.createdAt || new Date().toISOString(),
     }));
-  } catch (error) {
-    console.error('Database query for slips failed:', error);
-    throw new Error('Database query for slips failed.', { cause: error });
+  } catch (error: any) {
+    markDbUnavailable(error);
+    return [];
   }
 }
 
-export async function saveDbSlip(slip: LoadSlip): Promise<LoadSlip> {
+export async function saveDbSlip(slip: LoadSlip): Promise<LoadSlip | null> {
+  if (isDbInCooldown() || !process.env.SQL_HOST) {
+    return null;
+  }
+
   try {
     const payload = {
       id: slip.id,
@@ -81,18 +89,22 @@ export async function saveDbSlip(slip: LoadSlip): Promise<LoadSlip> {
       });
 
     return slip;
-  } catch (error) {
-    console.error('Database save slip failed:', error);
-    throw new Error('Database save slip failed.', { cause: error });
+  } catch (error: any) {
+    markDbUnavailable(error);
+    return null;
   }
 }
 
 export async function deleteDbSlip(id: string): Promise<boolean> {
+  if (isDbInCooldown() || !process.env.SQL_HOST) {
+    return false;
+  }
+
   try {
     await db.delete(slips).where(eq(slips.id, id));
     return true;
-  } catch (error) {
-    console.error('Database delete slip failed:', error);
-    throw new Error('Database delete slip failed.', { cause: error });
+  } catch (error: any) {
+    markDbUnavailable(error);
+    return false;
   }
 }
