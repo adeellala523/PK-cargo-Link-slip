@@ -11,7 +11,7 @@
  * with a reason instead.
  */
 import { LoadSlip, AvailableTruck } from '../types';
-import { mapToUrduCity, CITY_EN_TO_UR } from './location';
+import { mapToUrduCity, CITY_EN_TO_UR, normalizeUrduText } from './location';
 import { PAKISTAN_VEHICLE_TYPES } from './vehicleTypes';
 
 export interface WaMessage {
@@ -136,7 +136,7 @@ const JUNK_CITY_TAIL =
 
 /** Normalize a city mention to the Urdu name used on the website. */
 export function normalizeCityName(raw: string): string {
-  let c = raw.replace(/[\u200B-\u200D\uFEFF]/g, ' ').replace(/\s+/g, ' ').trim();
+  let c = normalizeUrduText(raw).replace(/[\u200B-\u200D\uFEFF]/g, ' ').replace(/\s+/g, ' ').trim();
   c = c.replace(JUNK_CITY_TAIL, '').trim();
   if (!c) return '';
   const mapped = mapToUrduCity(c);
@@ -147,7 +147,7 @@ const KNOWN_URDU_CITIES = new Set<string>(Object.values(CITY_EN_TO_UR));
 
 /** True when the text is a city the website knows (English-mappable or already Urdu). */
 export function isKnownCity(raw: string): boolean {
-  const c = raw.replace(/[\u200B-\u200D\uFEFF]/g, ' ').replace(/\s+/g, ' ').trim();
+  const c = normalizeUrduText(raw).replace(/[\u200B-\u200D\uFEFF]/g, ' ').replace(/\s+/g, ' ').trim();
   if (!c) return false;
   if (mapToUrduCity(c)) return true;
   return KNOWN_URDU_CITIES.has(c);
@@ -194,6 +194,64 @@ function pickKnownCity(chunk: string, fromStart: boolean): string {
   return '';
 }
 
+/** Words that can never be a city name — guards the fallback extraction below. */
+const CITY_STOP_WORDS = new Set([
+  'اس', 'اسی', 'اسے', 'یہ', 'یہی', 'وہ', 'وہی', 'جو', 'جس', 'جن',
+  'پہلے', 'پہلی', 'پہلا', 'بعد',
+  'لوڈ', 'لوڈنگ', 'انلوڈنگ', 'ان', 'لوڈنگ ہے',
+  'گاڑی', 'گاڑیاں', 'گاری', 'خالی',
+  'چاہیے', 'چاہئے', 'چاہیئے',
+  'رابطہ', 'رابطے', 'کریں', 'کرے', 'کرنا', 'کیا', 'کہا', 'کہیں',
+  'شکریہ', 'براہ', 'کرم', 'مہربانی',
+  'مال', 'وزن', 'کرایہ', 'بھرتی',
+  'کی', 'کا', 'کے', 'کو', 'میں', 'نے', 'سے', 'تک', 'طرف', 'لیے', 'لئے', 'پر',
+  'ہے', 'ہیں', 'ہو', 'ہوگا', 'ہوگی', 'گا', 'گی', 'گے', 'تھا', 'تھی', 'ہوں',
+  'والا', 'والی', 'والے',
+  'نمبر', 'فون', 'موبائل',
+  'ڈرائیور', 'ڈرائیورز', 'پارٹی', 'اڈا', 'اڈے',
+  'ٹرپ', 'آج', 'کل', 'ابھی', 'فوری', 'جلدی', 'روزانہ',
+  'اور', 'یا', 'بھی', 'نہیں', 'نہ', 'صرف', 'تمام',
+]);
+
+function cleanChunkWords(chunk: string): string[] {
+  return normalizeUrduText(chunk)
+    .replace(/[\u200B-\u200D\uFEFF]/g, ' ')
+    .replace(/[\u060C,.:;()\"'"\u201C\u201D]/g, ' ')
+    .split(/\s+/)
+    .map((w) => w.trim())
+    .filter((w) => w.length > 0);
+}
+
+/**
+ * Fallback: when the dictionary doesn't know the city but the message has an
+ * explicit "X سے Y" route, use the raw words (up to 3) instead of dropping the
+ * whole slip. Stops at digits or stop-words so junk like "اس سے پہلے" never
+ * becomes a city.
+ */
+function pickFallbackCity(chunk: string, fromStart: boolean): string {
+  const words = cleanChunkWords(chunk);
+  const picked: string[] = [];
+  const seq = fromStart ? [...words].reverse() : words;
+  for (const w of seq) {
+    if (/\d/.test(w)) break;
+    if (CITY_STOP_WORDS.has(w)) break;
+    picked.push(w);
+    if (picked.length >= 3) break;
+  }
+  const ordered = fromStart ? picked.reverse() : picked;
+  return ordered.join(' ').trim();
+}
+
+/**
+ * City picker with fallback: known dictionary city first (normalized Urdu),
+ * otherwise the raw chunk words when an explicit route separator is present.
+ */
+function pickCity(chunk: string, fromStart: boolean): string {
+  const known = pickKnownCity(chunk, fromStart);
+  if (known) return known;
+  return pickFallbackCity(chunk, fromStart);
+}
+
 export function extractRoute(text: string): { loadingCity: string; destinationCity: string } {
   for (const sep of ROUTE_SEPS) {
     let fromIdx = 0;
@@ -205,9 +263,9 @@ export function extractRoute(text: string): { loadingCity: string; destinationCi
       if (!isSepBoundary(text, idx, sep.length)) continue;
       const before = text.slice(Math.max(0, idx - 45), idx);
       const after = text.slice(idx + sep.length, idx + sep.length + 45);
-      const from = pickKnownCity(before, true);
+      const from = pickCity(before, true);
       if (!from) continue;
-      const to = pickKnownCity(after, false);
+      const to = pickCity(after, false);
       if (from !== to) return { loadingCity: from, destinationCity: to || '' };
     }
   }
