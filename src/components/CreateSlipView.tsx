@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { PAKISTAN_VEHICLE_VALUES } from '../utils/vehicleTypes';
 import { 
   PlusCircle, 
   MapPin, 
@@ -39,18 +40,7 @@ const POPULAR_GOODS = [
   'لوہا و سٹیل', 'کپاس / روئی', 'فروٹ و سبزی', 'کیمیکل ڈرم', 'کریانہ جنرل'
 ];
 
-const COMMON_VEHICLES = [
-  '22 Wheeler',
-  '10 Wheeler',
-  'Shahzor',
-  'JAC',
-  'Porter',
-  'Mazda 16 Foot',
-  'Mazda 18 Foot',
-  'Mazda 20 Foot',
-  '40 Foot Container',
-  '40 Foot'
-];
+const COMMON_VEHICLES = PAKISTAN_VEHICLE_VALUES;
 
 const COMMON_BODIES = ['فل باڈی', 'ہاف باڈی', 'پھٹا', 'کنٹینر'];
 
