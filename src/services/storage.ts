@@ -1653,6 +1653,47 @@ export const StorageService = {
         return this.getAllSlips();
       }
 
+      // Step 0: Fetch the server's deleted-ID blocklist and purge local copies,
+      // so server-side deletions (e.g. bad imports) stay deleted on every device.
+      try {
+        const delRes = await fetch('/api/slips?deleted_ids=1', {
+          signal: AbortSignal.timeout(5000),
+        });
+        if (delRes.ok) {
+          const deletedIds = await delRes.json().catch(() => null);
+          if (Array.isArray(deletedIds) && deletedIds.length > 0) {
+            const localDeleted = this.getDeletedSlipIds();
+            let changed = false;
+            for (const rawId of deletedIds) {
+              const clean = String(rawId).replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+              if (clean && !localDeleted.includes(rawId) && !localDeleted.includes(clean)) {
+                localDeleted.push(clean);
+                changed = true;
+              }
+            }
+            if (changed) {
+              try {
+                localStorage.setItem(STORAGE_KEYS.DELETED_SLIP_IDS, JSON.stringify(localDeleted));
+              } catch {}
+              // Purge matching slips from local storage
+              const current = this.getAllSlips();
+              const purged = current.filter((s) => {
+                if (!s || !s.id) return true;
+                const sClean = s.id.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+                return !localDeleted.includes(s.id) && !localDeleted.includes(sClean);
+              });
+              if (purged.length !== current.length) {
+                try {
+                  localStorage.setItem(STORAGE_KEYS.SLIPS, JSON.stringify(purged));
+                } catch {}
+              }
+            }
+          }
+        }
+      } catch {
+        // Non-fatal: continue with normal sync
+      }
+
       // Step 1: Retry any pending slips that failed in prior attempts
       const pendingSlips = this.getPendingSyncSlips();
       if (pendingSlips.length > 0) {
