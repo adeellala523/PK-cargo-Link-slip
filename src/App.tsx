@@ -27,6 +27,7 @@ import { AiChatbotWidget } from './components/AiChatbotWidget';
 import { LocationPrompt } from './components/LocationPrompt';
 import { StrikeBanner } from './components/StrikeBanner';
 import { getStoredCity, isDismissed } from './utils/location';
+import { notifyForNewSlip } from './utils/matchNotify';
 // Old GeminiLiveVoiceWidget hidden per user request - replaced by AI chatbot
 import { VoiceLoadCreatorModal } from './components/VoiceLoadCreatorModal';
 import { PaymentSettings } from './components/PaymentSettings';
@@ -381,6 +382,11 @@ export default function App() {
     const result = await StorageService.createSlipAsync(newSlip);
     const updatedSlips = StorageService.getAllSlips();
     setSlips(updatedSlips);
+    // Auto-match: in-app notification when matching trucks exist
+    // (the slip-detail card shows the expandable matches section with WhatsApp buttons)
+    try {
+      notifyForNewSlip(result.slip, StorageService.getAvailableTrucks());
+    } catch {}
     setShareModalSlip(result.slip); // Open share modal right away!
     navigateTo('slip-detail', { slip: result.slip });
   };
