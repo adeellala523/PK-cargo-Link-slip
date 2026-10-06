@@ -25,6 +25,7 @@ import { MobileBottomNav } from './components/MobileBottomNav';
 import { AiVoiceSupportWidget } from './components/AiVoiceSupportWidget';
 import { AiChatbotWidget } from './components/AiChatbotWidget';
 import { LocationPrompt } from './components/LocationPrompt';
+import { StrikeBanner } from './components/StrikeBanner';
 import { getStoredCity, isDismissed } from './utils/location';
 // Old GeminiLiveVoiceWidget hidden per user request - replaced by AI chatbot
 import { VoiceLoadCreatorModal } from './components/VoiceLoadCreatorModal';
@@ -493,6 +494,9 @@ export default function App() {
         onLogout={handleLogout}
         onOpenNotifications={() => setIsNotificationCenterOpen(true)}
       />
+
+      {/* Nationwide transporters strike notice (temporary) */}
+      <StrikeBanner />
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-5xl w-full mx-auto px-3 sm:px-4 py-6 sm:py-8">
