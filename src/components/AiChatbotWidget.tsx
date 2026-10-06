@@ -445,7 +445,7 @@ export function AiChatbotWidget() {
       phone: f.phone,
       whatsappNumber: f.phone,
       role: f.role,
-      addaName: f.role === 'adda_manager' ? '' : f.name,
+      addaName: f.role === 'adda_manager' ? (f.addaName || '') : f.name,
       city: '',
       address: '',
       createdAt: new Date().toISOString(),
@@ -537,7 +537,7 @@ export function AiChatbotWidget() {
     const ok = await apiPost('/api/slips', slip);
     pushBot(
       ok
-        ? `آپ کا لوڈ بن گیا ہے! ✅\n\nسلپ نمبر: ${slipId}\n📍 ${f.slipFrom} ← ${f.slipTo}\n📦 ${f.goods} (${f.weight})\n🚚 ${f.slipVehicle}\n💰 کرایہ: ${f.fare}`
+        ? `آپ کا لوڈ بن گیا ہے! ✅\n\nسلپ نمبر: ${slipId}\n🏢 ${f.addaName}\n📍 ${f.slipFrom} ← ${f.slipTo}\n📦 ${f.goods} (${f.weight})\n🚚 ${f.slipVehicle}\n💰 کرایہ: ${f.fare}`
         : 'معذرت! کچھ غلط ہو گیا۔ دوبارہ کوشش کریں۔',
       ['↩ مین مینو'],
       800
@@ -561,9 +561,9 @@ export function AiChatbotWidget() {
           setFlow(nf);
           pushBot('اپنا موبائل نمبر لکھیں (مثلاً 03001234567)', undefined, 500);
         } else if (opt.includes('اڈا')) {
-          const nf = { ...f, role: 'adda_manager' as Role, step: 'ask_phone' };
+          const nf = { ...f, role: 'adda_manager' as Role, step: 'ask_adda_name' };
           setFlow(nf);
-          pushBot('اپنا موبائل نمبر لکھیں (مثلاً 03001234567)', undefined, 500);
+          pushBot('آپ کے اڈے کا نام کیا ہے؟ (مثلاً لاہور گڈز اڈا)', undefined, 500);
         }
         break;
       case 'driver_menu':
@@ -586,9 +586,16 @@ export function AiChatbotWidget() {
         break;
       case 'adda_menu':
         if (opt.includes('لوڈ')) {
-          const nf = { ...f, step: 'slip_adda', addaName: '', slipFrom: '', slipTo: '', goods: '', weight: '', slipVehicle: '', fare: '' };
-          setFlow(nf);
-          pushBot('اڈے کا نام لکھیں', undefined, 500);
+          // Adda name is already on the account — don't ask again per load
+          if (f.addaName) {
+            const nf = { ...f, step: 'slip_from', slipFrom: '', slipTo: '', goods: '', weight: '', slipVehicle: '', fare: '' };
+            setFlow(nf);
+            pushBot('لوڈنگ شہر کون سا ہے؟ (مثلاً لاہور)', undefined, 500);
+          } else {
+            const nf = { ...f, step: 'slip_adda', addaName: '', slipFrom: '', slipTo: '', goods: '', weight: '', slipVehicle: '', fare: '' };
+            setFlow(nf);
+            pushBot('اڈے کا نام لکھیں', undefined, 500);
+          }
         }
         break;
       case 'slip_vehicle':
@@ -635,6 +642,16 @@ export function AiChatbotWidget() {
           pushBot('آپ ڈرائیور ہیں یا اڈا مینیجر؟', ['ڈرائیور 🚚', 'اڈا مینیجر 🏢'], 1100);
         }
         break;
+      case 'ask_adda_name': {
+        if (t.length < 2) {
+          pushBot('براہ کرم اڈے کا درست نام لکھیں', undefined, 500);
+          return;
+        }
+        const nf = { ...f, addaName: t, step: 'ask_phone' };
+        setFlow(nf);
+        pushBot('اپنا موبائل نمبر لکھیں (مثلاً 03001234567)', undefined, 500);
+        break;
+      }
       case 'ask_phone': {
         const phone = normalizePhone(t);
         if (!phone) {
