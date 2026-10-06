@@ -140,6 +140,9 @@ export interface LoadSlip {
   // Multi-Load Support (Allow 2 or more loads per slip)
   additionalLoads?: SingleLoadItem[];
   includeContactsInWhatsApp?: boolean; // Default false (Preview only rule)
+
+  // Import origin marker (e.g. 'whatsapp' for chat-export imports)
+  source?: string;
 }
 
 export interface WhatsAppGroup {
@@ -290,6 +293,10 @@ export interface AvailableTruck {
   createdByPhone?: string;
   userRole?: 'driver' | 'adda_manager' | 'admin';
   status?: 'available' | 'booked';
+  /** True when the truck row was mirrored from a load slip record */
+  isFromSlip?: boolean;
+  /** Import origin marker (e.g. 'whatsapp' for chat-export imports) */
+  source?: string;
 }
 
 export interface AiVoiceSubscription {
