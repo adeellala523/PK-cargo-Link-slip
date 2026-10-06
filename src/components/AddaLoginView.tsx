@@ -73,7 +73,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
   const [isLoading, setIsLoading] = useState(false);
 
   // Handle Login Submit (Password-based)
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
     setLoginSuccess('');
@@ -89,6 +89,9 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
     }
 
     if (activeRole === 'driver') {
+      // Pull the latest driver accounts from the server first (chatbot-created
+      // accounts live there), then attempt login
+      try { await StorageService.syncDriversWithServer(); } catch { /* ignore */ }
       const res = StorageService.loginDriver(clean, loginPassword);
       if (res.success) {
         setLoginSuccess('ڈرائیور لاگ ان کامیاب!');
