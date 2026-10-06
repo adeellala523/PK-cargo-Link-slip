@@ -204,7 +204,7 @@ const CITY_STOP_WORDS = new Set([
   'رابطہ', 'رابطے', 'کریں', 'کرے', 'کرنا', 'کیا', 'کہا', 'کہیں',
   'شکریہ', 'براہ', 'کرم', 'مہربانی',
   'مال', 'وزن', 'کرایہ', 'بھرتی',
-  'کی', 'کا', 'کے', 'کو', 'میں', 'نے', 'سے', 'تک', 'طرف', 'لیے', 'لئے', 'پر',
+  'کی', 'کا', 'کے', 'کو', 'میں', 'نے', 'سے', 'تک', 'طرف', 'لیے', 'لئے', 'کیلئے', 'کیلیے', 'کیلۓ', 'کےلیے', 'کےلئے', 'پر',
   'ہے', 'ہیں', 'ہو', 'ہوگا', 'ہوگی', 'گا', 'گی', 'گے', 'تھا', 'تھی', 'ہوں',
   'والا', 'والی', 'والے',
   'نمبر', 'فون', 'موبائل',
@@ -401,6 +401,15 @@ function nextWaId(prefix: string, dateStr: string, used: Set<string>): string {
 
 const urduComma = (s: string) => s.replace(/,/g, '،');
 
+/** "<city> میں ..." — location anchor for messages without an explicit route.
+ * The city sits right before میں, so pick from the end of the captured chunk. */
+function extractMeinAnchorCity(text: string): string {
+  const m = normalizeUrduText(text).match(
+    /([\u0600-\u06FF][\u0600-\u06FF\s]{1,28}?)\s+میں\s*(کھڑی|کھڑا|موجود|ہے)?/
+  );
+  return m ? pickCity(m[1], true) : '';
+}
+
 function buildLoadSlip(
   msg: WaMessage,
   usedIds: Set<string>,
@@ -408,11 +417,12 @@ function buildLoadSlip(
 ): { slip?: LoadSlip; skipReason?: string } {
   const route = extractRoute(msg.text);
   const phones = extractPhones(msg.text);
-  if (!route.loadingCity) return { skipReason: 'پک اپ شہر درج نہیں' };
+  const loadingCity = route.loadingCity || extractMeinAnchorCity(msg.text);
+  if (!loadingCity) return { skipReason: 'پک اپ شہر درج نہیں' };
   if (phones.length === 0) return { skipReason: 'رابطہ نمبر درج نہیں' };
 
   const goods = urduComma(extractGoods(msg.text));
-  const key = `${route.loadingCity}|${route.destinationCity}|${phones[0]}|${goods}`;
+  const key = `${loadingCity}|${route.destinationCity}|${phones[0]}|${goods}`;
   if (seenKeys.has(key)) return { skipReason: 'ڈپلیکیٹ پوسٹنگ' };
   seenKeys.add(key);
 
@@ -422,15 +432,15 @@ function buildLoadSlip(
     id: nextWaId('WA', msg.date, usedIds),
     addaId: 'whatsapp-import',
     addaName,
-    addaCity: route.loadingCity,
+    addaCity: loadingCity,
     managerName: extractManagerName(msg.text, msg.sender),
     primaryPhone: phones[0],
     whatsappNumber: phones[0],
     additionalContacts: phones.slice(1),
-    loadingCity: route.loadingCity,
-    loadingLocation: route.loadingCity,
-    destinationCity: route.destinationCity || route.loadingCity,
-    destinationLocation: route.destinationCity || route.loadingCity,
+    loadingCity: loadingCity,
+    loadingLocation: loadingCity,
+    destinationCity: route.destinationCity || loadingCity,
+    destinationLocation: route.destinationCity || loadingCity,
     goods,
     weight: extractWeight(msg.text),
     quantity: '',
@@ -455,9 +465,13 @@ function buildTruck(
   const phones = extractPhones(msg.text);
   if (phones.length === 0) return { skipReason: 'رابطہ نمبر درج نہیں' };
 
-  // Current city: route "X سے Y" -> X is current; else first city mention
+  // Current city: route "X سے Y" -> X is current; else "X میں" anchor or city token
   const route = extractRoute(msg.text);
   let city = route.loadingCity;
+  if (!city) {
+    // Anchor: "<city> میں [کھڑی/موجود]" — unambiguous location mention
+    city = extractMeinAnchorCity(msg.text);
+  }
   if (!city) {
     // Fallback: first recognizable KNOWN city token in the message
     const tokens = msg.text.split(/[\s،,.\n]+/);
