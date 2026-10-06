@@ -45,22 +45,49 @@ const WORD_FIXES: Record<string, string> = {
   'مینیجر': 'मैनेजर', 'اڈا': 'अड्डा', 'اڈے': 'अड्डे',
   'ٹرک': 'ट्रक', 'گاڑی': 'गाड़ी', 'لوڈ': 'लोड',
   'آمدید': 'आमदीद', 'خوش': 'ख़ुश',
+  // Pronunciation fixes from live testing
+  'معذرت': 'माज़रत', 'نیچے': 'नीचे', 'آئے': 'आएं',
+  'گی': 'गई', 'گئی': 'गयी', 'مثلاً': 'मसलन',
+  'اس': 'इस', 'اسے': 'इसे', 'نہیں': 'नहीं',
+  'کوئی': 'कोई', 'اور': 'और', 'ملا': 'मिला',
+  'آزمائیں': 'आज़माएं', 'نمبر': 'नंबर', 'موبائل': 'मोबाइल',
+  'روٹ': 'रूट', 'بنائیں': 'बनाएं', 'لکھیں': 'लिखें',
+  'مبارک': 'मुबारक', 'اکاؤنٹ': 'अकाउंट', 'گیا': 'गया',
+  'کس': 'किस', 'کرایہ': 'किराया', 'لکھی': 'लिखी',
 };
+
+// Normalized lookup: ئ/ی spelling variants must not break dictionary hits
+const WORD_FIXES_NORM: Record<string, string> = {};
+for (const k of Object.keys(WORD_FIXES)) {
+  WORD_FIXES_NORM[k.replace(/ئ/g, 'ی')] = WORD_FIXES[k];
+}
+const normYeh = (s: string) => s.replace(/ئ/g, 'ی');
 
 export function urduToDevanagari(input: string): string {
   let text = input;
+  // Urdu punctuation -> Devanagari/Latin equivalents so the TTS pauses naturally
+  text = text
+    .replace(/۔/g, '।')
+    .replace(/،/g, ', ')
+    .replace(/؟/g, '?')
+    .replace(/؛/g, ';')
+    .replace(/:/g, ': ');
+
+  // Whole-word dictionary fixes on the RAW text first (before digraphs like
+  // بھ->भ would alter the words and break dictionary matching)
+  text = text.split(/(\s+)/).map((chunk) => {
+    if (/^\s*$/.test(chunk) || chunk === '') return chunk;
+    const bare = chunk.replace(/[.,!?؟:؛"“”'()।۔]/g, '');
+    const fixed = WORD_FIXES_NORM[normYeh(bare)];
+    return fixed !== undefined ? chunk.replace(bare, fixed) : chunk;
+  }).join('');
+
   for (const [u, d] of DIGRAPHS) {
     text = text.split(u).join(d);
   }
 
   return text.split(/(\s+)/).map((chunk) => {
     if (/^\s*$/.test(chunk) || chunk === '') return chunk;
-
-    // Whole-word fixes first
-    const bare = chunk.replace(/[.,!?؟:؛"“”'()]/g, '');
-    if (WORD_FIXES[bare] !== undefined) {
-      return chunk.replace(bare, WORD_FIXES[bare]);
-    }
 
     let out = '';
     const chars = Array.from(chunk);
