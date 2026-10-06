@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send, Mic, Volume2, VolumeX, Phone, PhoneOff } from 'lucide-react';
 import { PAKISTAN_VEHICLE_VALUES, matchVehicleType } from '../utils/vehicleTypes';
+import { urduToDevanagari } from '../utils/transliterate';
 import { StorageService } from '../services/storage';
 
 interface ChatMessage {
@@ -130,11 +131,14 @@ export function AiChatbotWidget() {
     }
   };
 
-  // Pick a Hindi TTS voice for speaking (text stays Urdu, voice sounds Hindi/Urdu)
+  // Pick a Hindi TTS voice for speaking (text stays Urdu, voice sounds Hindi/Urdu).
+  // Prefers Google's Hindi voice when available (higher quality).
   const pickHindiVoice = (): SpeechSynthesisVoice | null => {
     try {
       const voices = window.speechSynthesis.getVoices() || [];
-      return voices.find((v) => v.lang && v.lang.toLowerCase().startsWith('hi')) || null;
+      const hindi = voices.filter((v) => v.lang && v.lang.toLowerCase().startsWith('hi'));
+      if (hindi.length === 0) return null;
+      return hindi.find((v) => /google/i.test(v.name)) || hindi[0];
     } catch { return null; }
   };
 
@@ -149,6 +153,12 @@ export function AiChatbotWidget() {
       utter.lang = 'hi-IN'; // Hindi voice
       const hindiVoice = pickHindiVoice();
       if (hindiVoice) utter.voice = hindiVoice;
+      // Speak Devanagari transliteration so the Hindi voice pronounces
+      // words correctly (chat text shown to the user stays in Urdu)
+      try {
+        const dev = urduToDevanagari(clean);
+        if (dev && dev.trim()) utter.text = dev;
+      } catch { /* fall back to original text */ }
       utter.rate = 0.95;
       // Safety net: Chrome sometimes never fires onend/onerror (utterance gets
       // stuck), which would freeze the call with a dead mic. Force-continue
