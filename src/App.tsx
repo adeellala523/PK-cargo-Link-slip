@@ -24,6 +24,8 @@ import { NotificationCenterModal } from './components/NotificationCenterModal';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { AiVoiceSupportWidget } from './components/AiVoiceSupportWidget';
 import { AiChatbotWidget } from './components/AiChatbotWidget';
+import { LocationPrompt } from './components/LocationPrompt';
+import { getStoredCity, isDismissed } from './utils/location';
 // Old GeminiLiveVoiceWidget hidden per user request - replaced by AI chatbot
 import { VoiceLoadCreatorModal } from './components/VoiceLoadCreatorModal';
 import { PaymentSettings } from './components/PaymentSettings';
@@ -47,6 +49,12 @@ export default function App() {
   const [loginInitialMode, setLoginInitialMode] = useState<'login' | 'register'>('login');
   const [loginInitialRole, setLoginInitialRole] = useState<'adda_manager' | 'driver'>('adda_manager');
   const [loginNoticeMessage, setLoginNoticeMessage] = useState<string>('');
+
+  // Visitor's detected city (Urdu) for location-based load display
+  const [userCity, setUserCity] = useState<string | null>(() => getStoredCity());
+  const [showLocationPrompt, setShowLocationPrompt] = useState<boolean>(
+    () => !getStoredCity() && !isDismissed()
+  );
 
   // Admin Security & Permission Diagnostic Errors State
   const [adminDebugErrors, setAdminDebugErrors] = useState<Array<{ timestamp: string; message: string; details?: string }>>([]);
@@ -548,15 +556,27 @@ export default function App() {
 
         {/* 1. Home / Landing Page */}
         {currentTab === 'home' && (
-          <HeroSection
-            onOpenCreate={() => handleOpenCreateModal()}
-            onNavigateToSearch={() => navigateTo('search')}
-            onNavigateToVerify={() => navigateTo('verify')}
-            onNavigateToTrucks={() => navigateTo('trucks')}
-            onNavigateToDriver={() => navigateTo('driver')}
-            onViewSlip={viewSlipDetail}
-            recentSlips={slips}
-          />
+          <div className="space-y-4">
+            {showLocationPrompt && (
+              <LocationPrompt
+                onCityDetected={(city) => {
+                  setUserCity(city);
+                  setShowLocationPrompt(false);
+                }}
+                onDismiss={() => setShowLocationPrompt(false)}
+              />
+            )}
+            <HeroSection
+              onOpenCreate={() => handleOpenCreateModal()}
+              onNavigateToSearch={() => navigateTo('search')}
+              onNavigateToVerify={() => navigateTo('verify')}
+              onNavigateToTrucks={() => navigateTo('trucks')}
+              onNavigateToDriver={() => navigateTo('driver')}
+              onViewSlip={viewSlipDetail}
+              recentSlips={slips}
+              userCity={userCity}
+            />
+          </div>
         )}
 
         {/* 2. Public Slip Detail View (Driver & Manager) */}
