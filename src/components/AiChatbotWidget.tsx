@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send, Mic, Volume2, VolumeX, Phone, PhoneOff } from 'lucide-react';
 import { PAKISTAN_VEHICLE_VALUES, matchVehicleType } from '../utils/vehicleTypes';
+import { StorageService } from '../services/storage';
 
 interface ChatMessage {
   id: number;
@@ -364,6 +365,54 @@ export function AiChatbotWidget() {
     }
   };
 
+  // Mirror the chatbot account into the website's own login session, so the
+  // driver portal / dashboard recognize the user instead of showing login.
+  const bridgeSiteSession = (user: any, role: Role | null) => {
+    try {
+      if (role === 'driver') {
+        const det = user.driverDetails || {};
+        StorageService.saveDriverAccount({
+          id: String(user.id || `driver_${Date.now()}`),
+          driverName: user.managerName || user.name || user.driverName || 'ڈرائیور',
+          phone: String(user.phone),
+          password: user.password,
+          whatsappNumber: user.whatsappNumber || String(user.phone),
+          vehicleType: det.vehicleType || user.vehicleType || '22 Wheeler',
+          bodyType: det.bodyType || '',
+          vehicleNumber: det.vehicleNumber || '',
+          currentCity: det.currentCity || user.city || '',
+          preferredRoute: det.preferredRoute || '',
+          createdAt: user.createdAt,
+        });
+      } else if (role === 'adda_manager') {
+        const users = StorageService.getUsers();
+        const cleanP = String(user.phone).replace(/[^0-9]/g, '');
+        const siteUser: any = {
+          id: String(user.id),
+          phone: String(user.phone),
+          password: user.password || '',
+          role: 'adda_manager',
+          name: user.managerName || user.name || '',
+          managerName: user.managerName || user.name || '',
+          addaName: user.addaName || '',
+          city: user.city || '',
+          address: user.address || '',
+          whatsappNumber: user.whatsappNumber || String(user.phone),
+          status: user.status || 'active',
+          createdAt: user.createdAt || new Date().toISOString(),
+        };
+        const idx = users.findIndex((u: any) => u && String(u.phone).replace(/[^0-9]/g, '') === cleanP);
+        if (idx !== -1) users[idx] = { ...users[idx], ...siteUser };
+        else users.unshift(siteUser);
+        StorageService.saveUsers(users);
+        StorageService.setCurrentUser(siteUser);
+        StorageService.setLoggedIn(true, String(user.phone));
+      }
+      // Let the app refresh its logged-in state immediately
+      try { window.dispatchEvent(new Event('pkcl-session-changed')); } catch { /* ignore */ }
+    } catch { /* ignore */ }
+  };
+
   const createAccount = async (f: FlowState) => {
     pushBot('آپ کا اکاؤنٹ بنایا جا رہا ہے...', undefined, 300);
     const users = await apiGet('/api/users-sync');
@@ -375,6 +424,7 @@ export function AiChatbotWidget() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({ name: nf.name, phone: nf.phone, role: nf.role, userId: nf.userId }));
       } catch { /* ignore */ }
+      bridgeSiteSession(existing, (existing.role as Role) || f.role);
       setFlow(nf);
       pushBot(`خوش آمدید واپس، ${nf.name}! آپ کا اکاؤنٹ پہلے سے موجود ہے ✅`, undefined, 600);
       window.setTimeout(() => showMenu(nf), 1300);
@@ -398,6 +448,7 @@ export function AiChatbotWidget() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ name: nf.name, phone: nf.phone, role: nf.role, userId: nf.userId }));
     } catch { /* ignore */ }
+    bridgeSiteSession(newUser, f.role);
     setFlow(nf);
     pushBot('مبارک ہو! آپ کا اکاؤنٹ بن گیا ہے ✅', undefined, 600);
     window.setTimeout(() => showMenu(nf), 1300);
