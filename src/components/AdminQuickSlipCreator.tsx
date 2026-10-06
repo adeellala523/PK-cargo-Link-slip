@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { PAKISTAN_VEHICLE_VALUES } from '../utils/vehicleTypes';
 import { 
   PlusCircle, 
   MapPin, 
@@ -44,19 +45,7 @@ const COMMON_GOODS = [
   'فارما ادویات', 'الیکٹرانکس', 'کوئلہ', 'چینی (شوگر)', 'آٹا', 'فیڈ'
 ];
 
-const VEHICLE_OPTIONS: VehicleType[] = [
-  '22 Wheeler',
-  '10 Wheeler',
-  'Shahzor',
-  'JAC',
-  'Porter',
-  'Mazda',
-  '16 Foot',
-  '18 Foot',
-  '20 Foot',
-  '40 Foot Container',
-  'Other',
-];
+const VEHICLE_OPTIONS: VehicleType[] = [...PAKISTAN_VEHICLE_VALUES];
 
 const BODY_OPTIONS: BodyType[] = ['فل باڈی', 'ہاف باڈی', 'پھٹا', 'کنٹینر'];
 
