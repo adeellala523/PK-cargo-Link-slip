@@ -60,24 +60,66 @@ export const WhatsAppImportView: React.FC = () => {
   const [parsed, setParsed] = useState<ParsedImport | null>(null);
   const [voiceSkipped, setVoiceSkipped] = useState<string[]>([]);
   const [expanded, setExpanded] = useState<'loads' | 'vehicles' | 'skipped' | null>('loads');
+  const [fileError, setFileError] = useState('');
   const [importResult, setImportResult] = useState<{
     loads: number;
     vehicles: number;
     matches: number;
   } | null>(null);
 
+  const runParse = async (text: string, voices: VoiceFile[], withVoice: boolean) => {
+    setPhase('parsing');
+    setVoiceSkipped([]);
+    setFileError('');
+    const extra: WaMessage[] = [];
+    const skippedVoice: string[] = [];
+
+    if (withVoice && voices.length > 0) {
+      let i = 0;
+      for (const vf of voices) {
+        i += 1;
+        setProgress(`وائس نوٹ ${i}/${voices.length} سنی جا رہی ہے…`);
+        const t = await transcribeVoice(vf.blob);
+        if (t) extra.push(transcriptToMessage(t, vf.sender, vf.name));
+        else skippedVoice.push(vf.name);
+      }
+    }
+    setVoiceSkipped(skippedVoice);
+
+    setProgress('پیغامات پارس ہو رہے ہیں…');
+    // Let UI paint before the heavy parse
+    await new Promise((r) => setTimeout(r, 30));
+    try {
+      const result = parseChatExport(text, {
+        existingSlips: StorageService.getAllSlips(),
+        existingTrucks: StorageService.getAvailableTrucks(),
+        extraMessages: extra,
+      });
+      setParsed(result);
+      setPhase('preview');
+      setProgress('');
+    } catch {
+      setProgress('');
+      setFileError('پارس کرنے میں خرابی ہوئی۔ کیا فائل درست چیٹ ایکسپورٹ ہے؟');
+      setPhase('idle');
+    }
+  };
+
   const handleFile = async (f: File | undefined) => {
     if (!f) return;
     setFileName(f.name);
     setParsed(null);
     setImportResult(null);
-    setPhase('idle');
+    setVoiceSkipped([]);
+    setFileError('');
+    setProgress('فائل پڑھی جا رہی ہے…');
     try {
+      let text = '';
+      const voices: VoiceFile[] = [];
       if (f.name.toLowerCase().endsWith('.zip')) {
         const zip = await JSZip.loadAsync(f);
         let bestTxt = '';
         let bestSize = 0;
-        const voices: VoiceFile[] = [];
         const jobs: Promise<void>[] = [];
         zip.forEach((relPath, entry) => {
           if (entry.dir) return;
@@ -100,55 +142,39 @@ export const WhatsAppImportView: React.FC = () => {
           }
         });
         await Promise.all(jobs);
-        setChatText(bestTxt);
-        setVoiceFiles(voices);
+        if (!bestTxt.trim()) {
+          setProgress('');
+          setPhase('idle');
+          setFileError('اس زپ میں چیٹ ٹیکسٹ (.txt) نہیں ملی۔ گروپ کھول کر ⋮ → More → Export chat سے نئی ایکسپورٹ بنائیں۔');
+          return;
+        }
+        text = bestTxt;
       } else {
-        setChatText(await f.text());
-        setVoiceFiles([]);
+        text = await f.text();
       }
+      if (!text.trim()) {
+        setProgress('');
+        setPhase('idle');
+        setFileError('فائل خالی ہے۔ درست چیٹ ایکسپورٹ منتخب کریں۔');
+        return;
+      }
+      setChatText(text);
+      setVoiceFiles(voices);
+      // Auto-parse right after a successful read — no second tap needed
+      await runParse(text, voices, includeVoice);
     } catch {
-      setProgress('فائل پڑھنے میں خرابی ہوئی');
+      setProgress('');
+      setPhase('idle');
+      setFileError('فائل پڑھنے میں خرابی ہوئی۔ دوبارہ کوشش کریں۔');
     }
   };
 
-  const handleParse = async () => {
-    if (!chatText) {
-      setProgress('پہلے چیٹ فائل منتخب کریں');
+  const handleParse = () => {
+    if (!chatText.trim()) {
+      setFileError('پہلے چیٹ فائل منتخب کریں۔');
       return;
     }
-    setPhase('parsing');
-    setVoiceSkipped([]);
-    const extra: WaMessage[] = [];
-    const skippedVoice: string[] = [];
-
-    if (includeVoice && voiceFiles.length > 0) {
-      let i = 0;
-      for (const vf of voiceFiles) {
-        i += 1;
-        setProgress(`وائس نوٹ ${i}/${voiceFiles.length} سنی جا رہی ہے…`);
-        const t = await transcribeVoice(vf.blob);
-        if (t) extra.push(transcriptToMessage(t, vf.sender, vf.name));
-        else skippedVoice.push(vf.name);
-      }
-    }
-    setVoiceSkipped(skippedVoice);
-
-    setProgress('پیغامات پارس ہو رہے ہیں…');
-    // Let UI paint before the heavy parse
-    await new Promise((r) => setTimeout(r, 30));
-    try {
-      const result = parseChatExport(chatText, {
-        existingSlips: StorageService.getAllSlips(),
-        existingTrucks: StorageService.getAvailableTrucks(),
-        extraMessages: extra,
-      });
-      setParsed(result);
-      setPhase('preview');
-      setProgress('');
-    } catch {
-      setProgress('پارس کرنے میں خرابی ہوئی');
-      setPhase('idle');
-    }
+    runParse(chatText, voiceFiles, includeVoice);
   };
 
   const handleImport = async () => {
@@ -233,7 +259,11 @@ export const WhatsAppImportView: React.FC = () => {
           type="file"
           accept=".txt,.zip"
           className="hidden"
-          onChange={(e) => handleFile(e.target.files?.[0])}
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            e.target.value = ''; // allow picking the same file again
+            handleFile(f);
+          }}
         />
         <button
           type="button"
@@ -269,6 +299,13 @@ export const WhatsAppImportView: React.FC = () => {
         {progress && phase !== 'done' && (
           <p className="text-xs text-slate-500 text-center">{progress}</p>
         )}
+        {fileError && (
+          <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2.5 text-center leading-relaxed">{fileError}</p>
+        )}
+        <div className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-[11px] sm:text-xs text-slate-500 leading-relaxed">
+          <span className="font-bold text-slate-600">طریقہ:</span> واٹس ایپ میں گروپ کھولیں → ⋮ → More → <span className="font-bold">Export chat</span> →
+          Without media (.txt) یا Include media (.zip) → فائل محفوظ کر کے یہاں منتخب کریں۔ فائل منتخب کرتے ہی سسٹم خود پارس کر کے پیش نظارہ دکھا دے گا۔
+        </div>
       </div>
 
       {/* Preview */}
