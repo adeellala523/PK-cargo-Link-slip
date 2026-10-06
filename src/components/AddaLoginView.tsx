@@ -92,7 +92,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
       // Pull the latest driver accounts from the server first (chatbot-created
       // accounts live there), then attempt login
       try { await StorageService.syncDriversWithServer(); } catch { /* ignore */ }
-      const res = StorageService.loginDriver(clean, loginPassword);
+      const res = await StorageService.loginDriver(clean, loginPassword);
       if (res.success) {
         setLoginSuccess('ڈرائیور لاگ ان کامیاب!');
         setTimeout(() => {
@@ -102,7 +102,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
         setLoginError(res.message);
       }
     } else {
-      const res = StorageService.loginAddaManager(clean, loginPassword);
+      const res = await StorageService.loginAddaManager(clean, loginPassword);
       if (res.success) {
         setLoginSuccess('اڈا منیجر لاگ ان کامیاب!');
         setTimeout(() => {
