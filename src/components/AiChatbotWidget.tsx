@@ -186,7 +186,9 @@ export function AiChatbotWidget() {
         const transcript = e.results?.[0]?.[0]?.transcript || '';
         setListening(false);
         if (transcript.trim()) {
-          handleText(transcript.trim());
+          // Review-before-send: show the heard text for checking/editing.
+          // The listening loop pauses here and resumes after the user taps send.
+          setInput(transcript.trim());
         } else if (callModeRef.current) {
           restartCallListening(300);
         }
@@ -227,7 +229,7 @@ export function AiChatbotWidget() {
     }
     setMuted(false);
     setCallModeBoth(true);
-    pushBot('کال شروع ہو گئی ہے 🎙️ میں سن رہا ہوں، بولیں...');
+    pushBot('کال شروع ہو گئی ہے 🎙️ بولیں... آپ کی بات نیچے لکھی آئے گی — درست کر کے بھیجیں دبائیں۔');
   };
 
   const endCall = () => {
@@ -251,7 +253,12 @@ export function AiChatbotWidget() {
   };
 
   const toggleListening = () => {
-    if (callModeRef.current) return; // call mode has its own listening loop
+    if (callModeRef.current) {
+      // In call mode the mic button means "speak again": discard the draft and listen fresh
+      setInput('');
+      beginCallListening();
+      return;
+    }
     if (listening) {
       try { recognitionRef.current?.stop(); } catch { /* ignore */ }
       setListening(false);
@@ -270,7 +277,8 @@ export function AiChatbotWidget() {
       rec.onresult = (e: any) => {
         const transcript = e.results?.[0]?.[0]?.transcript || '';
         setListening(false);
-        if (transcript.trim()) handleText(transcript.trim());
+        // Review-before-send: let the user check/edit the heard text, then tap send
+        if (transcript.trim()) setInput(transcript.trim());
       };
       rec.onerror = () => setListening(false);
       rec.onend = () => setListening(false);
@@ -750,7 +758,7 @@ export function AiChatbotWidget() {
               </button>
               <button
                 onClick={toggleListening}
-                aria-label={listening ? 'سننا بند کریں' : 'بول کر جواب دیں'}
+                aria-label={callMode ? 'دوبارہ بولیں' : listening ? 'سننا بند کریں' : 'بول کر جواب دیں'}
                 className={`w-11 h-11 shrink-0 rounded-full flex items-center justify-center active:scale-95 transition ${
                   listening
                     ? 'bg-red-500 text-white animate-pulse'
