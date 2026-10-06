@@ -50,7 +50,9 @@ export function getCommodityEmoji(goods: string): string {
  */
 export function formatWhatsAppMessage(slip: LoadSlip): string {
   const cleanId = slip.id.replace(/[^a-zA-Z0-9]/g, '');
-  const slipUrl = `${OFFICIAL_WEBSITE_URL}/slip/${cleanId}`;
+  // Use the OG preview endpoint so WhatsApp shows the truck image + slip details
+  // (real users get redirected to the actual slip page)
+  const slipUrl = `${OFFICIAL_WEBSITE_URL}/api/slip-og.php?id=${cleanId}`;
 
   // All contact numbers (one or however many)
   const allNumbers = [slip.primaryPhone, slip.whatsappNumber, ...(slip.additionalContacts || [])]
