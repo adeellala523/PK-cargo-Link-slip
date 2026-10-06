@@ -136,25 +136,59 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             لوڈ تلاش کریں، ڈیجیٹل سلپ بنائیں، اور اپنا کارگو کام آسان بنائیں۔
           </p>
 
-          {/* Primary Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+          {/* Primary 3D Buttons */}
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 pt-2 max-w-2xl mx-auto">
             <button
               type="button"
-              onClick={onNavigateToSearch}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 bg-[#19A974] hover:bg-[#169163] text-white font-extrabold text-lg px-8 py-3.5 rounded-2xl shadow-lg hover:shadow-emerald-500/25 active:scale-95 transition-all min-h-[48px]"
+              onClick={onOpenCreate}
+              className="group relative inline-flex flex-col items-center justify-center gap-1.5 text-white font-extrabold text-base sm:text-lg px-4 py-4 rounded-2xl min-h-[88px] transition-all active:scale-95"
+              style={{
+                background: 'linear-gradient(145deg, #22c55e 0%, #16a34a 50%, #15803d 100%)',
+                boxShadow: '0 6px 0 #14532d, 0 10px 20px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.3)',
+              }}
+              title="صرف اڈا منیجر کے لیے"
             >
-              <Search className="w-5 h-5" />
-              <span>لوڈ تلاش کریں</span>
+              <FileText className="w-7 h-7 drop-shadow" />
+              <span>نئی سلپ بنائیں</span>
             </button>
 
             <button
               type="button"
-              onClick={onOpenCreate}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 bg-white text-[#123A6D] hover:bg-slate-100 font-extrabold text-lg px-8 py-3.5 rounded-2xl shadow-lg active:scale-95 transition-all min-h-[48px]"
-              title="صرف اڈا منیجر کے لیے"
+              onClick={onNavigateToSearch}
+              className="group relative inline-flex flex-col items-center justify-center gap-1.5 text-white font-extrabold text-base sm:text-lg px-4 py-4 rounded-2xl min-h-[88px] transition-all active:scale-95"
+              style={{
+                background: 'linear-gradient(145deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%)',
+                boxShadow: '0 6px 0 #1e3a8a, 0 10px 20px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.3)',
+              }}
             >
-              <FileText className="w-5 h-5 text-[#19A974]" />
-              <span>لوڈ سلپ بنائیں (اڈا منیجر)</span>
+              <Search className="w-7 h-7 drop-shadow" />
+              <span>دستیاب لوڈز</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onNavigateToTrucks ? onNavigateToTrucks : onNavigateToSearch}
+              className="group relative inline-flex flex-col items-center justify-center gap-1.5 text-white font-extrabold text-base sm:text-lg px-4 py-4 rounded-2xl min-h-[88px] transition-all active:scale-95"
+              style={{
+                background: 'linear-gradient(145deg, #f59e0b 0%, #d97706 50%, #b45309 100%)',
+                boxShadow: '0 6px 0 #92400e, 0 10px 20px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.3)',
+              }}
+            >
+              <Truck className="w-7 h-7 drop-shadow" />
+              <span>دستیاب گاڑیاں</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onNavigateToDriver ? onNavigateToDriver : onNavigateToSearch}
+              className="group relative inline-flex flex-col items-center justify-center gap-1.5 text-white font-extrabold text-base sm:text-lg px-4 py-4 rounded-2xl min-h-[88px] transition-all active:scale-95"
+              style={{
+                background: 'linear-gradient(145deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%)',
+                boxShadow: '0 6px 0 #4c1d95, 0 10px 20px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.3)',
+              }}
+            >
+              <PlusCircle className="w-7 h-7 drop-shadow" />
+              <span>گاڑی لسٹ کریں</span>
             </button>
           </div>
 
