@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, Send, Mic, Volume2, VolumeX, Phone, PhoneOff } from 'lucide-react';
+import { X, Send, Mic, Volume2, VolumeX, Phone, PhoneOff } from 'lucide-react';
 import { PAKISTAN_VEHICLE_VALUES, matchVehicleType } from '../utils/vehicleTypes';
 import { urduToDevanagari } from '../utils/transliterate';
 import { StorageService } from '../services/storage';
@@ -767,9 +767,9 @@ export function AiChatbotWidget() {
         <button
           onClick={() => setOpen(true)}
           aria-label="چیٹ کھولیں"
-          className="no-print fixed bottom-36 right-4 sm:bottom-24 sm:right-6 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg shadow-green-600/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
+          className="no-print fixed bottom-36 right-4 sm:bottom-24 sm:right-6 z-40 w-16 h-16 rounded-full bg-white text-white shadow-lg shadow-green-600/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-transform overflow-hidden border-2 border-emerald-500"
         >
-          <MessageCircle className="w-7 h-7" />
+          <img src="/bot-mascot.png" alt="چیٹ بوٹ" className="w-full h-full object-cover" />
         </button>
       )}
 
@@ -779,8 +779,8 @@ export function AiChatbotWidget() {
           <div className="relative w-full sm:max-w-md h-[85vh] sm:h-[600px] bg-white sm:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col overflow-hidden">
             <div className="bg-gradient-to-l from-green-600 to-emerald-600 text-white px-4 py-3 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
-                <span className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
-                  <MessageCircle className="w-5 h-5" />
+                <span className="w-9 h-9 rounded-full bg-white flex items-center justify-center overflow-hidden">
+                  <img src="/bot-mascot.png" alt="چیٹ بوٹ" className="w-full h-full object-cover" />
                 </span>
                 <div>
                   <div className="font-bold leading-tight">PK Cargo Link چیٹ</div>
