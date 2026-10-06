@@ -1710,16 +1710,20 @@ export const StorageService = {
         validServerSlips.push(s);
       }
 
-      // Step 4: Merge active local slips and server slips
+      // Step 4: Merge active local slips and server slips.
+      // The SERVER is the source of truth: when a slip exists in both places,
+      // the server version wins (local edits are always POSTed to the server too,
+      // so the server already has them). Local-only slips are kept and pushed.
       const mergedMap = new Map<string, LoadSlip>();
       // Add server slips first
       validServerSlips.forEach((s) => {
         mergedMap.set(s.id, s);
       });
-      // Merge local slips
+      // Merge local slips — server version wins on conflict
       currentSlips.forEach((loc) => {
         if (!this.isSlipDeleted(loc.id)) {
           if (!mergedMap.has(loc.id)) {
+            mergedMap.set(loc.id, loc);
             // Local slip is missing on server -> push it to server in background
             fetch('/api/slips', {
               method: 'POST',
@@ -1728,7 +1732,6 @@ export const StorageService = {
               signal: AbortSignal.timeout(3000),
             }).catch(() => {});
           }
-          mergedMap.set(loc.id, loc);
         }
       });
 
