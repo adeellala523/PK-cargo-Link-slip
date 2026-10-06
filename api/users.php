@@ -114,17 +114,94 @@ function writeAllUsers($users) {
     return $written;
 }
 
+// ---------------------------------------------------------------------------
+// Security helpers
+// ---------------------------------------------------------------------------
+
+// Remove credential fields before any user record leaves the server.
+function sanitizeUser($u) {
+    if (!is_array($u)) return $u;
+    unset($u['password']);
+    unset($u['password_hash']);
+    return $u;
+}
+
+// Hash a plaintext password before storing. Already-hashed values pass through.
+function securePasswordField(&$u) {
+    if (!isset($u['password']) || $u['password'] === '' || $u['password'] === null) return;
+    $pw = (string)$u['password'];
+    if (strpos($pw, '$2y$') === 0 || strpos($pw, '$2a$') === 0 || strpos($pw, '$argon2') === 0) return;
+    $hash = password_hash($pw, PASSWORD_DEFAULT);
+    if ($hash !== false) {
+        $u['password'] = $hash;
+    }
+}
+
+// Verify a login attempt against the stored credential.
+// Supports: no password set (legacy chatbot accounts), modern hashes,
+// and legacy plaintext (upgraded to a hash on successful login).
+function verifyUserPassword($storedUser, $attempt) {
+    $stored = isset($storedUser['password']) ? (string)$storedUser['password'] : '';
+    $attempt = (string)$attempt;
+    if ($stored === '' || $stored === null) {
+        return $attempt !== '' ? 'ok_nopassword' : 'fail';
+    }
+    if (strpos($stored, '$2y$') === 0 || strpos($stored, '$2a$') === 0 || strpos($stored, '$argon2') === 0) {
+        return password_verify($attempt, $stored) ? 'ok' : 'fail';
+    }
+    if ($stored === $attempt) return 'ok_upgrade'; // legacy plaintext -> re-hash
+    return 'fail';
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
     $users = readAllUsers();
-    echo json_encode($users, JSON_UNESCAPED_UNICODE);
+    $safe = array_map('sanitizeUser', $users);
+    echo json_encode(array_values($safe), JSON_UNESCAPED_UNICODE);
     exit;
 }
 
 if ($method === 'POST') {
     $input = file_get_contents('php://input');
     $body = json_decode($input, true);
+
+    // --- Secure login endpoint: verifies credentials server-side ---
+    if (is_array($body) && isset($body['action']) && $body['action'] === 'login') {
+        $phone = isset($body['phone']) ? preg_replace('/[^0-9]/', '', (string)$body['phone']) : '';
+        $attempt = isset($body['password']) ? (string)$body['password'] : '';
+        $found = null;
+        foreach (readAllUsers() as $u) {
+            if (isset($u['phone']) && preg_replace('/[^0-9]/', '', (string)$u['phone']) === $phone && $phone !== '') {
+                $found = $u;
+                break;
+            }
+        }
+        if ($found === null) {
+            http_response_code(401);
+            echo json_encode(['error' => 'not_found']);
+            exit;
+        }
+        $verdict = verifyUserPassword($found, $attempt);
+        if ($verdict === 'fail') {
+            http_response_code(401);
+            echo json_encode(['error' => 'bad_credentials']);
+            exit;
+        }
+        // Upgrade legacy plaintext passwords to a hash on successful login
+        if ($verdict === 'ok_upgrade') {
+            $all = readAllUsers();
+            foreach ($all as &$u) {
+                if (isset($u['phone']) && preg_replace('/[^0-9]/', '', (string)$u['phone']) === $phone) {
+                    securePasswordField($u);
+                }
+            }
+            unset($u);
+            writeAllUsers($all);
+        }
+        echo json_encode(sanitizeUser($found), JSON_UNESCAPED_UNICODE);
+        exit;
+    }
 
     if (is_array($body)) {
         // If an array of users was posted
@@ -144,6 +221,13 @@ if ($method === 'POST') {
             foreach ($body as $u) {
                 if (isset($u['phone'])) {
                     $key = preg_replace('/[^0-9]/', '', $u['phone']);
+                    // Never wipe a stored credential: if the incoming record
+                    // carries no password (e.g. synced from a sanitized GET),
+                    // keep the one already stored.
+                    if ((!isset($u['password']) || $u['password'] === '' || $u['password'] === null) && isset($userMap[$key]['password'])) {
+                        $u['password'] = $userMap[$key]['password'];
+                    }
+                    securePasswordField($u);
                     // Convert base64 logoUrl to real image
                     if (isset($u['logoUrl']) && strpos($u['logoUrl'], 'data:image/') === 0) {
                         $u['logoUrl'] = saveBase64Image($u['logoUrl'], 'user_' . $key);
@@ -154,6 +238,10 @@ if ($method === 'POST') {
         } else if (isset($body['phone'])) {
             // Single user object posted
             $key = preg_replace('/[^0-9]/', '', $body['phone']);
+            if ((!isset($body['password']) || $body['password'] === '' || $body['password'] === null) && isset($userMap[$key]['password'])) {
+                $body['password'] = $userMap[$key]['password'];
+            }
+            securePasswordField($body);
             if (isset($body['logoUrl']) && strpos($body['logoUrl'], 'data:image/') === 0) {
                 $body['logoUrl'] = saveBase64Image($body['logoUrl'], 'user_' . $key);
             }
@@ -166,7 +254,7 @@ if ($method === 'POST') {
         echo json_encode([
             'success' => $saved,
             'count' => count($allUsers),
-            'users' => $allUsers
+            'users' => array_map('sanitizeUser', $allUsers)
         ], JSON_UNESCAPED_UNICODE);
         exit;
     }
