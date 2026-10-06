@@ -313,6 +313,13 @@ export function AiChatbotWidget() {
     if (saved && saved.phone && saved.role) {
       const f = { ...initialFlow, name: saved.name, phone: saved.phone, role: saved.role, userId: saved.userId };
       setFlow(f);
+      // Returning user: re-bridge the website login session so the driver
+      // portal / dashboard recognize them without asking to log in again.
+      apiGet('/api/users-sync').then((users) => {
+        const cleanPhone = String(saved.phone).replace(/[^0-9]/g, '');
+        const rec = (users || []).find((u: any) => u && u.phone && String(u.phone).replace(/[^0-9]/g, '') === cleanPhone);
+        if (rec) bridgeSiteSession(rec, (rec.role as Role) || saved.role);
+      }).catch(() => {});
       pushBot(`خوش آمدید واپس، ${saved.name}! 👋`, undefined, 300);
       window.setTimeout(() => showMenu(f), 900);
     } else {
