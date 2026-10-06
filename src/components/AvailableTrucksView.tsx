@@ -21,6 +21,8 @@ import {
 import { LoadSlip, AvailableTruck, DriverRating } from '../types';
 import { sanitizePhoneForCall, getWhatsAppShareUrl } from '../utils/formatters';
 import { StorageService } from '../services/storage';
+import { TruckMatchesSection } from './MatchSections';
+import { notifyForNewTruck } from '../utils/matchNotify';
 
 interface AvailableTrucksViewProps {
   slips: LoadSlip[];
@@ -171,6 +173,10 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
     StorageService.saveAvailableTruck(newTruck);
     const updatedList = StorageService.getAvailableTrucks();
     setTrucksList(updatedList);
+    // Auto-match: notify about matching loads (in-app notification + matches section)
+    try {
+      notifyForNewTruck(newTruck, StorageService.getAllSlips());
+    } catch {}
     setFormSuccess(
       effectiveRole === 'driver' && driverExistingTruck 
         ? 'آپ کی گاڑی کی تفصیلات کامیابی سے اپ ڈیٹ ہو گئیں!' 
@@ -501,6 +507,9 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                   </span>
                 </div>
               )}
+
+              {/* Matching loads (lazy, expandable) */}
+              <TruckMatchesSection truck={truck} />
 
               {/* Bottom Row: Direct Action Contact Buttons */}
               <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
