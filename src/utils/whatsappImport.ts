@@ -98,7 +98,7 @@ const VEHICLE_SIGNALS =
   /گاڑی\s*خالی|خالی\s*گاڑی|خالی\s*ہے|empty\s*(vehicle|truck|gari|gaari)|vehicle\s*available|truck\s*available|khali\s*(gaari|gari)?/i;
 const LOAD_NEED_VEHICLE = /گاڑی\s*چاہیے|گاڑی\s*چاہئے|vehicle\s*(chahiye|required|needed)|gaari\s*chahiye/i;
 const LOAD_SIGNALS =
-  /لوڈ|وزن|کرایہ|fare|weight|load(ing|ed)?\s*(hai|available|hoga)|bharti|بھرتی|مال\s*(لوڈ|ہے)|unloading|ان لوڈنگ/i;
+  /لوڈ|وزن|کرایہ|fare|weight|load(ing|ed)?\s*(hai|available|hoga)|bharti|بھرتی|مال\s*(لوڈ|ہے)|unloading|ان لوڈنگ|\bfrom\b.+\bto\b/i;
 
 export function classifyMessage(text: string): PostingKind {
   const t = text;
