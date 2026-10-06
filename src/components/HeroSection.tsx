@@ -12,6 +12,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { LoadSlip } from '../types';
+import { MapPin } from 'lucide-react';
 
 interface HeroSectionProps {
   onOpenCreate: () => void;
@@ -21,7 +22,82 @@ interface HeroSectionProps {
   onNavigateToTrucks?: () => void;
   onViewSlip: (slip: LoadSlip) => void;
   recentSlips: LoadSlip[];
+  /** Visitor's detected city (Urdu name) — shows a city-specific loads section */
+  userCity?: string | null;
 }
+
+/** Single load card used on the homepage */
+const HomeSlipCard: React.FC<{ slip: LoadSlip; onViewSlip: (slip: LoadSlip) => void }> = ({ slip, onViewSlip }) => (
+  <div
+    onClick={() => onViewSlip(slip)}
+    className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md border border-slate-200 hover:border-emerald-500/50 transition-all cursor-pointer group flex flex-col justify-between"
+  >
+    <div className="space-y-3">
+      <div className="flex items-center justify-between text-xs">
+        <span className="font-mono text-slate-500 ltr-content bg-slate-100 px-2 py-0.5 rounded font-bold">
+          {slip.id}
+        </span>
+        <span className={`px-2 py-0.5 rounded font-bold text-xs ${
+          slip.status === 'active' 
+            ? 'bg-emerald-100 text-emerald-800' 
+            : slip.status === 'booked' 
+            ? 'bg-blue-100 text-blue-800' 
+            : 'bg-slate-200 text-slate-700'
+        }`}>
+          {slip.status === 'active' ? '● دستیاب لوڈ' : slip.status === 'booked' ? '✓ لوڈ ہوچکا' : 'ختم شدہ'}
+        </span>
+      </div>
+
+      <div className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
+        <div className="text-right">
+          <span className="text-xs text-slate-400 block">لوڈنگ</span>
+          <span className="text-lg font-bold text-[#08284F]">{slip.loadingCity}</span>
+          <span className="text-xs text-slate-600 block truncate max-w-[120px]">{slip.loadingLocation}</span>
+        </div>
+
+        <div className="flex flex-col items-center px-2">
+          <Truck className="w-5 h-5 text-[#19A974] group-hover:scale-110 transition-transform" />
+          <span className="text-[10px] text-slate-400 font-sans">➔</span>
+        </div>
+
+        <div className="text-left">
+          <span className="text-xs text-slate-400 block">منزل</span>
+          <span className="text-lg font-bold text-emerald-800">{slip.destinationCity}</span>
+          <span className="text-xs text-slate-600 block truncate max-w-[120px]">{slip.destinationLocation}</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2 text-xs pt-1">
+        <div>
+          <span className="text-slate-400">مال:</span>{' '}
+          <span className="font-semibold text-slate-800">{slip.goods}</span>
+        </div>
+        <div>
+          <span className="text-slate-400">وزن:</span>{' '}
+          <span className="font-semibold text-slate-800">{slip.weight}</span>
+        </div>
+        <div>
+          <span className="text-slate-400">گاڑی:</span>{' '}
+          <span className="font-semibold text-slate-800">{slip.vehicleType}</span>
+        </div>
+        <div>
+          <span className="text-slate-400">باڈی:</span>{' '}
+          <span className="font-semibold text-slate-800">{slip.bodyType}</span>
+        </div>
+      </div>
+    </div>
+
+    <div className="pt-4 mt-3 border-t border-slate-100 flex items-center justify-between">
+      <div className="text-xs text-slate-600 font-medium truncate max-w-[180px]">
+        🏢 {slip.addaName}
+      </div>
+      <span className="text-xs font-bold text-[#19A974] group-hover:underline flex items-center gap-1">
+        <span>مکمل سلپ کھولیں</span>
+        <ArrowLeft className="w-3.5 h-3.5" />
+      </span>
+    </div>
+  </div>
+);
 
 export const HeroSection: React.FC<HeroSectionProps> = ({
   onOpenCreate,
@@ -31,7 +107,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   onNavigateToTrucks,
   onViewSlip,
   recentSlips,
+  userCity,
 }) => {
+  const citySlips = userCity
+    ? recentSlips.filter(
+        (s) =>
+          (s.loadingCity && s.loadingCity.includes(userCity)) ||
+          (s.destinationCity && s.destinationCity.includes(userCity))
+      )
+    : [];
   return (
     <div className="space-y-10 sm:space-y-14 font-nafees">
       
@@ -253,6 +337,49 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         </div>
       </section>
 
+      {/* 3B. USER'S CITY LOADS SECTION (shown when location detected) */}
+      {userCity && (
+        <section className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-emerald-200 pb-3">
+            <div>
+              <h2 className="text-2xl font-bold text-[#08284F] flex items-center gap-2">
+                <MapPin className="w-6 h-6 text-[#19A974]" />
+                <span>{userCity} کے تازہ ترین لوڈز</span>
+              </h2>
+              <p className="text-xs text-slate-500">
+                آپ کی لوکیشن کے مطابق آپ کے شہر کے دستیاب لوڈز
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onNavigateToSearch}
+              className="self-start sm:self-auto inline-flex items-center gap-1.5 text-sm font-bold text-[#19A974] hover:text-emerald-800 transition min-h-[44px]"
+            >
+              <span>تمام لوڈز دیکھیں</span>
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+          </div>
+
+          {citySlips.length === 0 ? (
+            <div className="bg-emerald-50 rounded-3xl p-6 text-center border border-emerald-200">
+              <MapPin className="w-8 h-8 text-[#19A974] mx-auto opacity-70" />
+              <p className="text-sm font-bold text-slate-700 mt-2">
+                {userCity} کے لیے ابھی کوئی لوڈ پوسٹ نہیں ہوا
+              </p>
+              <p className="text-xs text-slate-500 mt-1">
+                نیچے تمام شہروں کے تازہ ترین لوڈز دیکھیں
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {citySlips.slice(0, 4).map((slip) => (
+                <HomeSlipCard key={slip.id} slip={slip} onViewSlip={onViewSlip} />
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
       {/* 4. LIVE AVAILABLE LOADS SECTION */}
       <section className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
@@ -293,76 +420,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {recentSlips.slice(0, 4).map((slip) => (
-              <div
-                key={slip.id}
-                onClick={() => onViewSlip(slip)}
-                className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md border border-slate-200 hover:border-emerald-500/50 transition-all cursor-pointer group flex flex-col justify-between"
-              >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-mono text-slate-500 ltr-content bg-slate-100 px-2 py-0.5 rounded font-bold">
-                      {slip.id}
-                    </span>
-                    <span className={`px-2 py-0.5 rounded font-bold text-xs ${
-                      slip.status === 'active' 
-                        ? 'bg-emerald-100 text-emerald-800' 
-                        : slip.status === 'booked' 
-                        ? 'bg-blue-100 text-blue-800' 
-                        : 'bg-slate-200 text-slate-700'
-                    }`}>
-                      {slip.status === 'active' ? '● دستیاب لوڈ' : slip.status === 'booked' ? '✓ لوڈ ہوچکا' : 'ختم شدہ'}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
-                    <div className="text-right">
-                      <span className="text-xs text-slate-400 block">لوڈنگ</span>
-                      <span className="text-lg font-bold text-[#08284F]">{slip.loadingCity}</span>
-                      <span className="text-xs text-slate-600 block truncate max-w-[120px]">{slip.loadingLocation}</span>
-                    </div>
-
-                    <div className="flex flex-col items-center px-2">
-                      <Truck className="w-5 h-5 text-[#19A974] group-hover:scale-110 transition-transform" />
-                      <span className="text-[10px] text-slate-400 font-sans">➔</span>
-                    </div>
-
-                    <div className="text-left">
-                      <span className="text-xs text-slate-400 block">منزل</span>
-                      <span className="text-lg font-bold text-emerald-800">{slip.destinationCity}</span>
-                      <span className="text-xs text-slate-600 block truncate max-w-[120px]">{slip.destinationLocation}</span>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 text-xs pt-1">
-                    <div>
-                      <span className="text-slate-400">مال:</span>{' '}
-                      <span className="font-semibold text-slate-800">{slip.goods}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400">وزن:</span>{' '}
-                      <span className="font-semibold text-slate-800">{slip.weight}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400">گاڑی:</span>{' '}
-                      <span className="font-semibold text-slate-800">{slip.vehicleType}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400">باڈی:</span>{' '}
-                      <span className="font-semibold text-slate-800">{slip.bodyType}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-4 mt-3 border-t border-slate-100 flex items-center justify-between">
-                  <div className="text-xs text-slate-600 font-medium truncate max-w-[180px]">
-                    🏢 {slip.addaName}
-                  </div>
-                  <span className="text-xs font-bold text-[#19A974] group-hover:underline flex items-center gap-1">
-                    <span>مکمل سلپ کھولیں</span>
-                    <ArrowLeft className="w-3.5 h-3.5" />
-                  </span>
-                </div>
-              </div>
+              <HomeSlipCard key={slip.id} slip={slip} onViewSlip={onViewSlip} />
             ))}
           </div>
         )}
