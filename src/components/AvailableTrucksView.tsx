@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { PAKISTAN_VEHICLE_VALUES } from '../utils/vehicleTypes';
 import { 
   Truck, 
   MapPin, 
@@ -34,7 +35,7 @@ const POPULAR_CITIES = [
 ];
 
 const COMMON_VEHICLES = [
-  'تمام گاڑیاں', '22 Wheeler', '10 Wheeler', 'Shahzor', 'Mazda', '40 Foot Container', 'JAC', 'Porter'
+  'تمام گاڑیاں', ...PAKISTAN_VEHICLE_VALUES
 ];
 
 const BODY_TYPES = ['تمام باڈی', 'فل باڈی', 'ہاف باڈی', 'پھٹا', 'کنٹینر'];
@@ -873,7 +874,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                   className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
                 />
                 <div className="flex flex-wrap gap-1 mt-1.5">
-                  {['22 Wheeler', '10 Wheeler', 'Shahzor', 'Mazda', '40 Foot Container'].map((v) => (
+                  {PAKISTAN_VEHICLE_VALUES.slice(0, 12).map((v) => (
                     <button
                       key={v}
                       type="button"
