@@ -119,9 +119,11 @@ export function formatWhatsAppMessage(slip: LoadSlip): string {
     loadsBlock += '\n';
   }
 
-  // Contact section: original poster numbers are hidden in shared text;
-  // all inquiries go to the platform contact number instead.
-  const contactSection = `📞 رابطہ نمبر: ${PLATFORM_CONTACT_NUMBER}\n`;
+  // Contact section: show ALL the poster's numbers (one or however many there are)
+  // (user requirement: slip shares show the adda manager's/vehicle owner's real numbers)
+  const allNumbers = [slip.primaryPhone, slip.whatsappNumber, ...(slip.additionalContacts || [])]
+    .filter((n, i, arr) => n && arr.indexOf(n) === i); // dedupe
+  const contactSection = `📞 رابطہ نمبرز:\n${allNumbers.map(n => `• ${n}`).join('\n')}\n`;
 
   return `🫡 السلام علیکم ورحمۃ اللہ وبرکاتہ 🫡
 ایاک نعبد و ایاک نستعین
@@ -205,8 +207,8 @@ export function updateOpenGraphMetaTags(slip: LoadSlip | null): void {
     setMeta('og:site_name', 'PK Cargo Link');
     setMeta('og:title', 'PK Cargo Link – پاکستان ڈیجیٹل لوڈ سلپ نیٹ ورک');
     setMeta('og:description', 'پاکستان کے تمام ٹرانسپورٹ اڈا منیجرز اور ٹرک ڈرائیورز کے لیے تصدیق شدہ ڈیجیٹل لوڈ سلپ نیٹ ورک۔');
-    setMeta('og:image', `${OFFICIAL_WEBSITE_URL}/api/slip-image.php`);
-    setMeta('og:image:secure_url', `${OFFICIAL_WEBSITE_URL}/api/slip-image.php`);
+    setMeta('og:image', `${OFFICIAL_WEBSITE_URL}/slip-preview.jpg`);
+    setMeta('og:image:secure_url', `${OFFICIAL_WEBSITE_URL}/slip-preview.jpg`);
     return;
   }
 
@@ -217,16 +219,9 @@ export function updateOpenGraphMetaTags(slip: LoadSlip | null): void {
 
   document.title = `${addaName} – دستیاب لوڈ: ${fromTo}`;
 
-  // Compute exact image URL: NEVER use adda-logo.png
-  let logoImg = '';
-  if (slip.addaLogo && slip.addaLogo.startsWith('http') && !slip.addaLogo.includes('adda-logo.png') && !slip.addaLogo.includes('icon-512.png')) {
-    logoImg = slip.addaLogo;
-  } else if (slip.addaLogo && slip.addaLogo.startsWith('/uploads/')) {
-    logoImg = `${OFFICIAL_WEBSITE_URL}${slip.addaLogo}`;
-  } else {
-    // Dynamic image generator tailored specifically to this Adda and slip
-    logoImg = `${OFFICIAL_WEBSITE_URL}/api/slip-image.php?id=${encodeURIComponent(slip.id)}`;
-  }
+  // Compute exact image URL: use the PK Cargo Link truck banner for slip previews
+  // (user-provided promotional image)
+  const logoImg = `${OFFICIAL_WEBSITE_URL}/slip-preview.jpg`;
 
   // Set all OpenGraph tags so WhatsApp preview shows Adda details
   setMeta('og:site_name', addaName);
