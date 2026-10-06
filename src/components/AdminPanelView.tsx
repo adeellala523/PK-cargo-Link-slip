@@ -1526,7 +1526,7 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
               {filteredSlips.map((s) => {
                 const cleanPhone = (s.primaryPhone || '').replace(/[^0-9]/g, '');
                 const slipUrl = `https://pkcargolink.com/slip/${s.id}`;
-                const shareText = `*📋 PK Cargo Link لوڈ سلپ #${s.id}*\n📍 روٹ: ${s.loadingCity} ➔ ${s.destinationCity}\n📦 مال: ${s.goods} (${s.weight || s.quantity})\n🚚 گاڑی: ${s.vehicleType} (${s.bodyType})\n🏢 اڈا: ${s.addaName}\n📞 رابطہ: ${s.primaryPhone}\n\n🔗 ڈیجیٹل سلپ دیکھیں:\n${slipUrl}`;
+                const shareText = `*📋 PK Cargo Link لوڈ سلپ #${s.id}*\n📍 روٹ: ${s.loadingCity} ➔ ${s.destinationCity}\n📦 مال: ${s.goods} (${s.weight || s.quantity})\n🚚 گاڑی: ${s.vehicleType} (${s.bodyType})\n🏢 اڈا: ${s.addaName}\n📞 رابطہ: 03298111391\n\n🔗 ڈیجیٹل سلپ دیکھیں:\n${slipUrl}`;
 
                 return (
                   <div key={s.id} className="py-4 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
