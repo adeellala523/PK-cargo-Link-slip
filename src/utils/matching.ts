@@ -3,6 +3,7 @@
  *
  * Matches a load slip against available trucks (and vice versa) using
  * normalized city names, preferred routes and vehicle-type compatibility.
+ * Deployed 2026-10-06.
  */
 import { LoadSlip, AvailableTruck } from '../types';
 import { mapToUrduCity } from './location';
