@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import { LoadSlip, AdminStats, AddaProfile, UserAccount, PaymentSettings, AvailableTruck } from '../types';
 import { StorageService } from '../services/storage';
+import { WhatsAppImportView } from './WhatsAppImportView';
 import { AdConfig, AdService } from '../services/adService';
 import { AdPlaceholder } from './AdPlaceholder';
 import { AdminQuickSlipCreator } from './AdminQuickSlipCreator';
@@ -62,7 +63,7 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
   const [pinError, setPinError] = useState(false);
   const [showPin, setShowPin] = useState(false);
   const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
-  const [activeTab, setActiveTab] = useState<'trucks' | 'slips' | 'quick_slip' | 'users' | 'subscriptions' | 'payment_settings' | 'ads' | 'backup'>('trucks');
+  const [activeTab, setActiveTab] = useState<'trucks' | 'slips' | 'quick_slip' | 'users' | 'subscriptions' | 'payment_settings' | 'ads' | 'backup' | 'whatsapp_import'>('trucks');
   const [searchFilter, setSearchFilter] = useState('');
 
   // -------------------------------------------------------------
@@ -439,6 +440,18 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
         >
           <Download className="w-4 h-4" />
           <span>بیک اپ</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('whatsapp_import')}
+          className={`py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 ${
+            activeTab === 'whatsapp_import'
+              ? 'bg-[#25D366] text-white shadow-lg font-bold'
+              : 'text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300'
+          }`}
+        >
+          <MessageSquare className="w-4 h-4" />
+          <span>واٹس ایپ امپورٹ</span>
         </button>
       </div>
 
@@ -1888,6 +1901,13 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* TAB: WHATSAPP CHAT IMPORT                                */}
+      {/* ======================================================== */}
+      {activeTab === 'whatsapp_import' && (
+        <WhatsAppImportView />
       )}
 
     </div>
