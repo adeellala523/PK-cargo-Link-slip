@@ -44,6 +44,7 @@ import {
 } from '../utils/formatters';
 import { StorageService } from '../services/storage';
 import { NotificationService } from '../services/notificationService';
+import { SlipMatchesSection } from './MatchSections';
 
 interface LoadSlipCardProps {
   slip: LoadSlip;
@@ -993,6 +994,9 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
           </button>
 
         </div>
+
+        {/* Matching available trucks (lazy, expandable) */}
+        <SlipMatchesSection slip={currentSlip} />
 
         {/* Secondary Manager / Print Actions */}
         <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs">
