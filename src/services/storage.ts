@@ -1169,13 +1169,52 @@ export const StorageService = {
     this.setDriverLoggedIn(true, driver);
   },
 
-  loginDriver(phone: string, password?: string): { success: boolean; message: string; driver?: DriverAccount } {
+  async loginDriver(phone: string, password?: string): Promise<{ success: boolean; message: string; driver?: DriverAccount }> {
     const cleanP = phone.trim().replace(/[^0-9]/g, '');
+    const pw = (password || '').trim();
+
+    // 1) Verify against the server first (passwords are hashed server-side).
+    //    Works for synced and chatbot-created accounts on any device.
+    if (pw && typeof fetch !== 'undefined') {
+      try {
+        const res = await fetch('/api/users-sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'login', phone: cleanP, password: pw, role: 'driver' }),
+          signal: AbortSignal.timeout(8000),
+        });
+        if (res.ok) {
+          const u: any = await res.json().catch(() => null);
+          if (u && u.phone) {
+            const det = u.driverDetails || {};
+            const driver: DriverAccount = {
+              id: String(u.id || `driver_${cleanP}`),
+              driverName: u.managerName || u.name || u.driverName || 'ڈرائیور',
+              phone: String(u.phone),
+              whatsappNumber: u.whatsappNumber || String(u.phone),
+              vehicleType: det.vehicleType || '22 Wheeler',
+              bodyType: det.bodyType || '',
+              vehicleNumber: det.vehicleNumber || '',
+              currentCity: det.currentCity || u.city || '',
+              preferredRoute: det.preferredRoute || '',
+              createdAt: u.createdAt,
+            };
+            const drivers = this.getDrivers().filter((d) => d.phone.replace(/[^0-9]/g, '') !== cleanP);
+            drivers.unshift(driver);
+            try { localStorage.setItem(STORAGE_KEYS.REGISTERED_DRIVERS, JSON.stringify(drivers)); } catch { /* ignore */ }
+            this.setDriverLoggedIn(true, driver);
+            return { success: true, message: 'ڈرائیور لاگ ان کامیاب!', driver };
+          }
+        }
+      } catch { /* fall through to local check */ }
+    }
+
+    // 2) Local fallback (offline, or local-only accounts)
     const drivers = this.getDrivers();
     const found = drivers.find((d) => d.phone.replace(/[^0-9]/g, '') === cleanP);
-    
+
     if (found) {
-      if (found.password && password && found.password !== password.trim()) {
+      if (found.password && pw && found.password !== pw) {
         return { success: false, message: 'درج کردہ پاس ورڈ درست نہیں ہے۔' };
       }
       this.setDriverLoggedIn(true, found);
@@ -1185,13 +1224,41 @@ export const StorageService = {
     return { success: false, message: 'یہ فون نمبر بطور ڈرائیور رجسٹرڈ نہیں ہے۔ پہلے نیا ڈرائیور اکاؤنٹ بنائیں!' };
   },
 
-  loginAddaManager(phone: string, password?: string): { success: boolean; message: string; user?: UserAccount } {
+  async loginAddaManager(phone: string, password?: string): Promise<{ success: boolean; message: string; user?: UserAccount }> {
     const cleanP = phone.trim().replace(/[^0-9]/g, '');
+    const pw = (password || '').trim();
+
+    // 1) Verify against the server first (passwords are hashed server-side)
+    if (pw && typeof fetch !== 'undefined') {
+      try {
+        const res = await fetch('/api/users-sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'login', phone: cleanP, password: pw, role: 'adda_manager' }),
+          signal: AbortSignal.timeout(8000),
+        });
+        if (res.ok) {
+          const u: any = await res.json().catch(() => null);
+          if (u && u.phone) {
+            const users = this.getUsers();
+            const idx = users.findIndex((x) => x && x.phone.replace(/[^0-9]/g, '') === cleanP);
+            const merged: UserAccount = { ...((idx !== -1 ? users[idx] : {}) as object), ...u } as UserAccount;
+            if (idx !== -1) users[idx] = merged; else users.unshift(merged);
+            try { localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users)); } catch { /* ignore */ }
+            this.setCurrentUser(merged);
+            this.setLoggedIn(true, merged.phone);
+            return { success: true, message: 'اڈا منیجر لاگ ان کامیاب!', user: merged };
+          }
+        }
+      } catch { /* fall through to local check */ }
+    }
+
+    // 2) Local fallback (offline, or local-only accounts)
     const users = this.getUsers();
     const found = users.find((u) => u.phone.replace(/[^0-9]/g, '') === cleanP);
 
     if (found) {
-      if (found.password && password && found.password !== password.trim()) {
+      if (found.password && pw && found.password !== pw) {
         return { success: false, message: 'درج کردہ پاس ورڈ درست نہیں ہے۔' };
       }
       this.setLoggedIn(true, found.phone);
