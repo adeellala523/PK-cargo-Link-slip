@@ -30,10 +30,45 @@ export const CITY_EN_TO_UR: Record<string, string> = {
   'sargodha': 'سرگودھا', 'shahkot': 'شاہ کوٹ', 'sialkot': 'سیالکوٹ',
   'sindh': 'سندھ', 'sukkur': 'سکھر', 'toba tek singh': 'ٹوبہ ٹیک سنگھ',
   'vehari': 'وہاڑی', 'wah cantt': 'واہ کینٹ', 'wan bhachran': 'واں بھچراں',
+  // Extended transport-corridor cities (WhatsApp import coverage)
+  'dipalpur': 'دیپالپور', 'kot momin': 'کوٹ مومن', 'phalia': 'پھالیہ',
+  'bhalwal': 'بھلوال', 'shorkot': 'شورکوٹ', 'jaranwala': 'جڑانوالہ',
+  'tandlianwala': 'تاندلیانوالہ', 'samundri': 'سمندری', 'gojra': 'گوجرہ',
+  'hafizabad': 'حافظ آباد', 'wazirabad': 'وزیر آباد', 'daska': 'ڈسکہ',
+  'pasrur': 'پسرور', 'narowal': 'نارووال', 'shakargarh': 'شکرگڑھ',
+  'renala khurd': 'رینالہ خورد', 'haveli lakha': 'حویلی لکھا',
+  'basirpur': 'بصیرپور', 'pakpattan': 'پاکپتن', 'mailsi': 'میلسی',
+  'dunyapur': 'دنیا پور', 'lodhran': 'لودھراں', 'shujabad': 'شجاع آباد',
+  'jalalpur pirwala': 'جلالپور پیروالہ', 'khushab': 'خوشاب',
+  'quaidabad': 'قائد آباد', 'dera ismail khan': 'ڈیرہ اسماعیل خان',
+  'tank': 'ٹانک', 'lakki marwat': 'لکی مروت', 'bannu': 'بنوں',
+  'kohat': 'کوہاٹ', 'hangu': 'ہنگو', 'swat': 'سوات', 'mingora': 'مینگورہ',
+  'mansehra': 'مانسہرہ', 'abbottabad': 'ایبٹ آباد', 'talagang': 'تلہ گنگ',
+  'pind dadan khan': 'پنڈ دادن خان', 'kharian': 'کھاریاں',
+  'lalamusa': 'لالہ موسیٰ', 'dina': 'دینہ', 'gujar khan': 'گوجر خان',
+  'kahuta': 'کہوٹہ', 'murree': 'مری', 'taxila': 'ٹیکسلا',
+  'fateh jang': 'فتح جنگ', 'attock': 'اٹک', 'hazro': 'حضرو',
+  'swabi': 'صوابی', 'mardan': 'مردان', 'charsadda': 'چارسدہ',
+  'nowshera': 'نوشہرہ', 'jamrud': 'جمرود', 'landikotal': 'لنڈی کوتل',
+  'sibi': 'سبی', 'jacobabad': 'جیکب آباد', 'shikarpur': 'شکارپور',
+  'khairpur': 'خیرپور', 'nawabshah': 'نوابشاہ', 'dadu': 'دادو',
+  'sehwan': 'سیہون', 'thatta': 'ٹھٹھہ', 'badin': 'بدین',
+  'mirpur khas': 'میرپور خاص', 'sanghar': 'سانگھڑ',
+  'tando adam': 'ٹنڈو آدم', 'tando allahyar': 'ٹنڈو الہ یار',
 };
 
+/**
+ * Normalize Urdu text spelling variants to one canonical form so lookups
+ * don't miss: Arabic yeh (ي U+064A) -> Urdu yeh (ی U+06CC),
+ * Arabic kaf (ك U+0643) -> Urdu keheh (ک U+06A9).
+ * WhatsApp messages typed on mixed keyboards often use the Arabic variants.
+ */
+export function normalizeUrduText(s: string): string {
+  return s.replace(/ي/g, 'ی').replace(/ك/g, 'ک');
+}
+
 function normCity(c: string): string {
-  return c.trim().toLowerCase().replace(/[\s\-']/g, '');
+  return normalizeUrduText(c).trim().toLowerCase().replace(/[\s\-']/g, '');
 }
 
 export function mapToUrduCity(englishName: string): string | null {
