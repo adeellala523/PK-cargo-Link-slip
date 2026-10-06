@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send, Mic, Volume2, VolumeX, Phone, PhoneOff } from 'lucide-react';
+import { PAKISTAN_VEHICLE_VALUES, matchVehicleType } from '../utils/vehicleTypes';
 
 interface ChatMessage {
   id: number;
@@ -50,7 +51,7 @@ const initialFlow: FlowState = {
   fare: '',
 };
 
-const VEHICLE_TYPES = ['22 Wheeler', '10 Wheeler', 'Shahzor', 'Mazda', 'JAC', 'Porter'];
+const VEHICLE_TYPES = PAKISTAN_VEHICLE_VALUES;
 const STORAGE_KEY = 'pkcl_chatbot_user';
 
 let msgId = 0;
@@ -138,10 +139,28 @@ export function AiChatbotWidget() {
       const utter = new SpeechSynthesisUtterance(clean);
       utter.lang = 'ur-PK';
       utter.rate = 0.95;
-      utter.onend = () => afterSpeak();
-      utter.onerror = () => afterSpeak();
+      // Safety net: Chrome sometimes never fires onend/onerror (utterance gets
+      // stuck), which would freeze the call with a dead mic. Force-continue
+      // after an estimated speaking duration.
+      let finished = false;
+      const safetyMs = Math.min(30000, 4000 + clean.length * 110);
+      const safetyTimer = window.setTimeout(() => finish(), safetyMs);
+      const finish = () => {
+        if (finished) return;
+        finished = true;
+        window.clearTimeout(safetyTimer);
+        afterSpeak();
+      };
+      utter.onend = finish;
+      utter.onerror = finish;
       synth.speak(utter);
     } catch { afterSpeak(); }
+  };
+
+  const restartCallListening = (ms: number) => {
+    window.setTimeout(() => {
+      if (callModeRef.current) beginCallListening();
+    }, ms);
   };
 
   const beginCallListening = () => {
@@ -154,30 +173,45 @@ export function AiChatbotWidget() {
     try {
       try { recognitionRef.current?.abort(); } catch { /* ignore */ }
       const rec = new SR();
+      recognitionRef.current = rec;
+      // Only the newest instance may drive the call; older aborted ones stay silent.
+      const isCurrent = () => recognitionRef.current === rec && callModeRef.current;
+      let gotResult = false;
       rec.lang = 'ur-PK';
       rec.interimResults = false;
       rec.maxAlternatives = 1;
       rec.onresult = (e: any) => {
+        if (!isCurrent()) return;
+        gotResult = true;
         const transcript = e.results?.[0]?.[0]?.transcript || '';
         setListening(false);
         if (transcript.trim()) {
           handleText(transcript.trim());
         } else if (callModeRef.current) {
-          beginCallListening();
+          restartCallListening(300);
         }
       };
       rec.onerror = (e: any) => {
+        if (recognitionRef.current !== rec) return;
         setListening(false);
         const err = e?.error || '';
+        if (err === 'aborted') return; // superseded by a newer instance
         if (err === 'not-allowed' || err === 'service-not-allowed') {
           setCallModeBoth(false);
           pushBot('مائیکروفون کی اجازت نہیں ملی۔ براہ کرم اجازت دیں اور دوبارہ کال بٹن دبائیں۔');
-        } else if (callModeRef.current) {
-          window.setTimeout(() => { if (callModeRef.current) beginCallListening(); }, 1000);
+        }
+        // Other errors ('no-speech', 'network', ...): onend below restarts listening quietly.
+      };
+      rec.onend = () => {
+        if (recognitionRef.current !== rec) return;
+        setListening(false);
+        // Chrome stops listening after a few seconds of silence, which used to
+        // kill the call. If the user spoke, the reply chain restarts listening
+        // after the bot finishes speaking; if it was only silence, listen again.
+        if (callModeRef.current && !gotResult) {
+          restartCallListening(400);
         }
       };
-      rec.onend = () => setListening(false);
-      recognitionRef.current = rec;
       rec.start();
       setListening(true);
     } catch {
@@ -276,6 +310,21 @@ export function AiChatbotWidget() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, busy]);
+
+  // If the tab was hidden (screen lock / app switch) during a call, re-anchor
+  // the microphone when the user comes back so the call doesn't go quiet.
+  useEffect(() => {
+    const onVis = () => {
+      if (document.visibilityState === 'visible' && callModeRef.current) {
+        window.setTimeout(() => {
+          if (callModeRef.current) beginCallListening();
+        }, 600);
+      }
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const showMenu = (f: FlowState) => {
     if (f.role === 'driver') {
@@ -523,6 +572,17 @@ export function AiChatbotWidget() {
         searchLoads(nf);
         break;
       }
+      case 'truck_type': {
+        const matched = matchVehicleType(t);
+        if (matched) {
+          const nf = { ...f, vehicleType: matched, step: 'truck_number' };
+          setFlow(nf);
+          pushBot('گاڑی کا نمبر لکھیں (مثلاً LHR-1234)', undefined, 500);
+        } else {
+          pushBot('گاڑی کی قسم سمجھ نہیں آئی۔ نیچے دیے گئے بٹن میں سے منتخب کریں یا نام بولیں', VEHICLE_TYPES, 500);
+        }
+        break;
+      }
       case 'truck_number': {
         const nf = { ...f, vehicleNumber: t, step: 'truck_city' };
         setFlow(nf);
@@ -557,6 +617,17 @@ export function AiChatbotWidget() {
         const nf = { ...f, goods: t, step: 'slip_weight' };
         setFlow(nf);
         pushBot('وزن کتنا ہے؟ (مثلاً 30 ٹن)', undefined, 500);
+        break;
+      }
+      case 'slip_vehicle': {
+        const matched = matchVehicleType(t);
+        if (matched) {
+          const nf = { ...f, slipVehicle: matched, step: 'slip_fare' };
+          setFlow(nf);
+          pushBot('کرایہ کیا ہے؟ (مثلاً 50000)', undefined, 500);
+        } else {
+          pushBot('گاڑی کی قسم سمجھ نہیں آئی۔ نیچے دیے گئے بٹن میں سے منتخب کریں یا نام بولیں', VEHICLE_TYPES, 500);
+        }
         break;
       }
       case 'slip_weight': {
