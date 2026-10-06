@@ -3,6 +3,9 @@ import { LoadSlip } from '../types/index.ts';
 export const OFFICIAL_WEBSITE_URL = 'https://pkcargolink.com';
 export const APP_BASE_URL = OFFICIAL_WEBSITE_URL;
 
+/** Platform contact number shown in all shared slip texts (original poster numbers stay hidden). */
+export const PLATFORM_CONTACT_NUMBER = '03298111391';
+
 export function getAppBaseUrl(): string {
   return OFFICIAL_WEBSITE_URL;
 }
@@ -38,9 +41,11 @@ export function getCommodityEmoji(goods: string): string {
 }
 
 /**
- * Builds the exact WhatsApp formatted text with complete details and unhidden phone numbers:
+ * Builds the exact WhatsApp formatted text with complete slip details.
+ * Privacy rule: original poster phone numbers are NEVER shown in shared text —
+ * the platform contact number is shown instead (numbers stay visible on the website itself).
  * - Dynamically includes origin, destination, vehicle, weight/quantity, and cargo
- * - Unhides all primary and secondary phone numbers with manager/contact names
+ * - Shows the platform contact number for all inquiries
  * - Includes direct deep link to the verified load slip
  */
 export function formatWhatsAppMessage(slip: LoadSlip): string {
@@ -114,28 +119,9 @@ export function formatWhatsAppMessage(slip: LoadSlip): string {
     loadsBlock += '\n';
   }
 
-  // Unhide all contact phone numbers clearly
-  let contactSection = '';
-  if (slip.primaryPhone) {
-    const mgr = slip.managerName ? ` (${slip.managerName})` : '';
-    contactSection += `📞 رابطہ نمبر${mgr}: ${slip.primaryPhone}\n`;
-  }
-  if (slip.whatsappNumber && slip.whatsappNumber !== slip.primaryPhone) {
-    contactSection += `💬 واٹس ایپ نمبر: ${slip.whatsappNumber}\n`;
-  }
-  if (slip.namedContacts && slip.namedContacts.length > 0) {
-    slip.namedContacts.forEach((c) => {
-      if (c && c.number && c.number !== slip.primaryPhone && c.number !== slip.whatsappNumber) {
-        contactSection += `📞 رابطہ ${c.name ? `(${c.name})` : ''}: ${c.number}\n`;
-      }
-    });
-  } else if (slip.additionalContacts && slip.additionalContacts.length > 0) {
-    slip.additionalContacts.forEach((num, idx) => {
-      if (num && num !== slip.primaryPhone && num !== slip.whatsappNumber) {
-        contactSection += `📞 رابطہ نمبر ${idx + 2}: ${num}\n`;
-      }
-    });
-  }
+  // Contact section: original poster numbers are hidden in shared text;
+  // all inquiries go to the platform contact number instead.
+  const contactSection = `📞 رابطہ نمبر: ${PLATFORM_CONTACT_NUMBER}\n`;
 
   return `🫡 السلام علیکم ورحمۃ اللہ وبرکاتہ 🫡
 ایاک نعبد و ایاک نستعین
