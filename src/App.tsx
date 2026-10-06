@@ -289,6 +289,15 @@ export default function App() {
     StorageService.syncUsersWithServer().catch(() => {});
     StorageService.syncDriversWithServer().catch(() => {});
 
+    // Refresh logged-in state when the chatbot signs a user in/outside the normal flow
+    const refreshSession = () => {
+      try {
+        setIsLoggedIn(StorageService.isLoggedIn());
+        setProfile(StorageService.getAddaProfile());
+      } catch { /* ignore */ }
+    };
+    window.addEventListener('pkcl-session-changed', refreshSession);
+
     // Periodic auto-sync every 8 seconds so newly posted loads appear live without refreshing
     const syncInterval = setInterval(() => {
       StorageService.syncWithServer()
@@ -321,6 +330,7 @@ export default function App() {
       window.removeEventListener('focus', handleFocusSync);
       document.removeEventListener('visibilitychange', handleFocusSync);
       window.removeEventListener('popstate', handleUrlRoute);
+      window.removeEventListener('pkcl-session-changed', refreshSession);
     };
   }, []);
 
