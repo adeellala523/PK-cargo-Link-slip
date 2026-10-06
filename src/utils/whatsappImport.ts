@@ -277,6 +277,7 @@ const KNOWN_GOODS: { re: RegExp; urdu: string }[] = [
   { re: /فرنیچر|furniture/i, urdu: 'فرنیچر' },
   { re: /گھر\s*(کا\s*)?سامان|household/i, urdu: 'گھر سامان' },
   { re: /باجرہ|bajra/i, urdu: 'باجرہ' },
+  { re: /گوار[ہاہ]|guar/i, urdu: 'گوارہ' },
   { re: /گندم|wheat/i, urdu: 'گندم' },
   { re: /چاول|rice/i, urdu: 'چاول' },
   { re: /کپاس|cotton/i, urdu: 'کپاس' },
@@ -297,6 +298,14 @@ const KNOWN_GOODS: { re: RegExp; urdu: string }[] = [
   { re: /پھل|fruit/i, urdu: 'پھل' },
   { re: /سبزی|vegetable/i, urdu: 'سبزی' },
 ];
+
+/** True when the word is a known goods/crop name — guards against
+ *  "دیپالپور سے گوارہ" being read as a route when گوارہ is the maal. */
+export function isGoodsWord(word: string): boolean {
+  const w = word.trim();
+  if (!w) return false;
+  return KNOWN_GOODS.some((k) => k.re.test(w));
+}
 
 export function extractGoods(text: string): string {
   // Explicit "مال: X" / "goods: X" label wins
@@ -419,10 +428,13 @@ function buildLoadSlip(
   const phones = extractPhones(msg.text);
   const loadingCity = route.loadingCity || extractMeinAnchorCity(msg.text);
   if (!loadingCity) return { skipReason: 'پک اپ شہر درج نہیں' };
+  // "دیپالپور سے گوارہ": گوارہ sheher nahi, ajnas (maal) hai — destination khaali chhoro
+  let destinationCity = route.destinationCity;
+  if (destinationCity && isGoodsWord(destinationCity)) destinationCity = '';
   if (phones.length === 0) return { skipReason: 'رابطہ نمبر درج نہیں' };
 
   const goods = urduComma(extractGoods(msg.text));
-  const key = `${loadingCity}|${route.destinationCity}|${phones[0]}|${goods}`;
+  const key = `${loadingCity}|${destinationCity}|${phones[0]}|${goods}`;
   if (seenKeys.has(key)) return { skipReason: 'ڈپلیکیٹ پوسٹنگ' };
   seenKeys.add(key);
 
@@ -439,8 +451,8 @@ function buildLoadSlip(
     additionalContacts: phones.slice(1),
     loadingCity: loadingCity,
     loadingLocation: loadingCity,
-    destinationCity: route.destinationCity || loadingCity,
-    destinationLocation: route.destinationCity || loadingCity,
+    destinationCity: destinationCity || loadingCity,
+    destinationLocation: destinationCity || loadingCity,
     goods,
     weight: extractWeight(msg.text),
     quantity: '',
