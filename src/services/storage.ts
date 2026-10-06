@@ -1661,10 +1661,14 @@ export const StorageService = {
         });
         if (delRes.ok) {
           const deletedIds = await delRes.json().catch(() => null);
-          if (Array.isArray(deletedIds) && deletedIds.length > 0) {
+          // Only accept a proper string array (old server code returns slips here — ignore those)
+          const idList = Array.isArray(deletedIds)
+            ? deletedIds.filter((x) => typeof x === 'string')
+            : [];
+          if (idList.length > 0) {
             const localDeleted = this.getDeletedSlipIds();
             let changed = false;
-            for (const rawId of deletedIds) {
+            for (const rawId of idList) {
               const clean = String(rawId).replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
               if (clean && !localDeleted.includes(rawId) && !localDeleted.includes(clean)) {
                 localDeleted.push(clean);
