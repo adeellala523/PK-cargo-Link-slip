@@ -193,8 +193,8 @@ export function updateOpenGraphMetaTags(slip: LoadSlip | null): void {
   document.title = `${addaName} – دستیاب لوڈ: ${fromTo}`;
 
   // Compute exact image URL: use the PK Cargo Link truck banner for slip previews
-  // (user-provided promotional image)
-  const logoImg = `${OFFICIAL_WEBSITE_URL}/slip-preview.jpg`;
+  // (user-provided promotional image; ?v=2 busts WhatsApp's OG image cache)
+  const logoImg = `${OFFICIAL_WEBSITE_URL}/slip-preview.jpg?v=2`;
 
   // Set all OpenGraph tags so WhatsApp preview shows Adda details
   setMeta('og:site_name', addaName);
