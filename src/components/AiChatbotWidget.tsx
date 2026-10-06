@@ -129,6 +129,14 @@ export function AiChatbotWidget() {
     }
   };
 
+  // Pick a Hindi TTS voice for speaking (text stays Urdu, voice sounds Hindi/Urdu)
+  const pickHindiVoice = (): SpeechSynthesisVoice | null => {
+    try {
+      const voices = window.speechSynthesis.getVoices() || [];
+      return voices.find((v) => v.lang && v.lang.toLowerCase().startsWith('hi')) || null;
+    } catch { return null; }
+  };
+
   const speak = (text: string) => {
     try {
       const synth = window.speechSynthesis;
@@ -137,7 +145,9 @@ export function AiChatbotWidget() {
       const clean = text.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}]/gu, '').trim();
       if (!clean) { afterSpeak(); return; }
       const utter = new SpeechSynthesisUtterance(clean);
-      utter.lang = 'ur-PK';
+      utter.lang = 'hi-IN'; // Hindi voice
+      const hindiVoice = pickHindiVoice();
+      if (hindiVoice) utter.voice = hindiVoice;
       utter.rate = 0.95;
       // Safety net: Chrome sometimes never fires onend/onerror (utterance gets
       // stuck), which would freeze the call with a dead mic. Force-continue
@@ -314,6 +324,16 @@ export function AiChatbotWidget() {
     if (open && messages.length === 0) startConversation();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open ]);
+
+  // Warm up the TTS voice list early so a Hindi voice is ready when speaking starts
+  useEffect(() => {
+    try {
+      window.speechSynthesis?.getVoices();
+      window.speechSynthesis.onvoiceschanged = () => {
+        try { window.speechSynthesis.getVoices(); } catch { /* ignore */ }
+      };
+    } catch { /* ignore */ }
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
