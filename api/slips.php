@@ -66,7 +66,44 @@ function writeAllSlips($slips) {
 
 $method = $_SERVER['REQUEST_METHOD'];
 
+// --- Server-side deleted-ID blocklist: prevents deleted slips from being
+// resurrected by stale clients that re-push their local copies on auto-sync.
+function getDeletedIdsFile() {
+    return __DIR__ . '/deleted_slips.json';
+}
+function readDeletedIds() {
+    $f = getDeletedIdsFile();
+    if (!file_exists($f)) return [];
+    $parsed = json_decode(@file_get_contents($f), true);
+    return is_array($parsed) ? $parsed : [];
+}
+function addDeletedId($id) {
+    $clean = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(trim($id)));
+    if (empty($clean)) return;
+    $ids = readDeletedIds();
+    if (!in_array($clean, $ids, true)) {
+        $ids[] = $clean;
+        @file_put_contents(getDeletedIdsFile(), json_encode($ids), LOCK_EX);
+    }
+}
+function removeDeletedId($id) {
+    $clean = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(trim($id)));
+    $ids = array_values(array_filter(readDeletedIds(), function($x) use ($clean) {
+        return $x !== $clean;
+    }));
+    @file_put_contents(getDeletedIdsFile(), json_encode($ids), LOCK_EX);
+}
+function isDeletedId($id) {
+    $clean = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(trim($id)));
+    return in_array($clean, readDeletedIds(), true);
+}
+
 if ($method === 'GET') {
+    // ?deleted_ids=1 returns the blocklist so clients can purge local copies
+    if (isset($_GET['deleted_ids'])) {
+        echo json_encode(readDeletedIds(), JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     echo json_encode(readAllSlips(), JSON_UNESCAPED_UNICODE);
     exit;
 }
@@ -100,6 +137,9 @@ if ($method === 'DELETE') {
 
         writeAllSlips($filtered);
 
+        // Record in the server blocklist so stale clients can't resurrect it
+        addDeletedId($id);
+
         // Also remove individual dedicated slip file
         $cleanId = preg_replace('/[^a-zA-Z0-9_\-]/', '', $id);
         $singleDirs = [
@@ -130,6 +170,18 @@ if ($method === 'POST') {
         http_response_code(400);
         echo json_encode(['error' => 'Invalid slip payload']);
         exit;
+    }
+
+    // Block resurrection of deleted slips by stale clients.
+    // A deliberate re-creation must pass {undelete: true}.
+    if (isDeletedId($body['id']) && empty($body['undelete'])) {
+        http_response_code(410);
+        echo json_encode(['error' => 'Slip was deleted']);
+        exit;
+    }
+    if (!empty($body['undelete'])) {
+        removeDeletedId($body['id']);
+        unset($body['undelete']);
     }
 
     // Convert base64 addaLogo to real image file for WhatsApp crawler compatibility
