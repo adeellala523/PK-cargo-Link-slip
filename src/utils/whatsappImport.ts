@@ -95,7 +95,7 @@ export function parseExport(rawText: string): WaMessage[] {
 export type PostingKind = 'load' | 'vehicle' | 'chatter';
 
 const VEHICLE_SIGNALS =
-  /گاڑی\s*خالی|خالی\s*گاڑی|خالی\s*ہے|empty\s*(vehicle|truck|gari|gaari)|vehicle\s*available|truck\s*available|khali\s*(gaari|gari)?/i;
+  /گاڑی\s*(خالی|کھڑی|کھڑا)|گاری\s*(خالی|کھڑی|کھڑا)|کھڑی\s*گاڑی|کھڑا\s*ٹرک|خالی\s*گاڑی|خالی\s*ہے|empty\s*(vehicle|truck|gari|gaari)|vehicle\s*available|truck\s*available|khali\s*(gaari|gari)?/i;
 const LOAD_NEED_VEHICLE = /گاڑی\s*چاہیے|گاڑی\s*چاہئے|vehicle\s*(chahiye|required|needed)|gaari\s*chahiye/i;
 const LOAD_SIGNALS =
   /لوڈ|وزن|کرایہ|fare|weight|load(ing|ed)?\s*(hai|available|hoga)|bharti|بھرتی|مال\s*(لوڈ|ہے)|unloading|ان لوڈنگ|\bfrom\b.+\bto\b/i;
@@ -137,6 +137,12 @@ const JUNK_CITY_TAIL =
 /** Normalize a city mention to the Urdu name used on the website. */
 export function normalizeCityName(raw: string): string {
   let c = normalizeUrduText(raw).replace(/[\u200B-\u200D\uFEFF]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!c) return '';
+  // Known cities keep their full name — don't let JUNK_CITY_TAIL eat
+  // والا/والی off real names like عارف والا، بورے والا، کھرڑیانوالا.
+  const known = mapToUrduCity(c);
+  if (known) return known;
+  if (KNOWN_URDU_CITIES.has(c)) return c;
   c = c.replace(JUNK_CITY_TAIL, '').trim();
   if (!c) return '';
   const mapped = mapToUrduCity(c);
