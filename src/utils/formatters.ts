@@ -52,7 +52,7 @@ export function formatWhatsAppMessage(slip: LoadSlip): string {
   const cleanId = slip.id.replace(/[^a-zA-Z0-9]/g, '');
   // Use the OG preview endpoint so WhatsApp shows the truck image + slip details
   // (real users get redirected to the actual slip page)
-  const slipUrl = `${OFFICIAL_WEBSITE_URL}/api/slip-og.php?id=${cleanId}`;
+  const slipUrl = `${OFFICIAL_WEBSITE_URL}/api/slip-og.php?id=${cleanId}&v=3`;
 
   // All contact numbers (one or however many)
   const allNumbers = [slip.primaryPhone, slip.whatsappNumber, ...(slip.additionalContacts || [])]
@@ -182,8 +182,8 @@ export function updateOpenGraphMetaTags(slip: LoadSlip | null): void {
     setMeta('og:site_name', 'PK Cargo Link');
     setMeta('og:title', 'PK Cargo Link – پاکستان ڈیجیٹل لوڈ سلپ نیٹ ورک');
     setMeta('og:description', 'پاکستان کے تمام ٹرانسپورٹ اڈا منیجرز اور ٹرک ڈرائیورز کے لیے تصدیق شدہ ڈیجیٹل لوڈ سلپ نیٹ ورک۔');
-    setMeta('og:image', `${OFFICIAL_WEBSITE_URL}/slip-preview.jpg`);
-    setMeta('og:image:secure_url', `${OFFICIAL_WEBSITE_URL}/slip-preview.jpg`);
+    setMeta('og:image', `${OFFICIAL_WEBSITE_URL}/slip-preview.jpg?v=3`);
+    setMeta('og:image:secure_url', `${OFFICIAL_WEBSITE_URL}/slip-preview.jpg?v=3`);
     return;
   }
 
