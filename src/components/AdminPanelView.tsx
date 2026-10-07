@@ -84,6 +84,29 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
     return () => clearInterval(iv);
   }, [isAuthenticated]);
 
+  // Daily visitors counter (admin-only)
+  const [visitorsWeek, setVisitorsWeek] = useState<Record<string, number>>({});
+  useEffect(() => {
+    const fetchVisitors = () => {
+      fetch('/api/visitors.php?action=today')
+        .then(r => r.json())
+        .then(d => {
+          const el = document.getElementById('today-visitors-count');
+          if (el && d.visitors !== undefined) el.textContent = String(d.visitors);
+        })
+        .catch(() => {});
+      fetch('/api/visitors.php?action=week')
+        .then(r => r.json())
+        .then(d => {
+          if (d.week && typeof d.week === 'object') setVisitorsWeek(d.week);
+        })
+        .catch(() => {});
+    };
+    fetchVisitors();
+    const iv = setInterval(fetchVisitors, 60000);
+    return () => clearInterval(iv);
+  }, [isAuthenticated]);
+
   // -------------------------------------------------------------
   // TRUCKS / VEHICLES MANAGEMENT STATE (GAARI CONTROL)
   // -------------------------------------------------------------
@@ -1517,10 +1540,14 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
           </div>
 
           {/* Quick Metrics */}
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             <div className="bg-blue-50 p-2.5 rounded-xl border border-blue-200 text-center">
               <span className="text-[11px] text-blue-700 block">🟢 آن لائن یوزرز</span>
               <span className="text-base sm:text-lg font-bold font-mono text-blue-800" id="online-count">...</span>
+            </div>
+            <div className="bg-violet-50 p-2.5 rounded-xl border border-violet-200 text-center">
+              <span className="text-[11px] text-violet-700 block">📊 آج کے وزٹرز</span>
+              <span className="text-base sm:text-lg font-bold font-mono text-violet-800" id="today-visitors-count">...</span>
             </div>
             <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-center">
               <span className="text-[11px] text-slate-500 block">کل سلپس</span>
@@ -1539,6 +1566,21 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
               </span>
             </div>
           </div>
+
+          {/* 7-day visitors (admin only) */}
+          {Object.keys(visitorsWeek).length > 0 && (
+            <div className="bg-white rounded-xl border border-slate-200 p-3">
+              <div className="text-xs font-bold text-slate-700 mb-2">📊 پچھلے 7 دن کے وزٹرز</div>
+              <div className="flex gap-1.5 overflow-x-auto">
+                {Object.entries(visitorsWeek).map(([date, count]) => (
+                  <div key={date} className="flex-1 min-w-[62px] bg-slate-50 rounded-lg p-2 text-center border border-slate-100">
+                    <div className="text-[10px] text-slate-500 font-mono">{date.slice(5)}</div>
+                    <div className="text-sm font-bold font-mono text-slate-800">{count}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Search bar */}
           <div className="relative">
