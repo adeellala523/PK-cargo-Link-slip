@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ShieldCheck, 
   Users, 
@@ -65,6 +65,22 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
   const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
   const [activeTab, setActiveTab] = useState<'trucks' | 'slips' | 'quick_slip' | 'users' | 'subscriptions' | 'payment_settings' | 'ads' | 'backup' | 'whatsapp_import'>('trucks');
   const [searchFilter, setSearchFilter] = useState('');
+
+  // Online users counter
+  useEffect(() => {
+    const fetchOnline = () => {
+      fetch('/api/online.php')
+        .then(r => r.json())
+        .then(d => {
+          const el = document.getElementById('online-count');
+          if (el && d.online !== undefined) el.textContent = String(d.online);
+        })
+        .catch(() => {});
+    };
+    fetchOnline();
+    const iv = setInterval(fetchOnline, 30000);
+    return () => clearInterval(iv);
+  }, [isAuthenticated]);
 
   // -------------------------------------------------------------
   // TRUCKS / VEHICLES MANAGEMENT STATE (GAARI CONTROL)
@@ -1491,7 +1507,11 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
           </div>
 
           {/* Quick Metrics */}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-4 gap-3">
+            <div className="bg-blue-50 p-2.5 rounded-xl border border-blue-200 text-center">
+              <span className="text-[11px] text-blue-700 block">🟢 آن لائن یوزرز</span>
+              <span className="text-base sm:text-lg font-bold font-mono text-blue-800" id="online-count">...</span>
+            </div>
             <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-center">
               <span className="text-[11px] text-slate-500 block">کل سلپس</span>
               <span className="text-base sm:text-lg font-bold font-mono text-slate-900">{slips.length}</span>
