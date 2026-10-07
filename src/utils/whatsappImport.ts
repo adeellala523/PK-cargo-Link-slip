@@ -320,6 +320,17 @@ export function extractGoods(text: string): string {
     const g = labeled[1].replace(/\([^)]*\)/g, '').trim();
     if (g && !/خالی|چاہیے|چاہئے/i.test(g)) return g;
   }
+  // "سے [GOODS] کا" pattern wins — e.g. "قاضی احمد سے چاول کا لوڈنگ"
+  // People write "[pickup] se [goods] ka", so the goods right after سے is the intended one
+  const seKa = text.match(/سے\s+([^\s،,۔!؟*]{2,20})\s+کا/i);
+  if (seKa) {
+    const candidate = seKa[1].trim();
+    for (const k of KNOWN_GOODS) {
+      if (k.re.test(candidate)) return k.urdu;
+    }
+    // Even if not in known list, if it looks like a goods word (not a city/verb), use it
+    if (candidate && !/لوڈنگ|انلوڈنگ|گاڑی|ٹن|کلو/i.test(candidate)) return candidate;
+  }
   for (const k of KNOWN_GOODS) {
     if (k.re.test(text)) return k.urdu;
   }
