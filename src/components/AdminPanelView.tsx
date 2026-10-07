@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { BulkShareModal } from './BulkShareModal';
 import { 
   ShieldCheck, 
   Users, 
@@ -59,6 +60,7 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
   onViewSlip,
 }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [showBulkShare, setShowBulkShare] = useState(false);
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState(false);
   const [showPin, setShowPin] = useState(false);
@@ -1497,6 +1499,14 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
             <div className="flex items-center gap-2">
               <button
                 type="button"
+                onClick={() => setShowBulkShare(true)}
+                className="px-3.5 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1.5 cursor-pointer"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+                <span>📤 سب ایک ساتھ شیئر کریں</span>
+              </button>
+              <button
+                type="button"
                 onClick={() => setActiveTab('quick_slip')}
                 className="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1.5 cursor-pointer"
               >
@@ -1928,6 +1938,14 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
       {/* ======================================================== */}
       {activeTab === 'whatsapp_import' && (
         <WhatsAppImportView />
+      )}
+
+      {/* Bulk Share Modal — alag alag WhatsApp messages */}
+      {showBulkShare && (
+        <BulkShareModal
+          slips={slips}
+          onClose={() => setShowBulkShare(false)}
+        />
       )}
 
     </div>
