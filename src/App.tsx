@@ -64,16 +64,16 @@ export default function App() {
   // Capture console.error, unhandled rejections, and window errors for admin diagnostic debugging
   // Online users tracking heartbeat
   useEffect(() => {
-    const sid = 'sess_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    const vid = 'v_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
     const ping = () => {
       fetch('/api/online.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session_id: sid, page: window.location.pathname }),
+        body: JSON.stringify({ visitor_id: vid }),
       }).catch(() => {});
     };
     ping();
-    const iv = setInterval(ping, 60000); // every minute
+    const iv = setInterval(ping, 45000); // every 45s (server TTL is 60s)
     return () => clearInterval(iv);
   }, []);
 
