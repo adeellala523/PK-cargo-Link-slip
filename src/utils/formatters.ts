@@ -52,7 +52,7 @@ export function formatWhatsAppMessage(slip: LoadSlip): string {
   const cleanId = slip.id.replace(/[^a-zA-Z0-9]/g, '');
   // Use the OG preview endpoint so WhatsApp shows the truck image + slip details
   // (real users get redirected to the actual slip page)
-  const slipUrl = `${OFFICIAL_WEBSITE_URL}/api/slip-og.php?id=${cleanId}&v=3`;
+  const slipUrl = `${OFFICIAL_WEBSITE_URL}/api/slip-og.php?id=${cleanId}`;
 
   // All contact numbers (one or however many)
   const allNumbers = [slip.primaryPhone, slip.whatsappNumber, ...(slip.additionalContacts || [])]
@@ -67,9 +67,12 @@ export function formatWhatsAppMessage(slip: LoadSlip): string {
   // Quantity/weight
   const qty = slip.quantity || slip.weight || '';
 
-  // Vehicle with body type
-  const vehicle = slip.bodyType && slip.bodyType !== 'Other'
-    ? `${slip.vehicleType} (${slip.bodyType})` : slip.vehicleType;
+  // Vehicle with body type (hide if not specified)
+  const vehicle = slip.vehicleType
+    ? (slip.bodyType && slip.bodyType !== 'Other'
+        ? `${slip.vehicleType} (${slip.bodyType})` : slip.vehicleType)
+    : '';
+  const vehicleBlock = vehicle ? `\n\n🚚 گاڑی:\n${vehicle}` : '';
 
   // Date (d/m/yyyy format)
   const d = new Date(slip.createdAt || Date.now());
@@ -99,10 +102,7 @@ ${delivery}
 ${slip.goods}
 
 🔢 مقدار:
-${qty}
-
-🚚 گاڑی:
-${vehicle}
+${qty}${vehicleBlock}
 
 📅 تاریخ: ${dateStr}
 
@@ -182,8 +182,8 @@ export function updateOpenGraphMetaTags(slip: LoadSlip | null): void {
     setMeta('og:site_name', 'PK Cargo Link');
     setMeta('og:title', 'PK Cargo Link – پاکستان ڈیجیٹل لوڈ سلپ نیٹ ورک');
     setMeta('og:description', 'پاکستان کے تمام ٹرانسپورٹ اڈا منیجرز اور ٹرک ڈرائیورز کے لیے تصدیق شدہ ڈیجیٹل لوڈ سلپ نیٹ ورک۔');
-    setMeta('og:image', `${OFFICIAL_WEBSITE_URL}/slip-preview.jpg?v=3`);
-    setMeta('og:image:secure_url', `${OFFICIAL_WEBSITE_URL}/slip-preview.jpg?v=3`);
+    setMeta('og:image', `${OFFICIAL_WEBSITE_URL}/slip-preview.jpg`);
+    setMeta('og:image:secure_url', `${OFFICIAL_WEBSITE_URL}/slip-preview.jpg`);
     return;
   }
 
