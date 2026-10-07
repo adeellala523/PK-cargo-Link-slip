@@ -62,6 +62,21 @@ export default function App() {
   const [adminDebugErrors, setAdminDebugErrors] = useState<Array<{ timestamp: string; message: string; details?: string }>>([]);
 
   // Capture console.error, unhandled rejections, and window errors for admin diagnostic debugging
+  // Online users tracking heartbeat
+  useEffect(() => {
+    const sid = 'sess_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    const ping = () => {
+      fetch('/api/online.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: sid, page: window.location.pathname }),
+      }).catch(() => {});
+    };
+    ping();
+    const iv = setInterval(ping, 60000); // every minute
+    return () => clearInterval(iv);
+  }, []);
+
   useEffect(() => {
     const originalConsoleError = console.error;
 
