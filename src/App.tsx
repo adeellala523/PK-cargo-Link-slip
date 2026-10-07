@@ -62,9 +62,19 @@ export default function App() {
   const [adminDebugErrors, setAdminDebugErrors] = useState<Array<{ timestamp: string; message: string; details?: string }>>([]);
 
   // Capture console.error, unhandled rejections, and window errors for admin diagnostic debugging
-  // Online users tracking heartbeat
+  // Online users tracking heartbeat + daily visitor recording (admin-only stats)
   useEffect(() => {
-    const vid = 'v_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    // Stable per-browser visitor id so daily counts are unique visitors, not page loads
+    let vid = '';
+    try {
+      vid = localStorage.getItem('pkcl_visitor_id') || '';
+      if (!vid) {
+        vid = 'v_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+        localStorage.setItem('pkcl_visitor_id', vid);
+      }
+    } catch {
+      vid = 'v_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    }
     const ping = () => {
       fetch('/api/online.php', {
         method: 'POST',
@@ -74,6 +84,12 @@ export default function App() {
     };
     ping();
     const iv = setInterval(ping, 45000); // every 45s (server TTL is 60s)
+    // Record one visit per page load for the admin-only daily visitor counter
+    fetch('/api/visitors.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ visitor_id: vid }),
+    }).catch(() => {});
     return () => clearInterval(iv);
   }, []);
 
