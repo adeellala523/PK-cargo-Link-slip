@@ -34,7 +34,7 @@ export const SlipHistoryView: React.FC<SlipHistoryViewProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [timeFilter, setTimeFilter] = useState<'all' | 'today' | 'yesterday' | 'week' | 'month'>('all');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'booked'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'booked' | 'completed' | 'expired'>('all');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [animatingId, setAnimatingId] = useState<string | null>(null);
@@ -66,8 +66,12 @@ export const SlipHistoryView: React.FC<SlipHistoryViewProps> = ({
         s.destinationCity.toLowerCase().includes(searchQuery.toLowerCase()) ||
         s.goods.toLowerCase().includes(searchQuery.toLowerCase());
 
-      // 2. Status Filter
-      const matchesStatus = statusFilter === 'all' || s.status === statusFilter;
+      // 2. Status Filter (Yango-style history: جاری / مکمل / منسوخ)
+      const matchesStatus =
+        statusFilter === 'all' ? true
+        : statusFilter === 'completed' ? Boolean(s.completedAt)
+        : statusFilter === 'expired' ? s.status === 'expired'
+        : s.status === statusFilter;
 
       // 3. Time Filter
       let matchesTime = true;
@@ -167,7 +171,7 @@ export const SlipHistoryView: React.FC<SlipHistoryViewProps> = ({
           ))}
         </div>
 
-        {/* Status Filters: تمام | دستیاب | بکڈ */}
+        {/* Status Filters: تمام | دستیاب | بکڈ | مکمل | منسوخ */}
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs pt-2 border-t border-slate-100">
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-slate-400 font-bold ml-1">اسٹیٹس:</span>
@@ -175,6 +179,8 @@ export const SlipHistoryView: React.FC<SlipHistoryViewProps> = ({
               { id: 'all', label: `تمام (${slips.length})` },
               { id: 'active', label: '🟢 دستیاب' },
               { id: 'booked', label: '🔒 بکڈ' },
+              { id: 'completed', label: '✅ مکمل' },
+              { id: 'expired', label: '❌ منسوخ' },
             ].map((sf) => (
               <button
                 key={sf.id}
