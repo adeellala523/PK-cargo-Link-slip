@@ -27,12 +27,14 @@ export const SubscriptionPlansView: React.FC = () => {
   const plans: PlanDef[] = [
     {
       id: 'trial',
-      name: 'آزمائشی پلان',
+      name: 'مفت آزمائش',
       price: 'مفت',
-      period: 'پہلا مہینہ',
-      badge: '🎉 پہلا مہینہ بالکل مفت',
+      period: 'اکتوبر 2026 — لانچ آفر',
+      badge: '🎉 اس مہینہ بالکل مفت',
       icon: <Gift className="w-6 h-6 text-white" />,
       features: [
+        'اکتوبر میں تمام سہولتیں مفت',
+        'نومبر سے نئے یوزرز کے لیے 1 ہفتہ مفت',
         'لامحدود لوڈ سلپس بنائیں',
         'WhatsApp پر فوراً شیئرنگ',
         'لوڈ ↔ گاڑی آٹو میچنگ',
