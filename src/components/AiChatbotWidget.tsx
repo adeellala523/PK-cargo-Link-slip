@@ -106,6 +106,13 @@ function matchCity(text: string, city: string): boolean {
 
 export function AiChatbotWidget() {
   const [open, setOpen] = useState(false);
+
+  // Allow the bottom navigation's "AI چیٹ" tab to open the chatbot
+  useEffect(() => {
+    const openChat = () => setOpen(true);
+    window.addEventListener('pkcl:open-chatbot', openChat);
+    return () => window.removeEventListener('pkcl:open-chatbot', openChat);
+  }, []);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [flow, setFlow] = useState<FlowState>({ ...initialFlow });
