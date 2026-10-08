@@ -3,6 +3,7 @@ import { X, Send, Mic, Volume2, VolumeX, Phone, PhoneOff } from 'lucide-react';
 import { PAKISTAN_VEHICLE_VALUES, matchVehicleType } from '../utils/vehicleTypes';
 import { urduToDevanagari } from '../utils/transliterate';
 import { StorageService } from '../services/storage';
+import { getPostingBlockReason, resolveVerificationUser } from '../utils/verification';
 
 interface ChatMessage {
   id: number;
@@ -502,6 +503,16 @@ export function AiChatbotWidget() {
   };
 
   const saveTruck = async (f: FlowState) => {
+    // Verification gate: unverified drivers cannot list vehicles
+    {
+      const vUser = f.phone ? resolveVerificationUser(f.phone, 'driver') : null;
+      const blockReason = getPostingBlockReason(vUser);
+      if (blockReason) {
+        pushBot(blockReason + '\n\nویب سائٹ پر پروفائل میں جا کر "تصدیق" مکمل کریں۔ 🛡️', ['↩ مین مینو'], 800);
+        setFlow({ ...f, step: 'driver_menu' });
+        return;
+      }
+    }
     pushBot('آپ کی گاڑی لسٹ کی جا رہی ہے...', undefined, 300);
     const truck = {
       id: 'TRK' + Date.now(),
@@ -523,6 +534,16 @@ export function AiChatbotWidget() {
   };
 
   const saveSlip = async (f: FlowState) => {
+    // Verification gate: unverified addas cannot post loads
+    {
+      const vUser = f.phone ? resolveVerificationUser(f.phone, 'adda_manager') : null;
+      const blockReason = getPostingBlockReason(vUser);
+      if (blockReason) {
+        pushBot(blockReason + '\n\nویب سائٹ پر پروفائل میں جا کر "تصدیق" مکمل کریں۔ 🛡️', ['↩ مین مینو'], 800);
+        setFlow({ ...f, step: 'adda_menu' });
+        return;
+      }
+    }
     pushBot('آپ کا لوڈ بنایا جا رہا ہے...', undefined, 300);
     const slipId = makeSlipId();
     const slip = {
