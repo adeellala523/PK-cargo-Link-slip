@@ -137,6 +137,18 @@ export interface LoadSlip {
   driverAssignedPhone?: string;
   lastDriverUpdateAt?: string;
 
+  // Driver accepted this load (Yango Pro style accept flow)
+  acceptedByDriverName?: string;
+  acceptedByDriverPhone?: string;
+  acceptedAt?: string;
+
+  // InDrive-style negotiation: driver's counter offer
+  driverOffer?: string;
+
+  // Lifecycle (Yango-style history)
+  completedAt?: string;
+  cancelledAt?: string;
+
   // Multi-Load Support (Allow 2 or more loads per slip)
   additionalLoads?: SingleLoadItem[];
   includeContactsInWhatsApp?: boolean; // Default false (Preview only rule)
@@ -224,6 +236,16 @@ export interface DriverRating {
   rating: number; // 1 to 5
   feedback?: string;
   slipId?: string;
+  createdAt: string;
+}
+
+/** Saved pickup/delivery point (Yango-style saved places) */
+export interface SavedLocation {
+  id: string;
+  label: string;   // e.g. "میرا اڈا", "گودام"
+  city: string;
+  location: string;
+  kind: 'pickup' | 'delivery' | 'both';
   createdAt: string;
 }
 
