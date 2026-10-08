@@ -196,6 +196,23 @@ export interface UserAccount {
   paymentSubmittedAt?: string;
   isApprovedByAdmin: boolean;
   createdAt: string;
+
+  // Verification (KYC) — mandatory for posting loads / listing vehicles
+  verificationStatus?: 'unverified' | 'pending' | 'verified' | 'rejected';
+  verificationDocs?: {
+    // Driver docs
+    driverLicenseUrl?: string;   // ڈرائیونگ لائسنس کی تصویر
+    numberPlateUrl?: string;     // گاڑی کی نمبر پلیٹ کی تصویر
+    cnicUrl?: string;            // شناختی کارڈ (فرنٹ) کی تصویر
+    // Adda manager docs
+    addaPhotoUrl?: string;       // اڈے کی تصویر
+    addaLocationLat?: number;    // اڈے کی لوکیشن (نقشہ)
+    addaLocationLng?: number;
+    addaLocationLabel?: string;  // لوکیشن کا نام/پتہ
+  };
+  verificationRejectedReason?: string;
+  verificationSubmittedAt?: string;
+  verificationReviewedAt?: string;
 }
 
 export interface DriverRating {
