@@ -53,9 +53,19 @@ import { ArrowRight, ArrowLeft } from 'lucide-react';
 
 function AppInner() {
   // ── Yango-style split: driver subdomain gets the driver-only app ──
-  // Same codebase + same backend; detection is hostname-based.
+  // Same codebase + same backend; detection is hostname-based OR role-based.
+  // Role-based check fixes the case where a driver registers on the main site
+  // (via the onboarding role selector) — they get the DriverApp, not the old site.
   if (isDriverSubdomain()) {
     return <DriverApp />;
+  }
+  try {
+    const cu = StorageService.getCurrentUser();
+    if (cu && cu.role === 'driver') {
+      return <DriverApp />;
+    }
+  } catch {
+    /* fall through to main site */
   }
 
   const [currentTab, setCurrentTab] = useState<string>('home');

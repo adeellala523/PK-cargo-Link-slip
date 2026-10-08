@@ -4,6 +4,7 @@ import { WelcomeScreen } from './WelcomeScreen';
 import { PhoneScreen } from './PhoneScreen';
 import { PasswordScreen } from './PasswordScreen';
 import { NameScreen } from './NameScreen';
+import { RoleSelectScreen, UserRole } from './RoleSelectScreen';
 import { LocationScreen, GeoPoint } from './LocationScreen';
 import { VehicleStep } from './VehicleStep';
 import { OnboardingButton } from './OnboardingUI';
@@ -19,6 +20,7 @@ type Step =
   | 'phone'
   | 'password'
   | 'name'
+  | 'role' // NEW: user picks driver vs adda_manager (fixes hardcoded subdomain role)
   | 'vehicle' // driver only: pick their truck ONCE
   | 'location'
   | 'verification';
@@ -67,19 +69,25 @@ async function reverseGeocodeCity(lat: number, lng: number): Promise<string | nu
 
 /**
  * OnboardingFlow — Yango-style onboarding for PK Cargo Link, adapted with sense:
- *   Splash → Welcome → Phone → Password → Name → Location → Verification docs → Main app
+ *   Splash → Welcome → Phone → Password → Name → Role → Vehicle (driver) →
+ *   Location → Verification docs → Main app
  *
  * - NO OTP: login is phone + password (no SMS infrastructure exists).
  * - NO selfie step: routes into the EXISTING VerificationView with role-based docs
  *   (driver: license + number plate + CNIC | adda manager: CNIC + map location + adda photo).
- * - Role is derived from the subdomain (driver.* → driver, else adda_manager).
- * - Existing logged-in users skip onboarding entirely (handled by OnboardingGate).
+ * - Role is CHOSEN by the user (driver vs adda_manager), defaulting to the subdomain.
+ *   Existing users skip role selection — their role comes from their account.
+ * - After onboarding, drivers see the DriverApp, adda managers see the main site.
  */
 export function OnboardingFlow({ onDone }: { onDone: () => void }) {
   const [step, setStep] = useState<Step>('splash');
   const [phone10, setPhone10] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  // Role: user-chosen (fixes the old hardcoded subdomain role). Defaults from subdomain.
+  const [role, setRole] = useState<UserRole>(() =>
+    isDriverSubdomain() ? 'driver' : 'adda_manager'
+  );
   const [vehicleType, setVehicleType] = useState('');
   const [geo, setGeo] = useState<GeoPoint>({ lat: null, lng: null });
   const [existingUser, setExistingUser] = useState<UserAccount | null>(null);
@@ -87,16 +95,16 @@ export function OnboardingFlow({ onDone }: { onDone: () => void }) {
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
-  const role: 'driver' | 'adda_manager' = isDriverSubdomain() ? 'driver' : 'adda_manager';
+  const handleNameNext = useCallback((n: string) => {
+    setName(n);
+    // New users pick their role next; drivers then pick their vehicle ONCE.
+    setStep('role');
+  }, []);
 
-  const handleNameNext = useCallback(
-    (n: string) => {
-      setName(n);
-      // Drivers pick their vehicle ONCE at registration; adda managers skip.
-      setStep(role === 'driver' ? 'vehicle' : 'location');
-    },
-    [role]
-  );
+  const handleRoleNext = useCallback((r: UserRole) => {
+    setRole(r);
+    setStep(r === 'driver' ? 'vehicle' : 'location');
+  }, []);
 
   const handleVehicleNext = useCallback((v: string) => {
     setVehicleType(v);
@@ -118,10 +126,14 @@ export function OnboardingFlow({ onDone }: { onDone: () => void }) {
   const handlePasswordSubmit = useCallback(
     async (pw: string): Promise<string | null> => {
       if (existingUser) {
-        // Login path — verify password against the stored account
+        // Login path — verify password against the stored account.
+        // Use the account's role (skip role selection for existing users).
         try {
           const res = await StorageService.loginUser(existingUser.phone, pw);
           if (!res.success) return res.message;
+          if (res.user?.role === 'driver' || res.user?.role === 'adda_manager') {
+            setRole(res.user.role);
+          }
           finishOnboarding();
           return null;
         } catch {
@@ -194,7 +206,7 @@ export function OnboardingFlow({ onDone }: { onDone: () => void }) {
         setCreating(false);
       }
     },
-    [phone10, password, name, role]
+    [phone10, password, name, role, vehicleType]
   );
 
   const handleVerificationSave = useCallback(
@@ -277,19 +289,27 @@ export function OnboardingFlow({ onDone }: { onDone: () => void }) {
           onBack={() => setStep('password')}
         />
       );
+    case 'role':
+      return (
+        <RoleSelectScreen
+          initialRole={role}
+          onNext={handleRoleNext}
+          onBack={() => setStep('name')}
+        />
+      );
     case 'vehicle':
       return (
         <VehicleStep
           initialVehicle={vehicleType}
           onNext={handleVehicleNext}
-          onBack={() => setStep('name')}
+          onBack={() => setStep('role')}
         />
       );
     case 'location':
       return (
         <LocationScreen
           onNext={handleLocationNext}
-          onBack={() => setStep(role === 'driver' ? 'vehicle' : 'name')}
+          onBack={() => setStep(role === 'driver' ? 'vehicle' : 'role')}
         />
       );
     case 'verification':
