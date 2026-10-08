@@ -32,8 +32,15 @@ import { notifyForNewSlip } from './utils/matchNotify';
 import { VoiceLoadCreatorModal } from './components/VoiceLoadCreatorModal';
 import { PaymentSettings } from './components/PaymentSettings';
 import { SubscriptionPlansView } from './components/SubscriptionPlansView';
+import { VerificationView } from './components/VerificationView';
+import { VerificationBadge } from './components/VerificationBadge';
+import { VerificationNudgeBanner } from './components/VerificationNudgeBanner';
+import {
+  getVerificationStatus, isVerified, getPostingBlockReason,
+  resolveVerificationUser, saveVerificationUser,
+} from './utils/verification';
 import { StorageService } from './services/storage';
-import { LoadSlip, AddaProfile, WhatsAppGroup } from './types';
+import { LoadSlip, AddaProfile, WhatsAppGroup, UserAccount } from './types';
 import { updateOpenGraphMetaTags } from './utils/formatters';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
 
@@ -207,6 +214,8 @@ export default function App() {
         return '/privacy';
       case 'plans':
         return '/plans';
+      case 'verification':
+        return '/verification';
       case 'slip-detail':
         return slipId ? `/slip/${slipId}` : '/';
       default:
@@ -317,6 +326,8 @@ export default function App() {
         setCurrentTab('privacy');
       } else if (path === '/plans' || queryTab === 'plans') {
         setCurrentTab('plans');
+      } else if (path === '/verification' || queryTab === 'verification') {
+        setCurrentTab('verification');
       } else {
         setCurrentTab('home');
       }
@@ -418,6 +429,10 @@ export default function App() {
       navigateTo('login');
       return;
     }
+    // Verification gate: unverified addas cannot post loads
+    if (!checkPostingAllowed()) {
+      return;
+    }
     if (prefill) {
       setPrefillSlip(prefill);
     } else {
@@ -484,6 +499,56 @@ export default function App() {
     StorageService.setLoggedIn(true, updated.primaryPhone);
     navigateTo('dashboard');
   };
+
+  // ---- Verification (KYC) ----
+  // Bump to refresh verification-dependent UI after a save
+  const [verificationTick, setVerificationTick] = useState(0);
+
+  /** Resolve the UserAccount backing the current session for verification */
+  const resolveCurrentVerificationUser = (): UserAccount | null => {
+    if (isLoggedIn && profile?.primaryPhone) {
+      return resolveVerificationUser(profile.primaryPhone, 'adda_manager', {
+        addaName: profile.addaName,
+        managerName: profile.managerName,
+        city: profile.city,
+        address: profile.address,
+        whatsappNumber: profile.whatsappNumber,
+      });
+    }
+    const d = StorageService.getCurrentDriver();
+    if (d?.phone) {
+      return resolveVerificationUser(d.phone, 'driver', {
+        managerName: d.driverName,
+        city: d.currentCity,
+        whatsappNumber: d.whatsappNumber || d.phone,
+      });
+    }
+    return null;
+  };
+
+  const handleSaveVerification = async (updated: UserAccount) => {
+    await saveVerificationUser(updated);
+    setVerificationTick((t) => t + 1);
+  };
+
+  /** Gate: block posting when the logged-in user is not verified */
+  const checkPostingAllowed = (): boolean => {
+    const vu = resolveCurrentVerificationUser();
+    const reason = getPostingBlockReason(vu);
+    if (reason) {
+      setLoginNoticeMessage(reason);
+      navigateTo('verification');
+      return false;
+    }
+    return true;
+  };
+
+  // Memoized verification user for banners/badges (refreshes on verificationTick)
+  const verificationUser = useMemo(
+    () => resolveCurrentVerificationUser(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isLoggedIn, profile, verificationTick]
+  );
 
   const handleLoginSuccess = (phone: string, role?: 'adda_manager' | 'driver') => {
     if (role === 'driver') {
@@ -682,7 +747,14 @@ export default function App() {
 
         {/* 4. Adda Manager Dashboard */}
         {currentTab === 'dashboard' && (
-          <AddaDashboardView
+          <>
+            <div className="px-4 pt-3">
+              <VerificationNudgeBanner
+                user={verificationUser}
+                onNavigateToVerification={() => navigateTo('verification')}
+              />
+            </div>
+            <AddaDashboardView
             profile={profile}
             slips={myAddaSlips}
             onOpenCreateSlip={() => handleOpenCreateModal()}
@@ -696,6 +768,7 @@ export default function App() {
             onOpenNotifications={() => setIsNotificationCenterOpen(true)}
             onOpenVoiceModal={() => setIsVoiceLoadModalOpen(true)}
           />
+          </>
         )}
 
         {/* 5. My Slips / History */}
@@ -718,6 +791,8 @@ export default function App() {
             onSaveProfile={handleSaveProfile}
             onContinueToDashboard={() => navigateTo('dashboard')}
             isInitialRegistration={false}
+            onNavigateToVerification={() => navigateTo('verification')}
+            verificationStatus={getVerificationStatus(verificationUser)}
           />
         )}
 
@@ -765,7 +840,14 @@ export default function App() {
 
         {/* Dedicated Driver Portal / Dashboard */}
         {currentTab === 'driver' && (
-          <DriverPortalView
+          <>
+            <div className="px-4 pt-3">
+              <VerificationNudgeBanner
+                user={verificationUser}
+                onNavigateToVerification={() => navigateTo('verification')}
+              />
+            </div>
+            <DriverPortalView
             slips={slips}
             onViewSlip={viewSlipDetail}
             onNavigateToSearch={() => navigateTo('search')}
@@ -776,6 +858,7 @@ export default function App() {
             onNavigateToAddaLogin={() => handleOpenAddaLogin('login')}
             onLogoutDriver={handleLogout}
           />
+          </>
         )}
 
         {/* Available Trucks Network View */}
@@ -785,6 +868,7 @@ export default function App() {
             onViewSlip={viewSlipDetail}
             onNavigateToDriverPortal={() => handleOpenDriverLogin('login')}
             onNavigateToAddaLogin={() => handleOpenAddaLogin('login')}
+            onNavigateToVerification={() => navigateTo('verification')}
           />
         )}
 
@@ -806,6 +890,8 @@ export default function App() {
             onSaveProfile={handleSaveProfile}
             onContinueToDashboard={() => navigateTo('dashboard')}
             isInitialRegistration={true}
+            onNavigateToVerification={() => navigateTo('verification')}
+            verificationStatus={getVerificationStatus(verificationUser)}
           />
         )}
 
@@ -840,6 +926,35 @@ export default function App() {
         {/* 15. Subscription Plans (free trial -> weekly/monthly) */}
         {currentTab === 'plans' && (
           <SubscriptionPlansView />
+        )}
+
+        {/* 16. Verification (KYC) — mandatory for posting */}
+        {currentTab === 'verification' && (
+          (() => {
+            const vu = resolveCurrentVerificationUser();
+            if (!vu) {
+              return (
+                <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center px-6 text-center" dir="rtl">
+                  <p className="text-slate-700 font-bold text-lg">تصدیق کے لیے پہلے لاگ ان کریں</p>
+                  <p className="text-sm text-slate-500 mt-2">ڈرائیور یا اڈا مینیجر اکاؤنٹ سے لاگ ان کریں</p>
+                  <button
+                    onClick={() => navigateTo('login')}
+                    className="mt-4 bg-[#0B2A5B] text-white font-bold rounded-xl px-6 py-3"
+                  >
+                    لاگ ان کریں
+                  </button>
+                </div>
+              );
+            }
+            return (
+              <VerificationView
+                key={`${vu.id}-${verificationTick}`}
+                user={vu}
+                onSave={handleSaveVerification}
+                onBack={() => navigateTo(vu.role === 'driver' ? 'driver' : 'dashboard')}
+              />
+            );
+          })()
         )}
 
         {/* Configurable Ad Slot (Initially Disabled) */}
