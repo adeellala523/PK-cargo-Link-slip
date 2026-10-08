@@ -35,6 +35,9 @@ import { SubscriptionPlansView } from './components/SubscriptionPlansView';
 import { VerificationView } from './components/VerificationView';
 import { VerificationBadge } from './components/VerificationBadge';
 import { VerificationNudgeBanner } from './components/VerificationNudgeBanner';
+// Yango-style two-app split: driver.pkcargolink.com renders the driver-only app
+import { DriverApp } from './components/DriverApp';
+import { isDriverSubdomain } from './utils/subdomain';
 import {
   getVerificationStatus, isVerified, getPostingBlockReason,
   resolveVerificationUser, saveVerificationUser,
@@ -42,9 +45,16 @@ import {
 import { StorageService } from './services/storage';
 import { LoadSlip, AddaProfile, WhatsAppGroup, UserAccount } from './types';
 import { updateOpenGraphMetaTags } from './utils/formatters';
+import { NotificationService } from './services/notificationService';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
 
 export default function App() {
+  // ── Yango-style split: driver subdomain gets the driver-only app ──
+  // Same codebase + same backend; detection is hostname-based.
+  if (isDriverSubdomain()) {
+    return <DriverApp />;
+  }
+
   const [currentTab, setCurrentTab] = useState<string>('home');
   const [profile, setProfile] = useState<AddaProfile>(StorageService.getAddaProfile());
   const [slips, setSlips] = useState<LoadSlip[]>(StorageService.getAllSlips());
@@ -356,10 +366,30 @@ export default function App() {
     window.addEventListener('pkcl-session-changed', refreshSession);
 
     // Periodic auto-sync every 8 seconds so newly posted loads appear live without refreshing
+    // Also detects "driver accepted my load" for push-style in-app notifications (Yango-style)
+    const prevSlipsRef: { current: Map<string, string> } = { current: new Map() };
     const syncInterval = setInterval(() => {
       StorageService.syncWithServer()
         .then((synced) => {
           if (Array.isArray(synced) && synced.length > 0) {
+            try {
+              synced.forEach((s: LoadSlip) => {
+                const prev = prevSlipsRef.current.get(s.id);
+                const nowAcc = s.acceptedByDriverPhone || '';
+                if (prev !== undefined && prev !== nowAcc && nowAcc) {
+                  NotificationService.addNotification({
+                    title: '🚛 ڈرائیور نے آپ کا لوڈ قبول کر لیا!',
+                    message: `${s.acceptedByDriverName || 'ڈرائیور'} (${nowAcc}) نے لوڈ (${s.loadingCity} تا ${s.destinationCity}) قبول کیا۔`,
+                    type: 'slip_booked',
+                    slipId: s.id,
+                    route: `${s.loadingCity} تا ${s.destinationCity}`,
+                    driverPhone: nowAcc,
+                    driverName: s.acceptedByDriverName,
+                  });
+                }
+                prevSlipsRef.current.set(s.id, nowAcc);
+              });
+            } catch { /* notifications optional */ }
             setSlips(synced);
           }
         })
