@@ -129,6 +129,14 @@ export const Navbar: React.FC<NavbarProps> = ({
               ڈرائیور پورٹل
             </button>
             <button
+              onClick={() => setCurrentTab('plans')}
+              className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${
+                currentTab === 'plans' ? 'bg-[#F5A301] text-[#0B2A5B]' : 'text-amber-300 hover:bg-white/10'
+              }`}
+            >
+              💳 پلانز
+            </button>
+            <button
               onClick={() => setCurrentTab('about')}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 currentTab === 'about' ? 'bg-[#08284F] text-white' : 'text-slate-200 hover:bg-white/10'
@@ -276,6 +284,17 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>🚛 ڈرائیور پورٹل</span>
               <span className="bg-emerald-500/30 text-emerald-200 text-xs px-2 py-0.5 rounded-full font-nafees">
                 ڈرائیور
+              </span>
+            </button>
+            <button
+              onClick={() => { setCurrentTab('plans'); setMenuOpen(false); }}
+              className={`w-full text-right px-3 py-2.5 rounded-xl text-base font-bold min-h-[44px] flex items-center justify-between ${
+                currentTab === 'plans' ? 'bg-[#F5A301] text-[#0B2A5B]' : 'text-amber-300 hover:bg-white/5'
+              }`}
+            >
+              <span>💳 سبسکرپشن پلانز</span>
+              <span className="bg-[#19A974]/30 text-emerald-200 text-xs px-2 py-0.5 rounded-full font-nafees">
+                پہلا مہینہ مفت
               </span>
             </button>
             <button
