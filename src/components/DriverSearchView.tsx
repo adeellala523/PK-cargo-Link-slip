@@ -15,6 +15,7 @@ import {
   X
 } from 'lucide-react';
 import { LoadSlip } from '../types';
+import { LoadRequestCard } from './LoadRequestCard';
 import { sanitizePhoneForCall, getWhatsAppShareUrl, OFFICIAL_WEBSITE_URL } from '../utils/formatters';
 
 interface DriverSearchViewProps {
@@ -42,11 +43,18 @@ export const DriverSearchView: React.FC<DriverSearchViewProps> = ({
   // Free text search states (ZERO DROPDOWNS)
   const [loadingCity, setLoadingCity] = useState(initialLoadingCity);
   const [destinationCity, setDestinationCity] = useState(initialDestinationCity);
-  const [vehicleType, setVehicleType] = useState('');
+  const [vehicleType, setVehicleType] = useState(() => {
+    try { return sessionStorage.getItem('pkcl_home_vehicle') || ''; } catch { return ''; }
+  });
   const [selectedCityChip, setSelectedCityChip] = useState('تمام پاکستان');
   const [selectedVehicleChip, setSelectedVehicleChip] = useState('تمام گاڑیاں');
   const [goodsKeyword, setGoodsKeyword] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Consume the one-time vehicle prefill coming from the home search card
+  React.useEffect(() => {
+    try { sessionStorage.removeItem('pkcl_home_vehicle'); } catch { /* ignore */ }
+  }, []);
 
   const activeSlips = slips.filter((s) => s.status === 'active');
 
@@ -241,77 +249,7 @@ export const DriverSearchView: React.FC<DriverSearchViewProps> = ({
           </div>
         ) : (
           filteredSlips.map((slip) => (
-            <div
-              key={slip.id}
-              className="bg-white rounded-3xl p-4 sm:p-5 shadow-sm border border-slate-200 hover:border-emerald-400 transition space-y-3"
-            >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
-                    📍 {slip.loadingCity}
-                  </span>
-                  <span className="text-slate-400 font-bold">➔</span>
-                  <span className="text-xs font-bold text-[#123A6D] bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200">
-                    🏁 {slip.destinationCity}
-                  </span>
-                </div>
-                <span className="text-[11px] font-mono text-slate-400">{slip.id}</span>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                  <span className="text-slate-400 block text-[10px]">مال:</span>
-                  <strong className="text-slate-900 truncate block">{slip.goods}</strong>
-                </div>
-                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                  <span className="text-slate-400 block text-[10px]">گاڑی:</span>
-                  <strong className="text-slate-900 truncate block">{slip.vehicleType}</strong>
-                </div>
-                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                  <span className="text-slate-400 block text-[10px]">مقدار:</span>
-                  <strong className="text-slate-900 truncate block">{slip.quantity || slip.weight || 'حسبِ ضرورت'}</strong>
-                </div>
-                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                  <span className="text-slate-400 block text-[10px]">اڈا:</span>
-                  <strong className="text-slate-900 truncate block">{slip.addaName}</strong>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100">
-                <div className="flex items-center gap-2">
-                  <a
-                    href={`tel:${sanitizePhoneForCall(slip.primaryPhone)}`}
-                    className="inline-flex items-center gap-1.5 bg-[#123A6D] text-white px-3.5 py-2 rounded-xl text-xs font-bold"
-                  >
-                    <Phone className="w-3.5 h-3.5 text-emerald-300" />
-                    <span>کال ({slip.primaryPhone})</span>
-                  </a>
-
-                  <a
-                    href={getWhatsAppShareUrl(
-                      `السلام علیکم! میں نے PK Cargo Link پر آپ کی لوڈ سلپ (${slip.id}) دیکھی ہے۔ روٹ: ${slip.loadingCity} تا ${slip.destinationCity}۔ کیا یہ لوڈ دستیاب ہے؟`,
-                      slip.whatsappNumber || slip.primaryPhone
-                    )}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 bg-[#25D366] text-white px-3.5 py-2 rounded-xl text-xs font-bold"
-                  >
-                    <MessageSquare className="w-3.5 h-3.5" />
-                    <span>WhatsApp</span>
-                  </a>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => onViewSlip(slip)}
-                  className="inline-flex items-center gap-1 text-xs text-[#123A6D] hover:underline font-bold px-2 py-1"
-                >
-                  <Eye className="w-3.5 h-3.5" />
-                  <span>سلپ تفصیل</span>
-                </button>
-              </div>
-
-            </div>
+            <LoadRequestCard key={slip.id} slip={slip} onViewSlip={onViewSlip} />
           ))
         )}
       </div>
