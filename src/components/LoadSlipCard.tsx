@@ -43,6 +43,8 @@ import {
   OFFICIAL_WEBSITE_URL 
 } from '../utils/formatters';
 import { StorageService } from '../services/storage';
+import { VerificationBadge } from './VerificationBadge';
+import { getVerificationStatus } from '../utils/verification';
 import { NotificationService } from '../services/notificationService';
 import { SlipMatchesSection } from './MatchSections';
 
@@ -1267,7 +1269,17 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
             </div>
 
             <div className="space-y-1">
-              <p className="font-extrabold text-[#08284F] text-base">{currentSlip.addaName}</p>
+              <p className="font-extrabold text-[#08284F] text-base flex items-center gap-2 flex-wrap">
+                {currentSlip.addaName}
+                {(() => {
+                  const cp = (currentSlip.primaryPhone || '').replace(/[^0-9]/g, '');
+                  const u = cp ? StorageService.getUsers().find(
+                    (x) => (x.phone || '').replace(/[^0-9]/g, '') === cp ||
+                           (x.whatsappNumber || '').replace(/[^0-9]/g, '') === cp
+                  ) : undefined;
+                  return <VerificationBadge status={getVerificationStatus(u)} />;
+                })()}
+              </p>
               <p className="text-xs text-slate-500 font-mono">ID: {currentSlip.id}</p>
               <p className="text-xs text-emerald-700 font-bold pt-1">
                 کسی بھی موبائل کیمرے یا واٹس ایپ سے اسکین کریں
