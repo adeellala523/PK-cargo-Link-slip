@@ -6,6 +6,7 @@ import { VerificationBadge } from './VerificationBadge';
 import { DriverLocationShare } from './DriverLocationShare';
 import type { VerificationStatus } from '../utils/verification';
 import { sanitizePhoneForCall, getWhatsAppShareUrl } from '../utils/formatters';
+import { haversineKm, vehicleTypesMatch, DRIVER_NEARBY_KM } from '../utils/geo';
 
 interface DriverHomeViewProps {
   slips: LoadSlip[];
@@ -62,22 +63,60 @@ export const DriverHomeView: React.FC<DriverHomeViewProps> = ({
 }) => {
   const [cityFilter, setCityFilter] = useState<string>('سب');
 
+  // Driver's live GPS location — required for the 7km proximity rule (Adeel).
+  const [geo, setGeo] = useState<{ lat: number; lng: number } | null>(null);
+  const [geoStatus, setGeoStatus] = useState<'idle' | 'requesting' | 'denied' | 'granted'>('idle');
+
+  const requestGeo = () => {
+    if (!navigator.geolocation) {
+      setGeoStatus('denied');
+      return;
+    }
+    setGeoStatus('requesting');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setGeo({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setGeoStatus('granted');
+      },
+      () => setGeoStatus('denied'),
+      { enableHighAccuracy: true, timeout: 15000 }
+    );
+  };
+
   const activeSlips = useMemo(() => slips.filter((s) => s.status === 'active'), [slips]);
   const acceptedSet = useMemo(() => new Set(acceptedIds), [acceptedIds]);
   const declinedSet = useMemo(() => new Set(declinedIds), [declinedIds]);
 
-  // Rank: driver's own city/vehicle first
-  const ranked = useMemo(() => {
-    const vType = (driver?.vehicleType || '').toLowerCase().trim();
-    const city = (driver?.currentCity || '').trim();
-    const score = (s: LoadSlip): number => {
-      let n = 0;
-      if (vType && (s.vehicleType || '').toLowerCase().includes(vType)) n += 3;
-      if (city && (s.loadingCity.includes(city) || s.destinationCity.includes(city))) n += 2;
-      return n;
-    };
-    return [...activeSlips].sort((a, b) => score(b) - score(a));
-  }, [activeSlips, driver]);
+  /**
+   * Nearby loads — Yango-style proximity + vehicle matching (Adeel's rules):
+   * 1. Vehicle type MUST match the driver's registered truck
+   *    (empty on either side = open to all).
+   * 2. Pickup must be within 7 km of the driver's GPS location.
+   *    Slips without coordinates sort last (no badge).
+   * 3. Sorted nearest-first.
+   */
+  const nearby = useMemo(() => {
+    const driverVehicle = driver?.vehicleType || '';
+    const matched = activeSlips.filter((s) =>
+      vehicleTypesMatch(s.vehicleType, driverVehicle)
+    );
+    const withDist = matched.map((s) => {
+      let distKm: number | null = null;
+      if (
+        geo &&
+        typeof s.pickupLat === 'number' &&
+        typeof s.pickupLng === 'number'
+      ) {
+        distKm = haversineKm(geo.lat, geo.lng, s.pickupLat, s.pickupLng);
+      }
+      return { slip: s, distKm };
+    });
+    const inRange = withDist.filter(
+      (x) => x.distKm === null || x.distKm <= DRIVER_NEARBY_KM
+    );
+    inRange.sort((a, b) => (a.distKm ?? 1e9) - (b.distKm ?? 1e9));
+    return inRange;
+  }, [activeSlips, driver, geo]);
 
   const cities = useMemo(() => {
     const set = new Set<string>();
@@ -86,16 +125,21 @@ export const DriverHomeView: React.FC<DriverHomeViewProps> = ({
   }, [activeSlips]);
 
   const visible = useMemo(() => {
-    const base = cityFilter === 'سب' ? ranked : ranked.filter((s) => s.loadingCity === cityFilter);
-    return base.filter((s) => !declinedSet.has(s.id));
-  }, [ranked, cityFilter, declinedSet]);
+    const base =
+      cityFilter === 'سب'
+        ? nearby
+        : nearby.filter((x) => x.slip.loadingCity === cityFilter);
+    return base.filter((x) => !declinedSet.has(x.slip.id));
+  }, [nearby, cityFilter, declinedSet]);
 
-  // Incoming request: newest active, not accepted/declined (Yango-style)
+  // Incoming request: nearest nearby load, not accepted/declined (Yango-style)
   const incoming = useMemo(() => {
     if (!driver || !online) return null;
-    const cand = ranked.find((s) => !acceptedSet.has(s.id) && !declinedSet.has(s.id));
-    return cand || null;
-  }, [ranked, acceptedSet, declinedSet, driver, online]);
+    const cand = nearby.find(
+      (x) => !acceptedSet.has(x.slip.id) && !declinedSet.has(x.slip.id)
+    );
+    return cand ? cand.slip : null;
+  }, [nearby, acceptedSet, declinedSet, driver, online]);
 
   // Driver's currently active accepted load
   const activeLoad = useMemo(() => {
@@ -104,6 +148,8 @@ export const DriverHomeView: React.FC<DriverHomeViewProps> = ({
   }, [activeSlips, acceptedSet, driver]);
 
   if (!driver) {
+    // Access rule (Adeel): the loads list is visible ONLY to logged-in drivers.
+    // Public visitors see the welcome + login prompt instead — NO loads list.
     return (
       <div className="font-nafees space-y-4" dir="rtl">
         <div className="bg-gradient-to-br from-[#0B2A5B] to-[#123A6D] rounded-3xl p-6 text-white text-center shadow-lg">
@@ -121,17 +167,6 @@ export const DriverHomeView: React.FC<DriverHomeViewProps> = ({
             لاگ ان / رجسٹر کریں
           </button>
         </div>
-        <LoadList
-          slips={visible.slice(0, 6)}
-          cities={cities}
-          cityFilter={cityFilter}
-          onCityFilter={setCityFilter}
-          onViewSlip={onViewSlip}
-          acceptedSet={acceptedSet}
-          onAcceptLoad={onAcceptLoad}
-          onDeclineLoad={onDeclineLoad}
-          locked
-        />
       </div>
     );
   }
@@ -180,6 +215,32 @@ export const DriverHomeView: React.FC<DriverHomeViewProps> = ({
       )}
 
       {online ? (
+        geoStatus !== 'granted' ? (
+          /* Location gate (Adeel): nearby loads need the driver's GPS location. */
+          <div className="bg-amber-50 border-2 border-dashed border-amber-300 rounded-3xl p-6 text-center space-y-3">
+            <MapPin className="w-10 h-10 text-amber-500 mx-auto" />
+            <p className="font-extrabold text-[#0B2A5B]">
+              قریبی لوڈز دیکھنے کے لیے لوکیشن آن کریں
+            </p>
+            <p className="text-xs text-slate-500 font-bold leading-5">
+              آپ کو صرف 7 کلومیٹر کے اندر کے لوڈز نظر آئیں گے — آپ کی گاڑی کی قسم کے مطابق
+            </p>
+            {geoStatus === 'denied' ? (
+              <p className="text-xs text-red-500 font-bold leading-5">
+                لوکیشن کی اجازت بند ہے — براؤزر کی سیٹنگ سے Location آن کریں پھر دوبارہ کوشش کریں
+              </p>
+            ) : null}
+            <button
+              type="button"
+              onClick={requestGeo}
+              disabled={geoStatus === 'requesting'}
+              className="w-full py-3.5 rounded-2xl font-extrabold text-[#0B2A5B] min-h-[52px] active:scale-[0.98] transition disabled:opacity-60"
+              style={{ background: 'linear-gradient(135deg, #FFC531 0%, #F5A301 60%, #E8930C 100%)' }}
+            >
+              {geoStatus === 'requesting' ? 'لوکیشن لی جا رہی ہے…' : '📍 لوکیشن آن کریں'}
+            </button>
+          </div>
+        ) : (
         <>
           {incoming && !activeLoad && (
             <IncomingRequestBanner
@@ -190,19 +251,22 @@ export const DriverHomeView: React.FC<DriverHomeViewProps> = ({
               onView={() => onViewSlip(incoming)}
             />
           )}
-          <LoadList
-            slips={visible}
-            cities={cities}
-            cityFilter={cityFilter}
-            onCityFilter={setCityFilter}
-            onViewSlip={onViewSlip}
-            acceptedSet={acceptedSet}
-            onAcceptLoad={onAcceptLoad}
-            onDeclineLoad={onDeclineLoad}
-            locked={false}
-            canAccept={verificationStatus === 'verified'}
-          />
-        </>
+          {/* Location gate (Adeel): nearby loads need the driver's GPS location.
+              Without it, loads can't be shown — prompt to enable. */}
+            <LoadList
+              items={visible}
+              cities={cities}
+              cityFilter={cityFilter}
+              onCityFilter={setCityFilter}
+              onViewSlip={onViewSlip}
+              acceptedSet={acceptedSet}
+              onAcceptLoad={onAcceptLoad}
+              onDeclineLoad={onDeclineLoad}
+              locked={false}
+              canAccept={verificationStatus === 'verified'}
+            />
+          </>
+        )
       ) : (
         <div className="bg-white rounded-3xl border border-slate-100 p-8 text-center">
           <Power className="w-10 h-10 text-slate-300 mx-auto mb-3" />
@@ -378,7 +442,7 @@ const ActiveLoadPanel: React.FC<{
 /* ---------- Load list ---------- */
 
 interface LoadListProps {
-  slips: LoadSlip[];
+  items: { slip: LoadSlip; distKm: number | null }[];
   cities: string[];
   cityFilter: string;
   onCityFilter: (c: string) => void;
@@ -391,11 +455,11 @@ interface LoadListProps {
 }
 
 const LoadList: React.FC<LoadListProps> = ({
-  slips, cities, cityFilter, onCityFilter, onViewSlip, acceptedSet, onAcceptLoad, onDeclineLoad, locked, canAccept = true,
+  items, cities, cityFilter, onCityFilter, onViewSlip, acceptedSet, onAcceptLoad, onDeclineLoad, locked, canAccept = true,
 }) => (
   <section className="space-y-3">
     <div className="flex items-center justify-between px-1">
-      <h2 className="text-base font-extrabold text-[#0B2A5B]">دستیاب لوڈز ({slips.length})</h2>
+      <h2 className="text-base font-extrabold text-[#0B2A5B]">دستیاب لوڈز ({items.length})</h2>
     </div>
 
     <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1">
@@ -415,20 +479,22 @@ const LoadList: React.FC<LoadListProps> = ({
       ))}
     </div>
 
-    {slips.length === 0 ? (
+    {items.length === 0 ? (
       <div className="bg-white rounded-3xl border border-dashed border-slate-200 p-8 text-center">
         <Truck className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-        <p className="text-sm font-bold text-slate-500">ابھی کوئی لوڈ دستیاب نہیں</p>
+        <p className="text-sm font-bold text-slate-500">آپ کے قریب ابھی کوئی لوڈ دستیاب نہیں</p>
+        <p className="text-xs text-slate-400 font-bold mt-1">7 کلومیٹر کے اندر نئے لوڈز یہاں نظر آئیں گے</p>
       </div>
     ) : (
       <div className="space-y-3">
-        {slips.map((slip) => (
+        {items.map(({ slip, distKm }) => (
           <DriverLoadCard
             key={slip.id}
             slip={slip}
             accepted={acceptedSet.has(slip.id)}
             locked={locked}
             canAccept={canAccept}
+            distanceKm={distKm}
             onAccept={(offer) => onAcceptLoad(slip, offer)}
             onDecline={() => onDeclineLoad(slip)}
             onView={() => onViewSlip(slip)}
@@ -446,10 +512,11 @@ const DriverLoadCard: React.FC<{
   accepted: boolean;
   locked: boolean;
   canAccept: boolean;
+  distanceKm?: number | null;
   onAccept: (offer?: string) => void;
   onDecline: () => void;
   onView: () => void;
-}> = ({ slip, accepted, locked, canAccept, onAccept, onDecline, onView }) => {
+}> = ({ slip, accepted, locked, canAccept, distanceKm = null, onAccept, onDecline, onView }) => {
   const [offer, setOffer] = useState('');
   const [showOffer, setShowOffer] = useState(false);
   const ago = timeAgo(slip.createdAt);
@@ -465,7 +532,14 @@ const DriverLoadCard: React.FC<{
           <span className={`w-1.5 h-1.5 rounded-full ${accepted ? 'bg-blue-500' : slip.status === 'active' ? 'bg-[#19A974] animate-pulse' : 'bg-slate-400'}`} />
           {accepted ? 'آپ نے قبول کیا' : slip.status === 'active' ? 'دستیاب لوڈ' : 'بک ہوگیا'}
         </span>
-        {ago && <span className="text-[11px] text-slate-400 font-bold">{ago}</span>}
+        <span className="text-[11px] text-slate-400 font-bold flex items-center gap-2">
+          {distanceKm !== null && (
+            <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full">
+              📍 {distanceKm < 10 ? (Math.round(distanceKm * 10) / 10) : Math.round(distanceKm)} km دور
+            </span>
+          )}
+          {ago && <span>{ago}</span>}
+        </span>
       </div>
 
       <div className="px-4 pb-1">

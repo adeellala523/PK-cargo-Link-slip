@@ -22,6 +22,7 @@ import { AdPlaceholder } from './components/AdPlaceholder';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { NotificationCenterModal } from './components/NotificationCenterModal';
 import { MobileBottomNav } from './components/MobileBottomNav';
+import { LoadsLoginPrompt } from './components/LoadsLoginPrompt';
 import { AiVoiceSupportWidget } from './components/AiVoiceSupportWidget';
 import { AiChatbotWidget } from './components/AiChatbotWidget';
 import { LocationPrompt } from './components/LocationPrompt';
@@ -38,6 +39,8 @@ import { VerificationNudgeBanner } from './components/VerificationNudgeBanner';
 // Yango-style two-app split: driver.pkcargolink.com renders the driver-only app
 import { DriverApp } from './components/DriverApp';
 import { isDriverSubdomain } from './utils/subdomain';
+// Yango-style one-time onboarding (new users only; logged-in users skip)
+import { OnboardingGate } from './components/onboarding/OnboardingFlow';
 import {
   getVerificationStatus, isVerified, getPostingBlockReason,
   resolveVerificationUser, saveVerificationUser,
@@ -48,7 +51,7 @@ import { updateOpenGraphMetaTags } from './utils/formatters';
 import { NotificationService } from './services/notificationService';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
 
-export default function App() {
+function AppInner() {
   // ── Yango-style split: driver subdomain gets the driver-only app ──
   // Same codebase + same backend; detection is hostname-based.
   if (isDriverSubdomain()) {
@@ -600,6 +603,15 @@ export default function App() {
     navigateTo('home');
   };
 
+  // Current user's role (for loads-list access rules)
+  const currentUserRole = useMemo((): 'driver' | 'adda_manager' | null => {
+    try {
+      return StorageService.getCurrentUser()?.role || null;
+    } catch {
+      return null;
+    }
+  }, [isLoggedIn]);
+
   // Slips strictly belonging to the currently logged in Adda manager
   const myAddaSlips = useMemo(() => {
     if (!isLoggedIn || !profile) return [];
@@ -620,6 +632,15 @@ export default function App() {
       return false;
     });
   }, [slips, profile, isLoggedIn]);
+
+  // Access rule (Adeel — Yango-style): the loads list is visible ONLY to
+  // logged-in drivers. Public visitors see NO loads (login prompt instead).
+  // Adda managers see ONLY their own posted loads.
+  const homeSlips = useMemo(() => {
+    if (!isLoggedIn) return [];
+    if (currentUserRole === 'driver') return slips;
+    return myAddaSlips;
+  }, [slips, myAddaSlips, isLoggedIn, currentUserRole]);
 
   const handleAddGroup = (grp: WhatsAppGroup) => {
     StorageService.saveWhatsAppGroup(grp);
@@ -728,8 +749,10 @@ export default function App() {
               onNavigateToPlans={() => navigateTo('plans')}
               onSearchWithFilter={handleHomeSearch}
               onViewSlip={viewSlipDetail}
-              recentSlips={slips}
+              recentSlips={homeSlips}
               userCity={userCity}
+              loadsLocked={!isLoggedIn}
+              onNavigateToLogin={() => navigateTo('login')}
             />
           </div>
         )}
@@ -826,14 +849,36 @@ export default function App() {
           />
         )}
 
-        {/* 7. Public Driver Load Search */}
+        {/* 7. Driver Load Search — ACCESS RULE (Adeel): loads list visible ONLY
+            to logged-in drivers. Public visitors get a login prompt.
+            Adda managers see ONLY their own posted loads. */}
         {currentTab === 'search' && (
-          <DriverSearchView
-            slips={slips}
-            onViewSlip={viewSlipDetail}
-            initialLoadingCity={searchInitialFilter.from}
-            initialDestinationCity={searchInitialFilter.to}
-          />
+          !isLoggedIn ? (
+            <div className="px-4 pt-8 max-w-md mx-auto">
+              <LoadsLoginPrompt onLogin={() => navigateTo('login')} />
+            </div>
+          ) : currentUserRole === 'driver' ? (
+            <DriverSearchView
+              slips={slips}
+              onViewSlip={viewSlipDetail}
+              initialLoadingCity={searchInitialFilter.from}
+              initialDestinationCity={searchInitialFilter.to}
+            />
+          ) : (
+            <div>
+              <div className="px-4 pt-4">
+                <p className="text-sm font-bold text-slate-600 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 leading-6">
+                  📋 یہاں صرف آپ کی اپنی پوسٹ کردہ لوڈز نظر آتی ہیں
+                </p>
+              </div>
+              <DriverSearchView
+                slips={myAddaSlips}
+                onViewSlip={viewSlipDetail}
+                initialLoadingCity={searchInitialFilter.from}
+                initialDestinationCity={searchInitialFilter.to}
+              />
+            </div>
+          )
         )}
 
         {/* 8. Slip Verification */}
@@ -1049,5 +1094,19 @@ export default function App() {
       />
 
     </div>
+  );
+}
+
+/**
+ * Default export — wraps the app in the one-time onboarding gate.
+ * New users see: Splash → Welcome → Phone → Password → Name → Location → Verification.
+ * Already-onboarded browsers and logged-in users skip straight into the app,
+ * so existing auth/chatbot/verification flows are untouched.
+ */
+export default function App() {
+  return (
+    <OnboardingGate>
+      <AppInner />
+    </OnboardingGate>
   );
 }

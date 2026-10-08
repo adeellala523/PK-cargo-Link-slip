@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { LoadSlip, AddaProfile, NamedContact } from '../types';
 import { generateSlipId } from '../utils/formatters';
+import { geocodeCity } from '../utils/geo';
 
 interface CreateSlipViewProps {
   addaProfile: AddaProfile;
@@ -154,9 +155,11 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [geocoding, setGeocoding] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!loadingCity.trim()) {
       setErrorMessage('براہ کرم پک اپ شہر درج کریں۔');
       return;
@@ -175,6 +178,23 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
     }
 
     setErrorMessage('');
+
+    // Geocode the pickup city → GPS coords for driver proximity filtering
+    // (7km rule). Non-blocking: slip posts even if geocoding fails.
+    setGeocoding(true);
+    let pickupLat: number | undefined;
+    let pickupLng: number | undefined;
+    try {
+      const coords = await geocodeCity(loadingCity.trim());
+      if (coords) {
+        pickupLat = coords.lat;
+        pickupLng = coords.lng;
+      }
+    } catch {
+      /* ignore — slip still posts without coords */
+    } finally {
+      setGeocoding(false);
+    }
 
     // Generate unique PKCL slip ID
     const newSlipId = generateSlipId();
@@ -196,6 +216,8 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
       namedContacts: validNamedContacts,
       loadingCity: loadingCity.trim(),
       loadingLocation: loadingLocation.trim() || 'مرکزی اڈا / گودام',
+      pickupLat,
+      pickupLng,
       destinationCity: destinationCity.trim(),
       destinationLocation: destinationLocation.trim() || 'گودام / مرکزی مارکیٹ',
       goods: goods.trim(),
@@ -703,10 +725,11 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
         <div className="pt-2">
           <button
             type="submit"
-            className="w-full bg-[#123A6D] hover:bg-[#0D2D57] text-white py-4 px-6 rounded-2xl font-extrabold text-base shadow-lg shadow-blue-950/20 active:scale-98 transition flex items-center justify-center gap-2"
+            disabled={geocoding}
+            className="w-full bg-[#123A6D] hover:bg-[#0D2D57] text-white py-4 px-6 rounded-2xl font-extrabold text-base shadow-lg shadow-blue-950/20 active:scale-98 transition flex items-center justify-center gap-2 disabled:opacity-60"
           >
             <PlusCircle className="w-5 h-5 text-emerald-300" />
-            <span>ڈیجیٹل لوڈ سلپ تیار اور محفوظ کریں</span>
+            <span>{geocoding ? 'لوکیشن معلوم کی جا رہی ہے…' : 'ڈیجیٹل لوڈ سلپ تیار اور محفوظ کریں'}</span>
           </button>
         </div>
 

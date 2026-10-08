@@ -105,6 +105,10 @@ export interface LoadSlip {
   // Loading Details
   loadingCity: string;
   loadingLocation: string;
+  /** Pickup GPS coordinates (geocoded from loadingCity when the slip is posted).
+      Used for driver proximity filtering (7km rule). */
+  pickupLat?: number;
+  pickupLng?: number;
   
   // Destination Details
   destinationCity: string;

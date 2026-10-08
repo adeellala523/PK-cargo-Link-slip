@@ -9,6 +9,7 @@ import {
 import { LoadSlip } from '../types';
 import { RideSearchCard } from './RideSearchCard';
 import { LoadRequestCard } from './LoadRequestCard';
+import { LoadsLoginPrompt } from './LoadsLoginPrompt';
 
 interface HeroSectionProps {
   onOpenCreate: () => void;
@@ -23,6 +24,12 @@ interface HeroSectionProps {
   recentSlips: LoadSlip[];
   /** Visitor's detected city (Urdu name) — shows a city-specific loads section */
   userCity?: string | null;
+  /**
+   * Access rule (Adeel): the loads list is visible ONLY to logged-in drivers.
+   * When true (public visitor), the loads sections are replaced with a login prompt.
+   */
+  loadsLocked?: boolean;
+  onNavigateToLogin?: () => void;
 }
 
 /**
@@ -40,6 +47,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   onViewSlip,
   recentSlips,
   userCity,
+  loadsLocked = false,
+  onNavigateToLogin,
 }) => {
   const citySlips = userCity
     ? recentSlips.filter(
@@ -72,6 +81,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         activeLoadsCount={activeSlips.length}
       />
 
+      {/* 2+3. LOADS SECTIONS — access rule (Adeel): visible ONLY to logged-in
+          drivers. Public visitors see the login prompt instead. */}
+      {loadsLocked ? (
+        <LoadsLoginPrompt onLogin={onNavigateToLogin || (() => {})} />
+      ) : (
+        <>
       {/* 2. USER'S CITY LOADS (shown when location detected) */}
       {userCity && (
         <section className="space-y-3">
@@ -114,7 +129,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               تازہ ترین لوڈز
             </h2>
             <p className="text-[11px] text-slate-500 font-bold">
-              براہِ راست کال و واٹس ایپ رابطہ — بغیر رجسٹریشن
+              براہِ راست کال و واٹس ایپ رابطہ
             </p>
           </div>
           <button
@@ -152,6 +167,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </div>
         )}
       </section>
+        </>
+      )}
 
       {/* 4. TRUST STRIP (compact) */}
       <section className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">

@@ -7,6 +7,8 @@ import { sanitizePhoneForCall, getWhatsAppShareUrl } from '../utils/formatters';
 interface LoadRequestCardProps {
   slip: LoadSlip;
   onViewSlip: (slip: LoadSlip) => void;
+  /** Distance from driver in km — shows a "X.X km دور" badge when provided */
+  distanceKm?: number | null;
 }
 
 /** Short "time ago" in Urdu */
@@ -30,7 +32,7 @@ function timeAgo(iso: string): string {
  * LoadRequestCard — InDrive ride-request style listing card, adapted for cargo.
  * Route visual on top, detail chips, fare line, and call/WhatsApp actions.
  */
-export const LoadRequestCard: React.FC<LoadRequestCardProps> = ({ slip, onViewSlip }) => {
+export const LoadRequestCard: React.FC<LoadRequestCardProps> = ({ slip, onViewSlip, distanceKm = null }) => {
   const ago = timeAgo(slip.createdAt);
   const fare = (slip.fareOffer || '').trim();
 
@@ -49,6 +51,11 @@ export const LoadRequestCard: React.FC<LoadRequestCardProps> = ({ slip, onViewSl
           {slip.status === 'active' ? 'دستیاب لوڈ' : slip.status === 'booked' ? 'بک ہوگیا' : 'ختم شدہ'}
         </span>
         <span className="text-[11px] text-slate-400 font-bold flex items-center gap-2">
+          {distanceKm !== null && (
+            <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full">
+              📍 {distanceKm < 10 ? (Math.round(distanceKm * 10) / 10) : Math.round(distanceKm)} km دور
+            </span>
+          )}
           {ago && <span>{ago}</span>}
           <span className="font-mono ltr-content">#{slip.id.replace(/[^0-9]/g, '').slice(-6)}</span>
         </span>
