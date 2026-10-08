@@ -23,6 +23,7 @@ import { sanitizePhoneForCall, getWhatsAppShareUrl } from '../utils/formatters';
 import { StorageService } from '../services/storage';
 import { TruckMatchesSection } from './MatchSections';
 import { notifyForNewTruck } from '../utils/matchNotify';
+import { geocodeCity } from '../utils/geo';
 import { VerificationBadge } from './VerificationBadge';
 import { getVerificationStatus, getPostingBlockReason, resolveVerificationUser } from '../utils/verification';
 
@@ -131,7 +132,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
   }, [isAddingTruck, isDriverLoggedIn, currentDriver, isManagerLoggedIn, currentProfile]);
 
   // Handle adding or updating truck
-  const handleAddTruckSubmit = (e: React.FormEvent) => {
+  const handleAddTruckSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError('');
 
@@ -170,6 +171,17 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
     const effectiveRole: 'driver' | 'adda_manager' = isDriverLoggedIn ? 'driver' : 'adda_manager';
     const existingId = effectiveRole === 'driver' && driverExistingTruck ? driverExistingTruck.id : `truck_${Date.now()}`;
 
+    // Geocode truck city → coords for proximity-sorted matching (non-blocking)
+    let truckLat: number | undefined;
+    let truckLng: number | undefined;
+    try {
+      const c = await geocodeCity(truckCity.trim());
+      if (c) {
+        truckLat = c.lat;
+        truckLng = c.lng;
+      }
+    } catch { /* ignore */ }
+
     const newTruck: AvailableTruck = {
       id: existingId,
       driverOrOwnerName: ownerName.trim(),
@@ -185,6 +197,8 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
       userId: isDriverLoggedIn && currentDriver ? currentDriver.id : isManagerLoggedIn && currentProfile ? currentProfile.id : undefined,
       createdByPhone: isDriverLoggedIn && currentDriver ? currentDriver.phone : isManagerLoggedIn && currentProfile ? currentProfile.primaryPhone : ownerPhone.trim(),
       userRole: effectiveRole,
+      truckLat,
+      truckLng,
     };
 
     StorageService.saveAvailableTruck(newTruck);

@@ -47,7 +47,8 @@ import { StorageService } from '../services/storage';
 import { VerificationBadge } from './VerificationBadge';
 import { getVerificationStatus } from '../utils/verification';
 import { NotificationService } from '../services/notificationService';
-import { SlipMatchesSection } from './MatchSections';
+import { VehicleMatchTool } from './VehicleMatchTool';
+import { LoadChat } from './LoadChat';
 import { LiveTrackingMap } from './LiveTrackingMap';
 import { RateDriverModal } from './RateDriverModal';
 import { stopSharing } from '../utils/tracking';
@@ -599,11 +600,23 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
 
       {/* ============================================================== */}
       {/* LIVE TRACKING MAP — Yango style (adda sees truck moving) */}
+      {/* Trip is live once booked to a driver, until completed. */}
       {/* ============================================================== */}
-      {isManagerView && acceptedDriverPhone && currentSlip.status === 'active' && (
+      {isManagerView && acceptedDriverPhone && (currentSlip.status === 'booked' || currentSlip.status === 'active') && !currentSlip.completedAt && (
         <LiveTrackingMap
           slipId={currentSlip.id}
           driverName={currentSlip.acceptedByDriverName || currentSlip.driverAssignedName}
+        />
+      )}
+
+      {/* Private 1:1 chat with the driver (text + voice notes) — manager side */}
+      {isManagerView && acceptedDriverPhone && !currentSlip.completedAt && (
+        <LoadChat
+          slipId={currentSlip.id}
+          myRole="adda"
+          myName={currentSlip.managerName || currentSlip.addaName}
+          myPhone={currentSlip.primaryPhone}
+          otherName={currentSlip.acceptedByDriverName || currentSlip.driverAssignedName}
         />
       )}
 
@@ -1073,8 +1086,9 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
 
         </div>
 
-        {/* Matching available trucks (lazy, expandable) */}
-        <SlipMatchesSection slip={currentSlip} />
+        {/* Matching vehicles — MANAGER ONLY (drivers must never see other vehicles).
+            Proximity-sorted "موزوں گاڑیاں" tool for the adda manager. */}
+        {isManagerView && <VehicleMatchTool slip={currentSlip} />}
 
         {/* Secondary Manager / Print Actions */}
         <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs">

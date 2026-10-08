@@ -21,6 +21,7 @@ import {
 import { LoadSlip, AddaProfile, NamedContact } from '../types';
 import { generateSlipId } from '../utils/formatters';
 import { geocodeCity } from '../utils/geo';
+import { PickupMapPicker } from './PickupMapPicker';
 
 interface CreateSlipViewProps {
   addaProfile: AddaProfile;
@@ -118,6 +119,11 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
   // Error state
   const [errorMessage, setErrorMessage] = useState('');
 
+  // Exact pickup pin (map) — source of truth for 7km driver matching.
+  // Falls back to city geocoding when no pin is dropped.
+  const [pickupPinLat, setPickupPinLat] = useState<number | undefined>(prefillSlip?.pickupLat);
+  const [pickupPinLng, setPickupPinLng] = useState<number | undefined>(prefillSlip?.pickupLng);
+
   // Toggle vehicle chip and update free text string
   const handleToggleVehicleChip = (v: string) => {
     let next: string[];
@@ -140,6 +146,8 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
   const handleApplyPreviousSlip = (slip: LoadSlip) => {
     setLoadingCity(slip.loadingCity);
     setLoadingLocation(slip.loadingLocation);
+    setPickupPinLat(slip.pickupLat);
+    setPickupPinLng(slip.pickupLng);
     setDestinationCity(slip.destinationCity);
     setDestinationLocation(slip.destinationLocation || '');
     setGoods(slip.goods);
@@ -179,20 +187,25 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
 
     setErrorMessage('');
 
-    // Geocode the pickup city → GPS coords for driver proximity filtering
-    // (7km rule). Non-blocking: slip posts even if geocoding fails.
+    // Pickup GPS: the map pin is the source of truth (7km rule).
+    // Falls back to geocoding the pickup city when no pin was dropped.
+    // Non-blocking: slip posts even if geocoding fails.
     setGeocoding(true);
-    let pickupLat: number | undefined;
-    let pickupLng: number | undefined;
-    try {
-      const coords = await geocodeCity(loadingCity.trim());
-      if (coords) {
-        pickupLat = coords.lat;
-        pickupLng = coords.lng;
+    let pickupLat: number | undefined = pickupPinLat;
+    let pickupLng: number | undefined = pickupPinLng;
+    if ((pickupLat == null || pickupLng == null) && loadingCity.trim()) {
+      try {
+        const coords = await geocodeCity(loadingCity.trim());
+        if (coords) {
+          pickupLat = coords.lat;
+          pickupLng = coords.lng;
+        }
+      } catch {
+        /* ignore — slip still posts without coords */
+      } finally {
+        setGeocoding(false);
       }
-    } catch {
-      /* ignore — slip still posts without coords */
-    } finally {
+    } else {
       setGeocoding(false);
     }
 
@@ -358,6 +371,18 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
                   onChange={(e) => setLoadingLocation(e.target.value)}
                   placeholder="مثال: ٹھوکر نیاز بیگ یا غلہ منڈی"
                   className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none"
+                />
+              </div>
+
+              {/* Exact pickup pin on map — source of truth for 7km matching */}
+              <div className="pt-2">
+                <PickupMapPicker
+                  lat={pickupPinLat}
+                  lng={pickupPinLng}
+                  onChange={(la, ln) => {
+                    setPickupPinLat(la);
+                    setPickupPinLng(ln);
+                  }}
                 />
               </div>
             </div>

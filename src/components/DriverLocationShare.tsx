@@ -66,19 +66,21 @@ export const DriverLocationShare: React.FC<DriverLocationShareProps> = ({ slip, 
   };
 
   // Resume heartbeat if it was on (e.g. app reopened)
+  // Trip is "live" once the driver accepts (status=booked) until completion.
   useEffect(() => {
-    if (isSharingFor(slip.id) && slip.status === 'active') {
+    const tripLive = slip.status === 'booked' && !slip.completedAt;
+    if (isSharingFor(slip.id) && tripLive) {
       void startSharing();
     }
-    // Auto-stop when the load is no longer active (completed/cancelled)
-    if (slip.status !== 'active' && isSharingFor(slip.id)) {
+    // Auto-stop when the load is completed/cancelled/expired (privacy)
+    if ((slip.completedAt || slip.status === 'expired') && isSharingFor(slip.id)) {
       void stopSharing(slip.id);
     }
     return () => {
       if (timer.current) { window.clearInterval(timer.current); timer.current = null; }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slip.id, slip.status]);
+  }, [slip.id, slip.status, slip.completedAt]);
 
   // Stop sharing when page hidden/closed (best effort)
   useEffect(() => {
@@ -96,7 +98,9 @@ export const DriverLocationShare: React.FC<DriverLocationShareProps> = ({ slip, 
     return () => window.removeEventListener('pagehide', onHide);
   }, []);
 
-  const isActive = slip.status === 'active';
+  // Sharing is allowed once the load is booked to this driver (trip live),
+  // and stops automatically when the load completes.
+  const isActive = slip.status === 'booked' && !slip.completedAt;
 
   return (
     <div className="font-nafees" dir="rtl">

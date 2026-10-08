@@ -340,6 +340,10 @@ export interface AvailableTruck {
   isFromSlip?: boolean;
   /** Import origin marker (e.g. 'whatsapp' for chat-export imports) */
   source?: string;
+  /** GPS coords of the truck's current location (geocoded on listing).
+      Used for proximity-sorted vehicle matching for adda managers. */
+  truckLat?: number;
+  truckLng?: number;
 }
 
 export interface AiVoiceSubscription {

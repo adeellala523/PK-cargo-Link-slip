@@ -767,14 +767,17 @@ function AppInner() {
           </div>
         )}
 
-        {/* 2. Public Slip Detail View (Driver & Manager) */}
+        {/* 2. Public Slip Detail View (Driver & Manager) — ACCESS RULE (Adeel):
+            an adda manager gets manager tools ONLY on their own slips.
+            Anyone else opening the link sees the shared slip without
+            management tools, chat, tracking or match features. */}
         {currentTab === 'slip-detail' && activeSlip && (
           <div className="space-y-4">
             <LoadSlipCard
               slip={activeSlip}
               onShareModal={() => setShareModalSlip(activeSlip)}
               onEditOrReuse={() => handleOpenCreateModal(activeSlip)}
-              isManagerView={isLoggedIn}
+              isManagerView={isLoggedIn && myAddaSlips.some((s) => s.id === activeSlip.id)}
               onToggleStatus={() => handleToggleSlipStatus(activeSlip)}
               onSearchLoads={() => navigateTo('search')}
               onUpdateSlip={handleSlipUpdated}
@@ -923,8 +926,15 @@ function AppInner() {
           />
         )}
 
-        {/* Dedicated Driver Portal / Dashboard */}
+        {/* Dedicated Driver Portal / Dashboard — ACCESS RULE (Adeel):
+            loads visible ONLY to logged-in drivers. Public visitors get a
+            login prompt; adda managers are sent back to their dashboard. */}
         {currentTab === 'driver' && (
+          !isLoggedIn ? (
+            <div className="px-4 pt-8 max-w-md mx-auto">
+              <LoadsLoginPrompt onLogin={() => navigateTo('login')} />
+            </div>
+          ) : currentUserRole === 'driver' ? (
           <>
             <div className="px-4 pt-3">
               <VerificationNudgeBanner
@@ -944,6 +954,20 @@ function AppInner() {
             onLogoutDriver={handleLogout}
           />
           </>
+          ) : (
+            <div className="px-4 pt-8 max-w-md mx-auto text-center font-nafees" dir="rtl">
+              <p className="text-sm font-bold text-slate-600 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-4 leading-7">
+                🚚 یہ ڈرائیور پورٹل ہے — اڈا مینیجر کے طور پر آپ یہاں صرف اپنی پوسٹ کردہ لوڈز دیکھ سکتے ہیں۔
+              </p>
+              <button
+                type="button"
+                onClick={() => navigateTo('dashboard')}
+                className="mt-4 bg-[#0B2A5B] text-white font-extrabold rounded-2xl px-8 py-3.5 min-h-[52px]"
+              >
+                ڈیش بورڈ پر واپس جائیں
+              </button>
+            </div>
+          )
         )}
 
         {/* Available Trucks Network View */}

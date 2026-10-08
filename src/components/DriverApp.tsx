@@ -6,7 +6,8 @@ import { DriverBottomNav } from './DriverBottomNav';
 import { DriverEarningsView } from './DriverEarningsView';
 import { DriverLocationShare } from './DriverLocationShare';
 import { LoadSlipCard } from './LoadSlipCard';
-import { AvailableTrucksView } from './AvailableTrucksView';
+import { MyVehicleView } from './MyVehicleView';
+import { LoadChat } from './LoadChat';
 import { AddaLoginView } from './AddaLoginView';
 import { VerificationView } from './VerificationView';
 import { VerificationBadge } from './VerificationBadge';
@@ -287,9 +288,19 @@ export const DriverApp: React.FC = () => {
                 </p>
               </div>
             </div>
-            {/* Live location share for accepted active loads */}
-            {driver && acceptedIds.includes(activeSlip.id) && activeSlip.status === 'active' && (
+            {/* Live location share for accepted loads (trip live = booked & not completed) */}
+            {driver && acceptedIds.includes(activeSlip.id) && (activeSlip.status === 'booked' || activeSlip.status === 'active') && !activeSlip.completedAt && (
               <DriverLocationShare slip={activeSlip} driver={driver} />
+            )}
+            {/* Private 1:1 chat with the adda manager (text + voice notes) */}
+            {driver && acceptedIds.includes(activeSlip.id) && !activeSlip.completedAt && (
+              <LoadChat
+                slipId={activeSlip.id}
+                myRole="driver"
+                myName={driver.driverName}
+                myPhone={driver.phone}
+                otherName={activeSlip.addaName}
+              />
             )}
             {!acceptedIds.includes(activeSlip.id) && activeSlip.status === 'active' && (
               <button
@@ -313,22 +324,11 @@ export const DriverApp: React.FC = () => {
         )}
 
         {tab === 'd-truck' && (
-          <div className="space-y-4">
-            <div className="bg-white rounded-3xl border border-slate-100 p-4 flex items-center gap-3">
-              <Truck className="w-8 h-8 text-[#0B2A5B]" />
-              <div>
-                <h2 className="font-extrabold text-[#0B2A5B]">میری گاڑی</h2>
-                <p className="text-[11px] text-slate-500 font-bold">اپنی گاڑی کی معلومات درج یا اپ ڈیٹ کریں</p>
-              </div>
-            </div>
-            <AvailableTrucksView
-              slips={slips}
-              onViewSlip={viewSlip}
-              onNavigateToDriverPortal={() => { setLoginMode('login'); navigate('d-login'); }}
-              onNavigateToAddaLogin={() => window.open(getOtherSideUrl(), '_blank')}
-              onNavigateToVerification={() => navigate('d-verification')}
-            />
-          </div>
+          <MyVehicleView
+            onNavigateToLogin={() => { setLoginMode('login'); navigate('d-login'); }}
+            onNavigateToRegister={() => { setLoginMode('register'); navigate('d-login'); }}
+            onNavigateToVerification={() => navigate('d-verification')}
+          />
         )}
 
         {tab === 'd-profile' && (
