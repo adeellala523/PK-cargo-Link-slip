@@ -30,7 +30,8 @@ import {
   User,
   Info,
   Lock,
-  Eye
+  Eye,
+  Banknote
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { toPng } from 'html-to-image';
@@ -47,6 +48,9 @@ import { VerificationBadge } from './VerificationBadge';
 import { getVerificationStatus } from '../utils/verification';
 import { NotificationService } from '../services/notificationService';
 import { SlipMatchesSection } from './MatchSections';
+import { LiveTrackingMap } from './LiveTrackingMap';
+import { RateDriverModal } from './RateDriverModal';
+import { stopSharing } from '../utils/tracking';
 
 interface LoadSlipCardProps {
   slip: LoadSlip;
@@ -92,6 +96,7 @@ export const LoadSlipCard: React.FC<LoadSlipCardProps> = ({
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showRateModal, setShowRateModal] = useState(false);
   
   // Driver Status Form fields
   const [selectedStatus, setSelectedStatus] = useState<DriverTripStatus>(
@@ -319,6 +324,34 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
     );
   }
 
+  /** Mark load completed (Yango-style): stops live tracking, opens driver rating */
+  const handleCompleteLoad = () => {
+    if (!window.confirm('کیا یہ لوڈ مکمل ہو گیا ہے؟')) return;
+    const updated: LoadSlip = {
+      ...currentSlip,
+      status: 'booked',
+      completedAt: new Date().toISOString(),
+      driverTripStatus: 'delivered',
+    };
+    StorageService.updateSlip(updated);
+    setCurrentSlip(updated);
+    if (onUpdateSlip) onUpdateSlip(updated);
+    // Auto-stop live tracking (privacy)
+    void stopSharing(currentSlip.id);
+    try {
+      NotificationService.addNotification({
+        title: '🎉 لوڈ مکمل ہو گیا!',
+        message: `لوڈ (${currentSlip.loadingCity} تا ${currentSlip.destinationCity}) مکمل۔ ڈرائیور کو ریٹ کرنا نہ بھولیں۔`,
+        type: 'system',
+        slipId: currentSlip.id,
+        route: `${currentSlip.loadingCity} تا ${currentSlip.destinationCity}`,
+      });
+    } catch { /* ignore */ }
+    setShowRateModal(true);
+  };
+
+  const acceptedDriverPhone = currentSlip.acceptedByDriverPhone || currentSlip.driverAssignedPhone;
+
   return (
     <div className="max-w-2xl mx-auto space-y-5 font-nafees">
       
@@ -346,6 +379,19 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
               دوبارہ فعال کریں
             </button>
           )}
+        </div>
+      )}
+
+      {/* Direct payment note — no in-app payments; adda pays driver directly */}
+      {(currentSlip.status === 'booked' || currentSlip.completedAt || currentSlip.driverTripStatus === 'delivered') && (
+        <div className="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-4 flex items-start gap-3">
+          <Banknote className="w-6 h-6 text-emerald-700 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-extrabold text-emerald-900 text-sm">💰 ادائیگی ڈرائیور سے براہ راست کریں</p>
+            <p className="text-xs text-emerald-700 font-bold mt-1 leading-relaxed">
+              کرایہ کی ادائیگی نقد یا بینک کے ذریعے ڈرائیور کو براہ راست ادا کریں — ایپ میں کوئی ادائیگی نہیں ہوتی اور نہ کوئی کمیشن کٹتا ہے۔
+            </p>
+          </div>
         </div>
       )}
 
@@ -549,6 +595,36 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
 
         </div>
       </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* LIVE TRACKING MAP — Yango style (adda sees truck moving) */}
+      {/* ============================================================== */}
+      {isManagerView && acceptedDriverPhone && currentSlip.status === 'active' && (
+        <LiveTrackingMap
+          slipId={currentSlip.id}
+          driverName={currentSlip.acceptedByDriverName || currentSlip.driverAssignedName}
+        />
+      )}
+
+      {/* Complete load + rate driver (Yango-style) */}
+      {isManagerView && acceptedDriverPhone && !currentSlip.completedAt && (
+        <button
+          type="button"
+          onClick={handleCompleteLoad}
+          className="no-print w-full py-4 rounded-3xl font-extrabold text-white text-base min-h-[56px] active:scale-[0.98] flex items-center justify-center gap-2 shadow-[0_8px_24px_rgba(25,169,116,0.35)]"
+          style={{ background: 'linear-gradient(135deg, #1DBF73 0%, #19A974 60%, #12805A 100%)' }}
+        >
+          <CheckCircle2 className="w-5 h-5" />
+          لوڈ مکمل کریں ✅
+        </button>
+      )}
+      {showRateModal && acceptedDriverPhone && (
+        <RateDriverModal
+          slip={currentSlip}
+          onClose={() => setShowRateModal(false)}
+          onDone={() => setShowRateModal(false)}
+        />
       )}
 
       {/* ============================================================== */}
