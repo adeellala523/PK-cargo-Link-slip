@@ -31,6 +31,7 @@ import { notifyForNewSlip } from './utils/matchNotify';
 // Old GeminiLiveVoiceWidget hidden per user request - replaced by AI chatbot
 import { VoiceLoadCreatorModal } from './components/VoiceLoadCreatorModal';
 import { PaymentSettings } from './components/PaymentSettings';
+import { SubscriptionPlansView } from './components/SubscriptionPlansView';
 import { StorageService } from './services/storage';
 import { LoadSlip, AddaProfile, WhatsAppGroup } from './types';
 import { updateOpenGraphMetaTags } from './utils/formatters';
@@ -204,6 +205,8 @@ export default function App() {
         return '/contact';
       case 'privacy':
         return '/privacy';
+      case 'plans':
+        return '/plans';
       case 'slip-detail':
         return slipId ? `/slip/${slipId}` : '/';
       default:
@@ -312,6 +315,8 @@ export default function App() {
         setCurrentTab('contact');
       } else if (path === '/privacy' || queryTab === 'privacy') {
         setCurrentTab('privacy');
+      } else if (path === '/plans' || queryTab === 'plans') {
+        setCurrentTab('plans');
       } else {
         setCurrentTab('home');
       }
@@ -387,6 +392,18 @@ export default function App() {
     const targetSlip = activeSlip || shareModalSlip;
     updateOpenGraphMetaTags(targetSlip);
   }, [activeSlip, shareModalSlip]);
+
+  // Yango-style home search: prefill the search view filters, then navigate
+  const handleHomeSearch = (from: string, to: string, vehicleType: string) => {
+    setSearchInitialFilter({ from, to });
+    // Vehicle type prefill is applied via the search view's own chip state default
+    if (vehicleType) {
+      try { sessionStorage.setItem('pkcl_home_vehicle', vehicleType); } catch { /* ignore */ }
+    } else {
+      try { sessionStorage.removeItem('pkcl_home_vehicle'); } catch { /* ignore */ }
+    }
+    navigateTo('search');
+  };
 
   // Update browser URL without full reload when active slip changes
   const viewSlipDetail = (slip: LoadSlip) => {
@@ -536,7 +553,7 @@ export default function App() {
       <StrikeBanner />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-5xl w-full mx-auto px-3 sm:px-4 py-6 sm:py-8">
+      <main className="flex-1 max-w-5xl w-full mx-auto px-3 sm:px-4 pt-4 sm:pt-6 pb-28 md:pb-10">
         
         {/* 🛠️ Admin Security & Permission Diagnostics Banner */}
         {adminDebugErrors.length > 0 && (
@@ -613,6 +630,8 @@ export default function App() {
               onNavigateToVerify={() => navigateTo('verify')}
               onNavigateToTrucks={() => navigateTo('trucks')}
               onNavigateToDriver={() => navigateTo('driver')}
+              onNavigateToPlans={() => navigateTo('plans')}
+              onSearchWithFilter={handleHomeSearch}
               onViewSlip={viewSlipDetail}
               recentSlips={slips}
               userCity={userCity}
@@ -816,6 +835,11 @@ export default function App() {
         {/* 14. Privacy Policy Page */}
         {currentTab === 'privacy' && (
           <PrivacyPolicyView />
+        )}
+
+        {/* 15. Subscription Plans (free trial -> weekly/monthly) */}
+        {currentTab === 'plans' && (
+          <SubscriptionPlansView />
         )}
 
         {/* Configurable Ad Slot (Initially Disabled) */}
