@@ -76,3 +76,21 @@ input, textarea, select, button {
     page-break-inside: avoid;
   }
 }
+
+/* Ride-hailing UI theme tokens (PK Cargo Link — navy + amber, own scheme) */
+:root {
+  --pkcl-navy: #0B2A5B;
+  --pkcl-navy-deep: #123A6D;
+  --pkcl-amber: #F5A301;
+  --pkcl-amber-light: #FFC531;
+  --pkcl-green: #19A974;
+  --pkcl-bg: #F2F5FA;
+}
+
+/* Hide scrollbars for horizontal chip rails */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Soft press feedback for ride-app style buttons */
+.pkcl-press { transition: transform .12s ease; }
+.pkcl-press:active { transform: scale(.97); }
