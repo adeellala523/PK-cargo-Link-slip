@@ -37,6 +37,7 @@ import {
 import { LoadSlip, AdminStats, AddaProfile, UserAccount, PaymentSettings, AvailableTruck } from '../types';
 import { StorageService } from '../services/storage';
 import { WhatsAppImportView } from './WhatsAppImportView';
+import { VerificationReviewPanel } from './VerificationReviewPanel';
 import { AdConfig, AdService } from '../services/adService';
 import { AdPlaceholder } from './AdPlaceholder';
 import { AdminQuickSlipCreator } from './AdminQuickSlipCreator';
@@ -65,7 +66,7 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
   const [pinError, setPinError] = useState(false);
   const [showPin, setShowPin] = useState(false);
   const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
-  const [activeTab, setActiveTab] = useState<'trucks' | 'slips' | 'quick_slip' | 'users' | 'subscriptions' | 'payment_settings' | 'ads' | 'backup' | 'whatsapp_import'>('trucks');
+  const [activeTab, setActiveTab] = useState<'trucks' | 'slips' | 'quick_slip' | 'users' | 'verification' | 'subscriptions' | 'payment_settings' | 'ads' | 'backup' | 'whatsapp_import'>('trucks');
   const [searchFilter, setSearchFilter] = useState('');
 
   // Online users counter
@@ -448,6 +449,17 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
         >
           <Users className="w-4 h-4" />
           <span>رجسٹرڈ اکاؤنٹس ({users.length})</span>
+        </button>
+
+        {/* VERIFICATION */}
+        <button
+          onClick={() => setActiveTab('verification')}
+          className={`flex-1 min-w-[120px] py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 ${
+            activeTab === 'verification' ? 'bg-[#0B2545] text-white shadow' : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <ShieldCheck className="w-4 h-4" />
+          <span>تصدیق ({users.filter((u) => (u.verificationStatus || 'unverified') === 'pending').length})</span>
         </button>
 
         {/* 5. SUBSCRIPTIONS */}
@@ -983,6 +995,16 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
       {/* ======================================================== */}
       {/* TAB 1: USERS & ADDA ACCOUNTS MANAGEMENT */}
       {/* ======================================================== */}
+      {activeTab === 'verification' && (
+        <VerificationReviewPanel
+          users={users}
+          onUsersChange={async (updated) => {
+            setUsers(updated);
+            await StorageService.saveUsers(updated);
+          }}
+        />
+      )}
+
       {activeTab === 'users' && (
         <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-200 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
