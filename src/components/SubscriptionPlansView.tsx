@@ -44,7 +44,7 @@ export const SubscriptionPlansView: React.FC = () => {
     {
       id: 'weekly',
       name: 'ہفتہ وار پلان',
-      price: 'قیمت جلد اعلان ہوگی',
+      price: 'Rs 500',
       period: 'فی ہفتہ',
       icon: <CalendarDays className="w-6 h-6 text-white" />,
       features: [
@@ -58,7 +58,7 @@ export const SubscriptionPlansView: React.FC = () => {
     {
       id: 'monthly',
       name: 'ماہانہ پلان',
-      price: 'قیمت جلد اعلان ہوگی',
+      price: 'Rs 2,000',
       period: 'فی مہینہ',
       badge: '⭐ بہترین قیمت',
       highlight: true,
