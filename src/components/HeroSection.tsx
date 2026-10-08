@@ -1,18 +1,14 @@
 import React from 'react';
-import { 
-  Search, 
-  FileText, 
-  ShieldCheck, 
-  Truck, 
-  CheckCircle2, 
+import {
   ArrowLeft,
-  Package,
+  CheckCircle2,
+  MapPin,
   PlusCircle,
-  Phone,
-  MessageSquare
+  Truck,
 } from 'lucide-react';
 import { LoadSlip } from '../types';
-import { MapPin } from 'lucide-react';
+import { RideSearchCard } from './RideSearchCard';
+import { LoadRequestCard } from './LoadRequestCard';
 
 interface HeroSectionProps {
   onOpenCreate: () => void;
@@ -20,91 +16,27 @@ interface HeroSectionProps {
   onNavigateToVerify: () => void;
   onNavigateToDriver?: () => void;
   onNavigateToTrucks?: () => void;
+  /** Yango-style search: prefill from/to/vehicle then jump to search */
+  onSearchWithFilter?: (from: string, to: string, vehicleType: string) => void;
+  onNavigateToPlans?: () => void;
   onViewSlip: (slip: LoadSlip) => void;
   recentSlips: LoadSlip[];
   /** Visitor's detected city (Urdu name) — shows a city-specific loads section */
   userCity?: string | null;
 }
 
-/** Single load card used on the homepage */
-const HomeSlipCard: React.FC<{ slip: LoadSlip; onViewSlip: (slip: LoadSlip) => void }> = ({ slip, onViewSlip }) => (
-  <div
-    onClick={() => onViewSlip(slip)}
-    className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md border border-slate-200 hover:border-emerald-500/50 transition-all cursor-pointer group flex flex-col justify-between"
-  >
-    <div className="space-y-3">
-      <div className="flex items-center justify-between text-xs">
-        <span className="font-mono text-slate-500 ltr-content bg-slate-100 px-2 py-0.5 rounded font-bold">
-          {slip.id}
-        </span>
-        <span className={`px-2 py-0.5 rounded font-bold text-xs ${
-          slip.status === 'active' 
-            ? 'bg-emerald-100 text-emerald-800' 
-            : slip.status === 'booked' 
-            ? 'bg-blue-100 text-blue-800' 
-            : 'bg-slate-200 text-slate-700'
-        }`}>
-          {slip.status === 'active' ? '● دستیاب لوڈ' : slip.status === 'booked' ? '✓ لوڈ ہوچکا' : 'ختم شدہ'}
-        </span>
-      </div>
-
-      <div className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
-        <div className="text-right">
-          <span className="text-xs text-slate-400 block">لوڈنگ</span>
-          <span className="text-lg font-bold text-[#08284F]">{slip.loadingCity}</span>
-          <span className="text-xs text-slate-600 block truncate max-w-[120px]">{slip.loadingLocation}</span>
-        </div>
-
-        <div className="flex flex-col items-center px-2">
-          <Truck className="w-5 h-5 text-[#19A974] group-hover:scale-110 transition-transform" />
-          <span className="text-[10px] text-slate-400 font-sans">➔</span>
-        </div>
-
-        <div className="text-left">
-          <span className="text-xs text-slate-400 block">منزل</span>
-          <span className="text-lg font-bold text-emerald-800">{slip.destinationCity}</span>
-          <span className="text-xs text-slate-600 block truncate max-w-[120px]">{slip.destinationLocation}</span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-2 text-xs pt-1">
-        <div>
-          <span className="text-slate-400">مال:</span>{' '}
-          <span className="font-semibold text-slate-800">{slip.goods}</span>
-        </div>
-        <div>
-          <span className="text-slate-400">وزن:</span>{' '}
-          <span className="font-semibold text-slate-800">{slip.weight}</span>
-        </div>
-        <div>
-          <span className="text-slate-400">گاڑی:</span>{' '}
-          <span className="font-semibold text-slate-800">{slip.vehicleType}</span>
-        </div>
-        <div>
-          <span className="text-slate-400">باڈی:</span>{' '}
-          <span className="font-semibold text-slate-800">{slip.bodyType}</span>
-        </div>
-      </div>
-    </div>
-
-    <div className="pt-4 mt-3 border-t border-slate-100 flex items-center justify-between">
-      <div className="text-xs text-slate-600 font-medium truncate max-w-[180px]">
-        🏢 {slip.addaName}
-      </div>
-      <span className="text-xs font-bold text-[#19A974] group-hover:underline flex items-center gap-1">
-        <span>مکمل سلپ کھولیں</span>
-        <ArrowLeft className="w-3.5 h-3.5" />
-      </span>
-    </div>
-  </div>
-);
-
+/**
+ * HeroSection — ride-hailing style home (Yango/InDrive-inspired, cargo-adapted).
+ * Big pickup/dropoff search card on top, then live load requests below.
+ */
 export const HeroSection: React.FC<HeroSectionProps> = ({
   onOpenCreate,
   onNavigateToSearch,
   onNavigateToVerify,
   onNavigateToDriver,
   onNavigateToTrucks,
+  onSearchWithFilter,
+  onNavigateToPlans,
   onViewSlip,
   recentSlips,
   userCity,
@@ -116,322 +48,82 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           (s.destinationCity && s.destinationCity.includes(userCity))
       )
     : [];
+
+  const activeSlips = recentSlips.filter((s) => s.status === 'active');
+
+  const handleSearch = (from: string, to: string, vehicleType: string) => {
+    if (onSearchWithFilter) {
+      onSearchWithFilter(from, to, vehicleType);
+    } else {
+      onNavigateToSearch();
+    }
+  };
+
   return (
-    <div className="space-y-10 sm:space-y-14 font-nafees">
-      
-      {/* 1. HERO BANNER SECTION (Section 6) */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#123A6D] via-[#0D2D57] to-[#08284F] text-white p-6 sm:p-10 shadow-xl border border-emerald-500/20">
-        {/* Subtle decorative glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+    <div className="space-y-6 sm:space-y-8 font-nafees">
 
-        <div className="relative z-10 max-w-4xl mx-auto text-center space-y-4 sm:space-y-6 pt-2 sm:pt-4">
-          
-          {/* Main Heading */}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold leading-tight tracking-tight text-white font-nafees">
-            پاکستان کا آسان ڈیجیٹل کارگو پلیٹ فارم
-          </h1>
+      {/* 1. YANGO-STYLE SEARCH CARD */}
+      <RideSearchCard
+        onSearch={handleSearch}
+        onOpenCreate={onOpenCreate}
+        onNavigateToTrucks={onNavigateToTrucks ? onNavigateToTrucks : onNavigateToSearch}
+        onNavigateToVerify={onNavigateToVerify}
+        onNavigateToDriver={onNavigateToDriver ? onNavigateToDriver : onNavigateToSearch}
+        activeLoadsCount={activeSlips.length}
+      />
 
-          {/* Subheading */}
-          <p className="text-base sm:text-xl text-slate-200 leading-relaxed max-w-2xl mx-auto font-nafees font-normal">
-            لوڈ تلاش کریں، ڈیجیٹل سلپ بنائیں، اور اپنا کارگو کام آسان بنائیں۔
-          </p>
-
-          {/* Primary 3D Buttons */}
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 pt-2 max-w-2xl mx-auto">
-            <button
-              type="button"
-              onClick={onOpenCreate}
-              className="group relative inline-flex flex-col items-center justify-center gap-1.5 text-white font-extrabold text-base sm:text-lg px-4 py-4 rounded-2xl min-h-[88px] transition-all active:scale-95"
-              style={{
-                background: 'linear-gradient(145deg, #22c55e 0%, #16a34a 50%, #15803d 100%)',
-                boxShadow: '0 6px 0 #14532d, 0 10px 20px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.3)',
-              }}
-              title="صرف اڈا منیجر کے لیے"
-            >
-              <FileText className="w-7 h-7 drop-shadow" />
-              <span>نئی سلپ بنائیں</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={onNavigateToSearch}
-              className="group relative inline-flex flex-col items-center justify-center gap-1.5 text-white font-extrabold text-base sm:text-lg px-4 py-4 rounded-2xl min-h-[88px] transition-all active:scale-95"
-              style={{
-                background: 'linear-gradient(145deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%)',
-                boxShadow: '0 6px 0 #1e3a8a, 0 10px 20px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.3)',
-              }}
-            >
-              <Search className="w-7 h-7 drop-shadow" />
-              <span>دستیاب لوڈز</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={onNavigateToTrucks ? onNavigateToTrucks : onNavigateToSearch}
-              className="group relative inline-flex flex-col items-center justify-center gap-1.5 text-white font-extrabold text-base sm:text-lg px-4 py-4 rounded-2xl min-h-[88px] transition-all active:scale-95"
-              style={{
-                background: 'linear-gradient(145deg, #f59e0b 0%, #d97706 50%, #b45309 100%)',
-                boxShadow: '0 6px 0 #92400e, 0 10px 20px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.3)',
-              }}
-            >
-              <Truck className="w-7 h-7 drop-shadow" />
-              <span>دستیاب گاڑیاں</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={onNavigateToDriver ? onNavigateToDriver : onNavigateToSearch}
-              className="group relative inline-flex flex-col items-center justify-center gap-1.5 text-white font-extrabold text-base sm:text-lg px-4 py-4 rounded-2xl min-h-[88px] transition-all active:scale-95"
-              style={{
-                background: 'linear-gradient(145deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%)',
-                boxShadow: '0 6px 0 #4c1d95, 0 10px 20px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.3)',
-              }}
-            >
-              <PlusCircle className="w-7 h-7 drop-shadow" />
-              <span>گاڑی لسٹ کریں</span>
-            </button>
-          </div>
-
-          {/* Secondary Buttons */}
-          <div className="flex flex-wrap items-center justify-center gap-2.5 pt-1">
-            <button
-              type="button"
-              onClick={onNavigateToTrucks ? onNavigateToTrucks : onNavigateToSearch}
-              className="inline-flex items-center justify-center gap-2 bg-[#FF9F43]/20 hover:bg-[#FF9F43]/30 text-amber-200 font-bold text-sm sm:text-base px-5 py-2.5 rounded-xl border border-amber-400/30 active:scale-95 transition-all min-h-[44px]"
-            >
-              <Truck className="w-4 h-4 text-[#FF9F43]" />
-              <span>دستیاب گاڑیاں</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={onNavigateToVerify}
-              className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-medium text-sm sm:text-base px-5 py-2.5 rounded-xl border border-white/15 active:scale-95 transition-all min-h-[44px]"
-            >
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>سلپ ویریفائی کریں</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={onNavigateToDriver ? onNavigateToDriver : onNavigateToSearch}
-              className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-medium text-sm sm:text-base px-5 py-2.5 rounded-xl border border-white/15 active:scale-95 transition-all min-h-[44px]"
-            >
-              <Truck className="w-4 h-4 text-emerald-400" />
-              <span>ڈرائیور پورٹل</span>
-            </button>
-          </div>
-
-        </div>
-      </section>
-
-      {/* 2. MAIN 4 FEATURE CARDS (Section 6) */}
-      <section className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-          
-          {/* Card 1: لوڈ تلاش کریں */}
-          <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-200 flex flex-col justify-between hover:border-[#123A6D]/40 hover:shadow-md transition-all">
-            <div className="space-y-2">
-              <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#123A6D] flex items-center justify-center">
-                <Package className="w-6 h-6 text-[#123A6D]" />
-              </div>
-              <h3 className="text-xl font-bold text-[#08284F]">
-                لوڈ تلاش کریں
-              </h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                اپنے روٹ کے مطابق دستیاب لوڈ تلاش کریں۔
-              </p>
-            </div>
-            <div className="pt-4">
-              <button
-                type="button"
-                onClick={onNavigateToSearch}
-                className="w-full inline-flex items-center justify-center gap-1.5 bg-[#123A6D] hover:bg-[#0D2D57] text-white font-bold text-sm py-2.5 px-4 rounded-xl transition active:scale-95 min-h-[44px]"
-              >
-                <span>لوڈ تلاش کریں</span>
-                <ArrowLeft className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* Card 2: ڈیجیٹل لوڈ سلپ */}
-          <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-200 flex flex-col justify-between hover:border-[#19A974]/40 hover:shadow-md transition-all">
-            <div className="space-y-2">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-[#19A974] flex items-center justify-center">
-                <FileText className="w-6 h-6 text-[#19A974]" />
-              </div>
-              <h3 className="text-xl font-bold text-[#08284F]">
-                ڈیجیٹل لوڈ سلپ
-              </h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                چند لمحوں میں پروفیشنل لوڈ سلپ تیار کریں۔
-              </p>
-            </div>
-            <div className="pt-4">
-              <button
-                type="button"
-                onClick={onOpenCreate}
-                className="w-full inline-flex items-center justify-center gap-1.5 bg-[#19A974] hover:bg-[#169163] text-white font-bold text-sm py-2.5 px-4 rounded-xl transition active:scale-95 min-h-[44px]"
-              >
-                <span>سلپ بنائیں</span>
-                <ArrowLeft className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* Card 3: دستیاب گاڑیاں */}
-          <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-200 flex flex-col justify-between hover:border-amber-400/40 hover:shadow-md transition-all">
-            <div className="space-y-2">
-              <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
-                <Truck className="w-6 h-6 text-[#FF9F43]" />
-              </div>
-              <h3 className="text-xl font-bold text-[#08284F]">
-                دستیاب گاڑیاں
-              </h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                اپنے روٹ کے لیے دستیاب گاڑی تلاش کریں۔
-              </p>
-            </div>
-            <div className="pt-4">
-              <button
-                type="button"
-                onClick={onNavigateToTrucks ? onNavigateToTrucks : onNavigateToSearch}
-                className="w-full inline-flex items-center justify-center gap-1.5 bg-[#FF9F43] hover:bg-amber-600 text-slate-900 font-bold text-sm py-2.5 px-4 rounded-xl transition active:scale-95 min-h-[44px]"
-              >
-                <span>گاڑیاں دیکھیں</span>
-                <ArrowLeft className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* Card 4: سلپ ویریفائی کریں */}
-          <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-200 flex flex-col justify-between hover:border-purple-400/40 hover:shadow-md transition-all">
-            <div className="space-y-2">
-              <div className="w-12 h-12 rounded-2xl bg-purple-50 text-[#7567E8] flex items-center justify-center">
-                <ShieldCheck className="w-6 h-6 text-[#7567E8]" />
-              </div>
-              <h3 className="text-xl font-bold text-[#08284F]">
-                سلپ ویریفائی کریں
-              </h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                PK Cargo Link کی سلپ کا ریکارڈ چیک کریں۔
-              </p>
-            </div>
-            <div className="pt-4">
-              <button
-                type="button"
-                onClick={onNavigateToVerify}
-                className="w-full inline-flex items-center justify-center gap-1.5 bg-[#7567E8] hover:bg-purple-700 text-white font-bold text-sm py-2.5 px-4 rounded-xl transition active:scale-95 min-h-[44px]"
-              >
-                <span>ویریفائی کریں</span>
-                <ArrowLeft className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      {/* 3. TRUST SECTION (Section 6) */}
-      <section className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
-        <div className="text-center space-y-1">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#08284F]">
-            PK Cargo Link کیوں؟
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-500">
-            پاکستان کے اڈا منیجرز اور ٹرک ڈرائیورز کا قابلِ اعتماد ڈیجیٹل ساتھی
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
-          <div className="p-4 rounded-2xl bg-[#F4F7FB] border border-slate-200/80 flex items-center gap-3">
-            <CheckCircle2 className="w-5 h-5 text-[#19A974] flex-shrink-0" />
-            <span className="font-bold text-sm text-[#08284F]">آسان ڈیجیٹل سلپس</span>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-[#F4F7FB] border border-slate-200/80 flex items-center gap-3">
-            <CheckCircle2 className="w-5 h-5 text-[#19A974] flex-shrink-0" />
-            <span className="font-bold text-sm text-[#08284F]">WhatsApp شیئرنگ</span>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-[#F4F7FB] border border-slate-200/80 flex items-center gap-3">
-            <CheckCircle2 className="w-5 h-5 text-[#19A974] flex-shrink-0" />
-            <span className="font-bold text-sm text-[#08284F]">آن لائن سلپ ویریفکیشن</span>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-[#F4F7FB] border border-slate-200/80 flex items-center gap-3">
-            <CheckCircle2 className="w-5 h-5 text-[#19A974] flex-shrink-0" />
-            <span className="font-bold text-sm text-[#08284F]">Adda اور رابطہ معلومات</span>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-[#F4F7FB] border border-slate-200/80 flex items-center gap-3">
-            <CheckCircle2 className="w-5 h-5 text-[#19A974] flex-shrink-0" />
-            <span className="font-bold text-sm text-[#08284F]">موبائل فرینڈلی نظام</span>
-          </div>
-        </div>
-      </section>
-
-      {/* 3B. USER'S CITY LOADS SECTION (shown when location detected) */}
+      {/* 2. USER'S CITY LOADS (shown when location detected) */}
       {userCity && (
-        <section className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-emerald-200 pb-3">
-            <div>
-              <h2 className="text-2xl font-bold text-[#08284F] flex items-center gap-2">
-                <MapPin className="w-6 h-6 text-[#19A974]" />
-                <span>{userCity} کے تازہ ترین لوڈز</span>
-              </h2>
-              <p className="text-xs text-slate-500">
-                آپ کی لوکیشن کے مطابق آپ کے شہر کے دستیاب لوڈز
-              </p>
-            </div>
+        <section className="space-y-3">
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-lg font-extrabold text-[#0B2A5B] flex items-center gap-1.5">
+              <MapPin className="w-5 h-5 text-[#19A974]" />
+              <span>{userCity} کے لوڈز</span>
+            </h2>
             <button
               type="button"
               onClick={onNavigateToSearch}
-              className="self-start sm:self-auto inline-flex items-center gap-1.5 text-sm font-bold text-[#19A974] hover:text-emerald-800 transition min-h-[44px]"
+              className="inline-flex items-center gap-1 text-xs font-extrabold text-[#B97A0A] hover:underline min-h-[36px]"
             >
-              <span>تمام لوڈز دیکھیں</span>
-              <ArrowLeft className="w-4 h-4" />
+              <span>سب دیکھیں</span>
+              <ArrowLeft className="w-3.5 h-3.5" />
             </button>
           </div>
 
           {citySlips.length === 0 ? (
-            <div className="bg-emerald-50 rounded-3xl p-6 text-center border border-emerald-200">
-              <MapPin className="w-8 h-8 text-[#19A974] mx-auto opacity-70" />
-              <p className="text-sm font-bold text-slate-700 mt-2">
-                {userCity} کے لیے ابھی کوئی لوڈ پوسٹ نہیں ہوا
-              </p>
-              <p className="text-xs text-slate-500 mt-1">
-                نیچے تمام شہروں کے تازہ ترین لوڈز دیکھیں
+            <div className="bg-emerald-50/60 rounded-3xl p-5 text-center border border-emerald-100">
+              <p className="text-sm font-bold text-slate-600">
+                {userCity} کے لیے ابھی کوئی لوڈ نہیں — نیچے تازہ لوڈز دیکھیں
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
               {citySlips.slice(0, 4).map((slip) => (
-                <HomeSlipCard key={slip.id} slip={slip} onViewSlip={onViewSlip} />
+                <LoadRequestCard key={slip.id} slip={slip} onViewSlip={onViewSlip} />
               ))}
             </div>
           )}
         </section>
       )}
 
-      {/* 4. LIVE AVAILABLE LOADS SECTION */}
-      <section className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
+      {/* 3. LIVE LOAD REQUESTS (InDrive-style list) */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between px-1">
           <div>
-            <h2 className="text-2xl font-bold text-[#08284F]">
-              تازہ ترین دستیاب لوڈز
+            <h2 className="text-lg font-extrabold text-[#0B2A5B]">
+              تازہ ترین لوڈز
             </h2>
-            <p className="text-xs text-slate-500">
-              ڈرائیور حضرات بغیر رجسٹریشن کے براہ راست لوڈ چیک کریں اور اڈا منیجر سے رابطہ کریں
+            <p className="text-[11px] text-slate-500 font-bold">
+              براہِ راست کال و واٹس ایپ رابطہ — بغیر رجسٹریشن
             </p>
           </div>
           <button
             type="button"
             onClick={onNavigateToSearch}
-            className="self-start sm:self-auto inline-flex items-center gap-1.5 text-sm font-bold text-[#19A974] hover:text-emerald-800 transition min-h-[44px]"
+            className="inline-flex items-center gap-1 text-xs font-extrabold text-[#B97A0A] hover:underline min-h-[36px] shrink-0"
           >
-            <span>تمام لوڈز دیکھیں</span>
-            <ArrowLeft className="w-4 h-4" />
+            <span>سب دیکھیں</span>
+            <ArrowLeft className="w-3.5 h-3.5" />
           </button>
         </div>
 
@@ -440,44 +132,72 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <Truck className="w-10 h-10 text-[#19A974] mx-auto opacity-70" />
             <h3 className="font-bold text-slate-800 text-base">ابھی کوئی نیا لوڈ پوسٹ نہیں ہوا</h3>
             <p className="text-xs text-slate-500 max-w-md mx-auto">
-              اڈا منیجر حضرات نیا لوڈ پوسٹ کرنے کے لیے 'لوڈ سلپ بنائیں' بٹن دبائیں اور واٹس ایپ پر فوراً شیئر کریں۔
+              اڈا منیجر حضرات نیا لوڈ پوسٹ کرنے کے لیے 'نئی سلپ بنائیں' دبائیں اور واٹس ایپ پر فوراً شیئر کریں۔
             </p>
             <button
               type="button"
               onClick={onOpenCreate}
-              className="inline-flex items-center gap-2 bg-[#19A974] hover:bg-[#169163] text-white font-bold text-sm px-5 py-2.5 rounded-xl transition cursor-pointer min-h-[44px]"
+              className="inline-flex items-center gap-2 text-[#0B2A5B] font-extrabold text-sm px-6 py-3 rounded-2xl transition active:scale-95 min-h-[48px] shadow-[0_8px_24px_rgba(245,163,1,0.35)]"
+              style={{ background: 'linear-gradient(135deg, #FFC531 0%, #F5A301 60%, #E8930C 100%)' }}
             >
               <PlusCircle className="w-4 h-4" />
               <span>پہلی لوڈ سلپ بنائیں</span>
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {recentSlips.slice(0, 4).map((slip) => (
-              <HomeSlipCard key={slip.id} slip={slip} onViewSlip={onViewSlip} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            {recentSlips.slice(0, 6).map((slip) => (
+              <LoadRequestCard key={slip.id} slip={slip} onViewSlip={onViewSlip} />
             ))}
           </div>
         )}
       </section>
 
-      {/* 5. ADDA MANAGER PROMO BANNER */}
-      <section className="bg-gradient-to-r from-[#08284F] to-[#123A6D] rounded-3xl p-6 sm:p-8 text-white shadow-lg">
-        <div className="max-w-3xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="space-y-2.5 text-right">
-            <h3 className="text-2xl font-bold text-white font-nafees">
+      {/* 4. TRUST STRIP (compact) */}
+      <section className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
+        <h2 className="text-base font-extrabold text-[#0B2A5B] text-center pb-3">
+          PK Cargo Link کیوں؟
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {['آسان ڈیجیٹل سلپس', 'WhatsApp شیئرنگ', 'آن لائن ویریفکیشن', 'اڈا رابطہ معلومات', 'موبائل فرینڈلی', 'لوڈ-گاڑی میچنگ'].map((t) => (
+            <div key={t} className="p-3 rounded-2xl bg-[#F4F7FB] border border-slate-100 flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-[#19A974] flex-shrink-0" />
+              <span className="font-bold text-xs text-[#0B2A5B] leading-tight">{t}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 5. ADDA MANAGER PROMO */}
+      <section className="rounded-3xl p-6 text-white shadow-lg bg-gradient-to-br from-[#123A6D] to-[#08284F] border border-white/10">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="space-y-1.5 text-right">
+            <h3 className="text-xl font-extrabold">
               کیا آپ ٹرانسپورٹ اڈا منیجر ہیں؟
             </h3>
-            <p className="text-sm sm:text-base text-slate-200 leading-relaxed">
-              ایک بار اپنے اڈا کے 5 فون نمبر اور معلومات محفوظ کریں، اس کے بعد ہر سلپ پر آپ کے نمبر خود بخود درج ہوں گے۔
+            <p className="text-sm text-slate-300 leading-relaxed">
+              ایک بار اڈا کی معلومات محفوظ کریں — ہر سلپ پر نمبر خود بخود آئیں گے۔
             </p>
           </div>
-          <button
-            type="button"
-            onClick={onOpenCreate}
-            className="flex-shrink-0 bg-[#19A974] hover:bg-[#169163] text-white px-6 py-3.5 rounded-xl font-bold text-base shadow-md active:scale-95 transition min-h-[48px]"
-          >
-            نئی لوڈ سلپ بنائیں
-          </button>
+          <div className="flex-shrink-0 flex flex-col items-center gap-2">
+            <button
+              type="button"
+              onClick={onOpenCreate}
+              className="text-[#0B2A5B] px-6 py-3.5 rounded-2xl font-extrabold text-base shadow-md active:scale-95 transition min-h-[52px] w-full"
+              style={{ background: 'linear-gradient(135deg, #FFC531 0%, #F5A301 60%, #E8930C 100%)' }}
+            >
+              نئی لوڈ سلپ بنائیں
+            </button>
+            {onNavigateToPlans && (
+              <button
+                type="button"
+                onClick={onNavigateToPlans}
+                className="text-xs font-bold text-amber-200 hover:text-amber-100 underline underline-offset-4 min-h-[36px]"
+              >
+                💳 سبسکرپشن پلانز دیکھیں (پہلا مہینہ مفت)
+              </button>
+            )}
+          </div>
         </div>
       </section>
 
