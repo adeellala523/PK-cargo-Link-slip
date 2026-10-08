@@ -11,15 +11,19 @@ import {
   AlertCircle,
   Truck,
   Plus,
-  Trash2
+  Trash2,
+  ShieldCheck
 } from 'lucide-react';
 import { AddaProfile, NamedContact } from '../types';
+import { VerificationBadge } from './VerificationBadge';
 
 interface AddaProfileViewProps {
   profile: AddaProfile;
   onSaveProfile: (updated: AddaProfile) => void;
   onContinueToDashboard?: () => void;
   isInitialRegistration?: boolean;
+  onNavigateToVerification?: () => void;
+  verificationStatus?: 'unverified' | 'pending' | 'verified' | 'rejected';
 }
 
 export const AddaProfileView: React.FC<AddaProfileViewProps> = ({
@@ -27,6 +31,8 @@ export const AddaProfileView: React.FC<AddaProfileViewProps> = ({
   onSaveProfile,
   onContinueToDashboard,
   isInitialRegistration = false,
+  onNavigateToVerification,
+  verificationStatus = 'unverified',
 }) => {
   const [managerName, setManagerName] = useState(profile.managerName || '');
   const [addaName, setAddaName] = useState(profile.addaName || '');
@@ -169,6 +175,23 @@ export const AddaProfileView: React.FC<AddaProfileViewProps> = ({
           اڈے کی تمام معلومات اور 5 اضافی رابطہ نمبرز بمع نام درج کریں۔ یہ معلومات لوڈ سلپ پر پرنٹ ہوں گی۔
         </p>
       </div>
+
+      {/* Verification (KYC) entry */}
+      {onNavigateToVerification && (
+        <button
+          onClick={onNavigateToVerification}
+          className="w-full bg-white rounded-3xl p-5 shadow-sm border border-slate-200 flex items-center gap-4 text-right hover:border-[#F5A301]"
+        >
+          <div className="w-12 h-12 rounded-2xl bg-[#0B2A5B] flex items-center justify-center shrink-0">
+            <ShieldCheck className="w-6 h-6 text-amber-400" />
+          </div>
+          <div className="flex-1">
+            <p className="font-extrabold text-[#0B2545]">تصدیق (Verification)</p>
+            <p className="text-xs text-slate-500 mt-0.5">شناختی کارڈ، اڈے کی لوکیشن اور تصویر — تصدیق لازمی ہے</p>
+          </div>
+          <VerificationBadge status={verificationStatus} />
+        </button>
+      )}
 
       {savedSuccess && (
         <div className="bg-emerald-50 border border-emerald-300 text-emerald-900 px-4 py-3 rounded-2xl text-sm font-bold flex items-center gap-2">
