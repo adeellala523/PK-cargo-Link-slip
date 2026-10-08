@@ -18,8 +18,14 @@ export function SplashScreen({ onNext }: { onNext: () => void }) {
       dir="ltr"
     >
       <h1
-        className="text-white font-black italic tracking-tight select-none"
-        style={{ fontSize: 'clamp(2rem, 9vw, 3.5rem)' }}
+        className="text-white italic select-none uppercase"
+        style={{
+          fontSize: 'clamp(2.8rem, 13vw, 5rem)',
+          fontWeight: 900,
+          letterSpacing: '-0.02em',
+          lineHeight: 1,
+          fontStretch: 'condensed',
+        }}
       >
         PK CARGO LINK
       </h1>

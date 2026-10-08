@@ -15,8 +15,14 @@ export function WelcomeScreen({ onNext }: { onNext: () => void }) {
 
       <div className="flex-1 flex flex-col items-center justify-center text-center py-10">
         <h1
-          className="font-black text-neutral-900 leading-tight"
-          style={{ fontSize: '2.1rem', letterSpacing: '-0.01em' }}
+          className="font-black text-neutral-900 uppercase"
+          style={{
+            fontSize: 'clamp(2.6rem, 11vw, 4rem)',
+            lineHeight: 1.02,
+            letterSpacing: '-0.02em',
+            fontWeight: 900,
+            fontStretch: 'condensed',
+          }}
           dir="ltr"
         >
           TRUSTED AND

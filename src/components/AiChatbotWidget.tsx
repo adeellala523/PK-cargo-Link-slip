@@ -328,6 +328,48 @@ export function AiChatbotWidget() {
       if (raw) saved = JSON.parse(raw);
     } catch { /* ignore */ }
 
+    // PRIORITY: website login session — the bot KNOWS the user's role
+    // (Adeel: never ask "driver or adda manager?" when already logged in).
+    try {
+      if (StorageService.isDriverLoggedIn()) {
+        const d = StorageService.getCurrentDriver();
+        if (d && d.phone) {
+          const f = {
+            ...initialFlow,
+            name: d.driverName || 'ڈرائیور',
+            phone: d.phone,
+            role: 'driver' as Role,
+            userId: d.id || '',
+          };
+          setFlow(f);
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({ name: f.name, phone: f.phone, role: f.role, userId: f.userId }));
+          } catch { /* ignore */ }
+          pushBot(`خوش آمدید، ${f.name}! 👋 میں جانتا ہوں آپ ڈرائیور ہیں 🚚`, undefined, 300);
+          window.setTimeout(() => showMenu(f), 900);
+          return;
+        }
+      }
+      const cu = StorageService.getCurrentUser();
+      if (cu && cu.phone && cu.role) {
+        const f = {
+          ...initialFlow,
+          name: cu.managerName || cu.addaName || 'دوست',
+          phone: cu.phone,
+          role: cu.role as Role,
+          userId: cu.id || '',
+        };
+        setFlow(f);
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({ name: f.name, phone: f.phone, role: f.role, userId: f.userId }));
+        } catch { /* ignore */ }
+        const roleLabel = f.role === 'driver' ? 'ڈرائیور ہیں 🚚' : 'اڈا مینیجر ہیں 🏢';
+        pushBot(`خوش آمدید، ${f.name}! 👋 میں جانتا ہوں آپ ${roleLabel}`, undefined, 300);
+        window.setTimeout(() => showMenu(f), 900);
+        return;
+      }
+    } catch { /* fall through to saved/guest flow */ }
+
     if (saved && saved.phone && saved.role) {
       const f = { ...initialFlow, name: saved.name, phone: saved.phone, role: saved.role, userId: saved.userId };
       setFlow(f);

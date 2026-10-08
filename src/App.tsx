@@ -6,6 +6,7 @@ import { CreateSlipView } from './components/CreateSlipView';
 import { LoadSlipCard } from './components/LoadSlipCard';
 import { ShareModal } from './components/ShareModal';
 import { AddaDashboardView } from './components/AddaDashboardView';
+import { AddaFleetView } from './components/AddaFleetView';
 import { AddaProfileView } from './components/AddaProfileView';
 import { SlipHistoryView } from './components/SlipHistoryView';
 import { DriverSearchView } from './components/DriverSearchView';
@@ -214,6 +215,8 @@ function AppInner() {
         return '/create-slip';
       case 'my-slips':
         return '/my-slips';
+      case 'fleet':
+        return '/fleet';
       case 'profile':
         return '/profile';
       case 'search':
@@ -339,6 +342,8 @@ function AppInner() {
         setCurrentTab('driver');
       } else if (path === '/trucks' || path === '/available-trucks' || queryTab === 'trucks' || queryTab === 'available-trucks') {
         setCurrentTab('trucks');
+      } else if (path === '/fleet' || queryTab === 'fleet') {
+        setCurrentTab('fleet');
       } else if (path === '/admin' || path === '/adil' || queryTab === 'admin' || window.location.hash === '#adil') {
         setCurrentTab('admin');
       } else if (path === '/about' || queryTab === 'about') {
@@ -827,6 +832,7 @@ function AppInner() {
             onNavigateToMySlips={() => navigateTo('my-slips')}
             onNavigateToProfile={() => navigateTo('profile')}
             onNavigateToGroups={() => navigateTo('whatsapp-groups')}
+            onNavigateToFleet={() => navigateTo('fleet')}
             onViewSlip={viewSlipDetail}
             onShareSlip={(slip) => setShareModalSlip(slip)}
             onDuplicateSlip={(slip) => handleOpenCreateModal(slip)}
@@ -979,6 +985,22 @@ function AppInner() {
             onNavigateToAddaLogin={() => handleOpenAddaLogin('login')}
             onNavigateToVerification={() => navigateTo('verification')}
           />
+        )}
+
+        {/* Fleet — adda manager's own vehicles ("میری گاڑیاں") */}
+        {currentTab === 'fleet' && (
+          isLoggedIn && currentUserRole !== 'driver' ? (
+            <div className="px-3 sm:px-4 pt-4 pb-8">
+              <AddaFleetView
+                profile={profile}
+                onNavigateToLogin={() => navigateTo('login')}
+              />
+            </div>
+          ) : (
+            <div className="px-4 pt-8 max-w-md mx-auto">
+              <LoadsLoginPrompt onLogin={() => navigateTo('login')} />
+            </div>
+          )
         )}
 
         {/* 11. Login / Register Tab */}

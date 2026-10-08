@@ -27,6 +27,7 @@ interface AddaDashboardViewProps {
   onNavigateToMySlips: () => void;
   onNavigateToProfile: () => void;
   onNavigateToGroups: () => void;
+  onNavigateToFleet?: () => void;
   onNavigateToSearch?: () => void;
   onNavigateToTrucks?: () => void;
   onViewSlip: (slip: LoadSlip) => void;
@@ -44,6 +45,7 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
   onNavigateToMySlips,
   onNavigateToProfile,
   onNavigateToGroups,
+  onNavigateToFleet,
   onNavigateToSearch,
   onNavigateToTrucks,
   onViewSlip,
@@ -264,6 +266,16 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
           >
             <PlusCircle className="w-7 h-7 sm:w-8 sm:h-8 mb-1" />
             <span className="font-extrabold text-base sm:text-lg">نئی لوڈ سلپ</span>
+          </button>
+
+          {/* 🚛 میری گاڑیاں (fleet) */}
+          <button
+            type="button"
+            onClick={onNavigateToFleet ? onNavigateToFleet : onNavigateToTrucks}
+            className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-white hover:bg-slate-50 border border-slate-200 text-[#08284F] shadow-sm active:scale-95 transition min-h-[88px] text-center"
+          >
+            <Truck className="w-6 h-6 sm:w-7 sm:h-7 text-[#0B2A5B] mb-1" />
+            <span className="font-bold text-sm sm:text-base">میری گاڑیاں</span>
           </button>
 
           {/* 🚛 دستیاب گاڑی */}
