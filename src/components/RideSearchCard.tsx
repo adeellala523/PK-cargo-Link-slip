@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Search, MapPin, ArrowUpDown, Truck, FileText, ShieldCheck, UserCheck, Navigation } from 'lucide-react';
+import { Search, MapPin, ArrowUpDown, Truck, FileText, ShieldCheck, UserCheck, Navigation, Bookmark, Plus, X } from 'lucide-react';
+import { getSavedLocations, saveLocation, deleteSavedLocation } from '../utils/savedLocations';
+import type { SavedLocation } from '../types';
 
 interface RideSearchCardProps {
   /** Called with (from, to, vehicleType) — parent navigates to search with prefill */
@@ -29,6 +31,9 @@ export const RideSearchCard: React.FC<RideSearchCardProps> = ({
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [vehicle, setVehicle] = useState('تمام گاڑیاں');
+  const [saved, setSaved] = useState<SavedLocation[]>(() => getSavedLocations());
+  const [showSaveForm, setShowSaveForm] = useState(false);
+  const [saveLabel, setSaveLabel] = useState('');
 
   const swap = () => {
     setFrom(to);
@@ -37,6 +42,19 @@ export const RideSearchCard: React.FC<RideSearchCardProps> = ({
 
   const submit = () => {
     onSearch(from.trim(), to.trim(), vehicle === 'تمام گاڑیاں' ? '' : vehicle);
+  };
+
+  const handleSaveCurrent = () => {
+    if (!from.trim() && !to.trim()) return;
+    const entry = saveLocation({
+      label: saveLabel.trim() || `${from.trim() || '—'} تا ${to.trim() || '—'}`,
+      city: from.trim(),
+      location: to.trim(),
+      kind: 'both',
+    });
+    setSaved([entry, ...saved].slice(0, 20));
+    setSaveLabel('');
+    setShowSaveForm(false);
   };
 
   return (
@@ -107,6 +125,70 @@ export const RideSearchCard: React.FC<RideSearchCardProps> = ({
             </div>
           </div>
 
+          {/* Saved locations (Yango-style saved places) */}
+          <div className="pt-3">
+            <div className="flex items-center justify-between pb-1.5">
+              <div className="text-[11px] font-bold text-slate-400 flex items-center gap-1">
+                <Bookmark className="w-3.5 h-3.5" />
+                محفوظ مقامات
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSaveForm((s) => !s)}
+                className="inline-flex items-center gap-1 text-[11px] font-extrabold text-[#B97A0A] min-h-[32px]"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                موجودہ روٹ محفوظ کریں
+              </button>
+            </div>
+            {showSaveForm && (
+              <div className="flex gap-2 mb-2">
+                <input
+                  value={saveLabel}
+                  onChange={(e) => setSaveLabel(e.target.value)}
+                  placeholder="نام — مثال: میرا اڈا"
+                  className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold outline-none focus:border-[#F5A301] min-h-[40px]"
+                />
+                <button
+                  type="button"
+                  onClick={handleSaveCurrent}
+                  disabled={!from.trim() && !to.trim()}
+                  className="px-4 rounded-xl bg-[#0B2A5B] text-white text-xs font-extrabold min-h-[40px] disabled:opacity-40"
+                >
+                  محفوظ کریں
+                </button>
+              </div>
+            )}
+            {saved.length > 0 ? (
+              <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 no-scrollbar">
+                {saved.map((s) => (
+                  <span
+                    key={s.id}
+                    className="shrink-0 inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-full pl-2 pr-1 py-1"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => { setFrom(s.city); setTo(s.location); }}
+                      className="text-[11px] font-extrabold text-amber-900 px-1.5 min-h-[28px]"
+                    >
+                      📍 {s.label}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { deleteSavedLocation(s.id); setSaved((p) => p.filter((x) => x.id !== s.id)); }}
+                      className="w-6 h-6 rounded-full bg-white/70 flex items-center justify-center text-slate-400"
+                      aria-label="حذف کریں"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[10px] text-slate-400 font-bold pb-1">اکثر استعمال ہونے والے روٹ یہاں محفوظ کریں</p>
+            )}
+          </div>
+
           {/* Vehicle chips */}
           <div className="pt-3">
             <div className="text-[11px] font-bold text-slate-400 pb-1.5">گاڑی کی قسم</div>
@@ -137,6 +219,16 @@ export const RideSearchCard: React.FC<RideSearchCardProps> = ({
           >
             <Search className="w-5 h-5 stroke-[2.5]" />
             <span>لوڈ تلاش کریں</span>
+          </button>
+
+          {/* Adda-side primary: post a load (Yango passenger-app equivalent of "book a ride") */}
+          <button
+            type="button"
+            onClick={onOpenCreate}
+            className="mt-2.5 w-full inline-flex items-center justify-center gap-2 bg-[#0B2A5B] hover:bg-[#123A6D] text-white font-extrabold text-base py-4 rounded-2xl transition active:scale-[0.98] min-h-[56px] shadow-[0_8px_24px_rgba(11,42,91,0.30)]"
+          >
+            <FileText className="w-5 h-5 text-[#F5A301]" />
+            <span>لوڈ پوسٹ کریں</span>
           </button>
         </div>
       </div>
