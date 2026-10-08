@@ -48,6 +48,7 @@ import { VerificationBadge } from './VerificationBadge';
 import { getVerificationStatus } from '../utils/verification';
 import { NotificationService } from '../services/notificationService';
 import { VehicleMatchTool } from './VehicleMatchTool';
+import { NegotiationCard } from './NegotiationCard';
 import { LoadChat } from './LoadChat';
 import { LiveTrackingMap } from './LiveTrackingMap';
 import { RateDriverModal } from './RateDriverModal';
@@ -1089,6 +1090,20 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
         {/* Matching vehicles — MANAGER ONLY (drivers must never see other vehicles).
             Proximity-sorted "موزوں گاڑیاں" tool for the adda manager. */}
         {isManagerView && <VehicleMatchTool slip={currentSlip} />}
+
+        {/* inDrive-style negotiation thread (adda side) — counter-offers from drivers */}
+        {isManagerView && (currentSlip.offers || []).length > 0 && currentSlip.status === 'active' && (
+          <NegotiationCard
+            slip={currentSlip}
+            myRole="adda"
+            myName={currentSlip.managerName || currentSlip.addaName}
+            myPhone={currentSlip.primaryPhone}
+            onUpdate={(updated) => {
+              setCurrentSlip(updated);
+              if (onUpdateSlip) onUpdateSlip(updated);
+            }}
+          />
+        )}
 
         {/* Secondary Manager / Print Actions */}
         <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs">

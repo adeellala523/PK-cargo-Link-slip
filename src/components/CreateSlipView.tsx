@@ -1,27 +1,25 @@
 import React, { useState } from 'react';
-import { PAKISTAN_VEHICLE_VALUES } from '../utils/vehicleTypes';
-import { 
-  PlusCircle, 
-  MapPin, 
-  Truck, 
-  Package, 
-  Calendar,
-  Building2, 
-  History, 
-  Sparkles, 
-  ArrowLeft,
-  Info,
-  Phone,
-  User,
+import {
+  PAKISTAN_VEHICLE_TYPES,
+} from '../utils/vehicleTypes';
+import {
+  MapPin,
+  Truck,
+  Car,
+  Navigation,
+  Package,
+  ChevronDown,
+  Mic,
+  X,
   Plus,
   Trash2,
-  Check,
-  Mic
+  Phone,
 } from 'lucide-react';
 import { LoadSlip, AddaProfile, NamedContact } from '../types';
 import { generateSlipId } from '../utils/formatters';
 import { geocodeCity } from '../utils/geo';
 import { PickupMapPicker } from './PickupMapPicker';
+import { seedOpeningOffer } from '../utils/negotiation';
 
 interface CreateSlipViewProps {
   addaProfile: AddaProfile;
@@ -32,20 +30,26 @@ interface CreateSlipViewProps {
   onOpenVoiceModal?: () => void;
 }
 
-const POPULAR_CITIES = [
-  'لاہور', 'کراچی', 'ملتان', 'فیصل آباد', 'راولپنڈی', 'گوجرانوالہ',
-  'پشاور', 'کوئٹہ', 'ساہیوال', 'رحیم یار خان', 'سکھر', 'حیدرآباد', 'اسلام آباد'
+const IDRIVE_GREEN = '#B8E62E';
+const IDRIVE_GREEN_DARK = '#9BCB1A';
+const SELECTED_BLUE = '#E3F0FD';
+
+type TripKind = 'city' | 'freight' | 'intercity';
+
+const TRIP_TABS: { key: TripKind; label: string; icon: 'car' | 'truck' }[] = [
+  { key: 'city', label: 'شہر', icon: 'car' },
+  { key: 'freight', label: 'فریٹ', icon: 'truck' },
+  { key: 'intercity', label: 'شہر سے شہر', icon: 'car' },
 ];
 
-const POPULAR_GOODS = [
-  'چاول', 'گندم', 'کھاد', 'سیمنٹ', 'مکئی', 
-  'لوہا و سٹیل', 'کپاس / روئی', 'فروٹ و سبزی', 'کیمیکل ڈرم', 'کریانہ جنرل'
-];
-
-const COMMON_VEHICLES = PAKISTAN_VEHICLE_VALUES;
-
-const COMMON_BODIES = ['فل باڈی', 'ہاف باڈی', 'پھٹا', 'کنٹینر'];
-
+/**
+ * CreateSlipView — inDrive Freight style load posting (Adeel's direction:
+ * copy inDrive Freight EXACTLY).
+ * - Top tabs: City | Freight (selected) | City to city
+ * - ALL 41 vehicle types as tappable rows (icon + label), selected = blue highlight
+ * - Big lime-green "ریکویسٹ بنائیں" button
+ * - inDrive negotiation: adda's opening price seeds the bidding thread
+ */
 export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
   addaProfile,
   onSlipCreated,
@@ -54,95 +58,53 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
   onCancel,
   onOpenVoiceModal,
 }) => {
-  // Pickup & Destination Details (FREE TEXT INPUTS)
+  const [tripKind, setTripKind] = useState<TripKind>(prefillSlip?.tripKind || 'freight');
+
+  // Route
   const [loadingCity, setLoadingCity] = useState(prefillSlip?.loadingCity || addaProfile.city || 'لاہور');
   const [loadingLocation, setLoadingLocation] = useState(prefillSlip?.loadingLocation || '');
   const [destinationCity, setDestinationCity] = useState(prefillSlip?.destinationCity || 'کراچی');
   const [destinationLocation, setDestinationLocation] = useState(prefillSlip?.destinationLocation || '');
-
-  // Goods & Quantity
-  const [goods, setGoods] = useState(prefillSlip?.goods || '');
-  const [quantity, setQuantity] = useState(prefillSlip?.quantity || '');
-
-  // Vehicle (MULTIPLE SELECTION & FREE TYPING)
-  const [vehicleType, setVehicleType] = useState(prefillSlip?.vehicleType || '22 Wheeler');
-  const [selectedVehicleChips, setSelectedVehicleChips] = useState<string[]>(() => {
-    if (prefillSlip?.vehicleType) {
-      return prefillSlip.vehicleType.split('،').map((s) => s.trim()).filter(Boolean);
-    }
-    return ['22 Wheeler'];
-  });
-
-  // Body Type (FREE TEXT / CHIPS)
-  const [bodyType, setBodyType] = useState(prefillSlip?.bodyType || 'فل باڈی');
-  const [vehicleNumber, setVehicleNumber] = useState(prefillSlip?.vehicleNumber || '');
-  
-  // Date & Instructions
-  const todayIso = new Date().toISOString().split('T')[0];
-  const [loadDate, setLoadDate] = useState(todayIso);
-  const [fareOffer, setFareOffer] = useState(prefillSlip?.fareOffer || '');
-  const [specialInstructions, setSpecialInstructions] = useState(prefillSlip?.specialInstructions || '');
-
-  // Multi-Load Support (Allow 2nd or 3rd load in single slip)
-  const [additionalLoads, setAdditionalLoads] = useState<Array<{
-    goods: string;
-    loadingCity: string;
-    destinationCity: string;
-    weight?: string;
-    quantity?: string;
-    vehicleType?: string;
-  }>>(() => prefillSlip?.additionalLoads || []);
-
-  // 5 Additional Contacts with Name and Mobile Phone Number
-  const [namedContacts, setNamedContacts] = useState<NamedContact[]>(() => {
-    if (prefillSlip?.namedContacts && prefillSlip.namedContacts.length > 0) {
-      return prefillSlip.namedContacts;
-    }
-    if (addaProfile.namedContacts && addaProfile.namedContacts.length > 0) {
-      return addaProfile.namedContacts;
-    }
-    
-    // Seed from profile contacts
-    const initial: NamedContact[] = [];
-    if (addaProfile.contact1) initial.push({ name: addaProfile.contact1Name || 'منشی', number: addaProfile.contact1 });
-    if (addaProfile.contact2) initial.push({ name: addaProfile.contact2Name || 'اڈا پارٹنر', number: addaProfile.contact2 });
-    if (addaProfile.contact3) initial.push({ name: addaProfile.contact3Name || '', number: addaProfile.contact3 });
-    if (addaProfile.contact4) initial.push({ name: addaProfile.contact4Name || '', number: addaProfile.contact4 });
-    if (addaProfile.contact5) initial.push({ name: addaProfile.contact5Name || '', number: addaProfile.contact5 });
-
-    while (initial.length < 5) {
-      initial.push({ name: '', number: '' });
-    }
-    return initial.slice(0, 5);
-  });
-
-  // Error state
-  const [errorMessage, setErrorMessage] = useState('');
-
-  // Exact pickup pin (map) — source of truth for 7km driver matching.
-  // Falls back to city geocoding when no pin is dropped.
   const [pickupPinLat, setPickupPinLat] = useState<number | undefined>(prefillSlip?.pickupLat);
   const [pickupPinLng, setPickupPinLng] = useState<number | undefined>(prefillSlip?.pickupLng);
 
-  // Toggle vehicle chip and update free text string
-  const handleToggleVehicleChip = (v: string) => {
-    let next: string[];
-    if (selectedVehicleChips.includes(v)) {
-      next = selectedVehicleChips.filter((x) => x !== v);
-    } else {
-      next = [...selectedVehicleChips, v];
-    }
-    setSelectedVehicleChips(next);
-    setVehicleType(next.join('، '));
-  };
+  // Goods & price (inDrive: YOUR offer starts the negotiation)
+  const [goods, setGoods] = useState(prefillSlip?.goods || '');
+  const [quantity, setQuantity] = useState(prefillSlip?.quantity || prefillSlip?.weight || '');
+  const [fareOffer, setFareOffer] = useState(prefillSlip?.fareOffer || '');
 
-  const handleContactChange = (index: number, field: 'name' | 'number', value: string) => {
-    const updated = [...namedContacts];
-    updated[index] = { ...updated[index], [field]: value };
-    setNamedContacts(updated);
-  };
+  // Vehicle — single select from all 41 (inDrive style)
+  const [vehicleType, setVehicleType] = useState(
+    prefillSlip?.vehicleType?.split('،')[0]?.trim() || '22 Wheeler'
+  );
+  const [bodyType, setBodyType] = useState(prefillSlip?.bodyType || 'فل باڈی');
 
-  // Reuse previous slip
+  // Meta
+  const todayIso = new Date().toISOString().split('T')[0];
+  const [loadDate, setLoadDate] = useState(todayIso);
+  const [specialInstructions, setSpecialInstructions] = useState(prefillSlip?.specialInstructions || '');
+
+  // Collapsibles
+  const [showDetails, setShowDetails] = useState(false);
+  const [showContacts, setShowContacts] = useState(false);
+
+  const [additionalLoads, setAdditionalLoads] = useState<Array<{
+    goods: string; loadingCity: string; destinationCity: string; quantity?: string;
+  }>>(() => prefillSlip?.additionalLoads?.map((a) => ({
+    goods: a.goods, loadingCity: a.loadingCity, destinationCity: a.destinationCity, quantity: a.quantity,
+  })) || []);
+
+  const [namedContacts, setNamedContacts] = useState<NamedContact[]>(() => {
+    if (prefillSlip?.namedContacts && prefillSlip.namedContacts.length > 0) return prefillSlip.namedContacts;
+    const initial: NamedContact[] = [];
+    if (addaProfile.contact1) initial.push({ name: addaProfile.contact1Name || 'منشی', number: addaProfile.contact1 });
+    while (initial.length < 3) initial.push({ name: '', number: '' });
+    return initial.slice(0, 3);
+  });
+
+  const [errorMessage, setErrorMessage] = useState('');
+  const [geocoding, setGeocoding] = useState(false);
+
   const handleApplyPreviousSlip = (slip: LoadSlip) => {
     setLoadingCity(slip.loadingCity);
     setLoadingLocation(slip.loadingLocation);
@@ -151,69 +113,37 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
     setDestinationCity(slip.destinationCity);
     setDestinationLocation(slip.destinationLocation || '');
     setGoods(slip.goods);
-    setQuantity(slip.quantity);
-    setVehicleType(slip.vehicleType);
-    setSelectedVehicleChips(slip.vehicleType.split('،').map((s) => s.trim()).filter(Boolean));
+    setQuantity(slip.quantity || slip.weight || '');
+    setVehicleType(slip.vehicleType.split('،')[0].trim());
     setBodyType(slip.bodyType);
-    setVehicleNumber(slip.vehicleNumber || '');
     setFareOffer(slip.fareOffer || '');
     setSpecialInstructions(slip.specialInstructions || '');
-    if (slip.namedContacts && slip.namedContacts.length > 0) {
-      setNamedContacts(slip.namedContacts);
-    }
+    if (slip.tripKind) setTripKind(slip.tripKind);
   };
-
-  const [geocoding, setGeocoding] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!loadingCity.trim()) {
-      setErrorMessage('براہ کرم پک اپ شہر درج کریں۔');
-      return;
-    }
-    if (!destinationCity.trim()) {
-      setErrorMessage('براہ کرم ڈیلیوری شہر درج کریں۔');
-      return;
-    }
-    if (!goods.trim()) {
-      setErrorMessage('براہ کرم سامان کی تفصیل درج کریں۔');
-      return;
-    }
-    if (!vehicleType.trim()) {
-      setErrorMessage('براہ کرم مطلوبہ گاڑی درج یا منتخب کریں۔');
-      return;
-    }
-
+    if (!loadingCity.trim()) { setErrorMessage('پک اپ شہر درج کریں'); return; }
+    if (!destinationCity.trim()) { setErrorMessage('منزل کا شہر درج کریں'); return; }
+    if (!goods.trim()) { setErrorMessage('سامان کی تفصیل درج کریں'); return; }
+    if (!vehicleType.trim()) { setErrorMessage('گاڑی منتخب کریں'); return; }
     setErrorMessage('');
 
-    // Pickup GPS: the map pin is the source of truth (7km rule).
-    // Falls back to geocoding the pickup city when no pin was dropped.
-    // Non-blocking: slip posts even if geocoding fails.
     setGeocoding(true);
     let pickupLat: number | undefined = pickupPinLat;
     let pickupLng: number | undefined = pickupPinLng;
     if ((pickupLat == null || pickupLng == null) && loadingCity.trim()) {
       try {
         const coords = await geocodeCity(loadingCity.trim());
-        if (coords) {
-          pickupLat = coords.lat;
-          pickupLng = coords.lng;
-        }
-      } catch {
-        /* ignore — slip still posts without coords */
-      } finally {
-        setGeocoding(false);
-      }
+        if (coords) { pickupLat = coords.lat; pickupLng = coords.lng; }
+      } catch { /* ignore */ }
+      finally { setGeocoding(false); }
     } else {
       setGeocoding(false);
     }
 
-    // Generate unique PKCL slip ID
     const newSlipId = generateSlipId();
-
     const validNamedContacts = namedContacts.filter((c) => c && c.number.trim().length > 0);
-    const additionalNumbers = validNamedContacts.map((c) => c.number.trim());
 
     const newSlip: LoadSlip = {
       id: newSlipId,
@@ -222,10 +152,10 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
       addaCity: addaProfile.city || loadingCity,
       addaAddress: addaProfile.address,
       addaLogo: addaProfile.logoUrl,
-      managerName: addaProfile.managerName || 'اڈا منیجر',
+      managerName: addaProfile.managerName || 'اڈا مینیجر',
       primaryPhone: addaProfile.primaryPhone || '03001234567',
       whatsappNumber: addaProfile.whatsappNumber || addaProfile.primaryPhone || '03001234567',
-      additionalContacts: additionalNumbers,
+      additionalContacts: validNamedContacts.map((c) => c.number.trim()),
       namedContacts: validNamedContacts,
       loadingCity: loadingCity.trim(),
       loadingLocation: loadingLocation.trim() || 'مرکزی اڈا / گودام',
@@ -238,528 +168,357 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
       quantity: quantity.trim(),
       vehicleType: vehicleType.trim(),
       bodyType: bodyType.trim() || 'فل باڈی',
-      vehicleNumber: vehicleNumber.trim() || undefined,
       fareOffer: fareOffer.trim() || undefined,
       specialInstructions: specialInstructions.trim() || undefined,
+      tripKind,
       status: 'active',
       createdAt: new Date().toISOString(),
       viewsCount: 0,
       sharesCount: 0,
       driverTripStatus: 'not_started',
-      additionalLoads: additionalLoads.filter(al => al.goods.trim().length > 0),
+      additionalLoads: additionalLoads.filter((al) => al.goods.trim().length > 0).map((al) => ({
+        goods: al.goods, loadingCity: al.loadingCity, destinationCity: al.destinationCity,
+        quantity: al.quantity,
+      })),
     };
 
-    onSlipCreated(newSlip);
+    const slipWithOffer = seedOpeningOffer(
+      newSlip,
+      addaProfile.managerName || addaProfile.addaName || 'اڈا مینیجر',
+      addaProfile.primaryPhone || '03001234567'
+    );
+    onSlipCreated(slipWithOffer);
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 font-nafees">
-      
-      {/* View Header */}
-      <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-800 rounded-full text-xs font-bold border border-emerald-200 mb-2">
-            <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-            <span>صرف اڈا منیجر اختیار</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#08284F]">
-            نئی ڈیجیٹل لوڈ سلپ بنائیں
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            اڈا: <strong className="text-slate-800">{addaProfile.addaName}</strong> | منیجر: <strong className="text-slate-800">{addaProfile.managerName}</strong>
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
-          {onOpenVoiceModal && (
-            <button
-              type="button"
-              onClick={onOpenVoiceModal}
-              className="inline-flex items-center gap-1.5 text-xs text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 px-4 py-2.5 rounded-xl font-bold transition shadow-sm active:scale-95"
-            >
-              <Mic className="w-4 h-4 text-amber-300 animate-pulse" />
-              <span>🎙️ وائس سے لوڈ بنائیں</span>
-            </button>
-          )}
-
-          {onCancel && (
-            <button
-              type="button"
-              onClick={onCancel}
-              className="inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-xl font-bold transition min-h-[40px]"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>منسوخ</span>
-            </button>
-          )}
+    <div className="max-w-2xl mx-auto font-nafees bg-white min-h-screen" dir="rtl">
+      {/* ===== inDrive Freight top tabs ===== */}
+      <div className="sticky top-0 z-20 bg-white border-b border-slate-100 px-4 pt-3 pb-2">
+        <div className="flex items-center justify-center gap-2">
+          {TRIP_TABS.map((t) => {
+            const selected = tripKind === t.key;
+            const Icon = t.icon === 'truck' ? Truck : Car;
+            return (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => setTripKind(t.key)}
+                className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-sm font-extrabold transition min-h-[48px]"
+                style={selected ? { backgroundColor: SELECTED_BLUE, color: '#0B2A5B' } : { color: '#6B7280' }}
+              >
+                <Icon className="w-5 h-5" />
+                <span dir="ltr">{t.key === 'city' ? 'City' : t.key === 'freight' ? 'Freight' : 'City to city'}</span>
+                <span className="text-[11px] font-bold opacity-70">• {t.label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Quick Reuse Section */}
-      {recentSlips && recentSlips.length > 0 && (
-        <div className="bg-emerald-50/70 border border-emerald-200 rounded-3xl p-4 sm:p-5 space-y-3">
-          <div className="flex items-center gap-2 text-emerald-900 font-bold text-xs sm:text-sm">
-            <History className="w-4 h-4 text-emerald-700" />
-            <span>پچھلی سلپ سے خودکار تفصیلات بھریں (1-کلک):</span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {recentSlips.slice(0, 3).map((s) => (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() => handleApplyPreviousSlip(s)}
-                className="bg-white hover:bg-emerald-100 border border-emerald-300 text-emerald-950 text-xs px-3 py-1.5 rounded-xl font-medium transition shadow-2xs text-right"
-              >
-                {s.loadingCity} ➔ {s.destinationCity} ({s.goods} - {s.vehicleType})
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Main Form */}
-      <form onSubmit={handleSubmit} className="bg-white rounded-3xl shadow-lg border border-slate-200 p-5 sm:p-8 space-y-6 text-right">
-        
+      <form onSubmit={handleSubmit} className="px-4 pb-10 space-y-5">
         {errorMessage && (
-          <div className="bg-red-50 border border-red-200 text-red-700 p-3.5 rounded-2xl text-xs font-bold">
+          <div className="bg-red-50 border border-red-200 text-red-700 p-3.5 rounded-2xl text-xs font-bold mt-3">
             {errorMessage}
           </div>
         )}
 
-        {/* 1. ROUTE SECTION: LOADING & DESTINATION (FREE TEXT INPUTS) */}
-        <div className="bg-slate-50/80 rounded-2xl p-4 sm:p-5 border border-slate-200 space-y-4">
-          <h3 className="font-extrabold text-sm sm:text-base text-[#08284F] border-b border-slate-200 pb-2 flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-[#19A974]" />
-            <span>روٹ کی تفصیلات (روانگی اور منزل)</span>
-          </h3>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            
-            {/* روانگی کا شہر (FREE TEXT) */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 block">
-                روانگی کا شہر (پک اپ سٹی - ٹائپ کریں) <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={loadingCity}
-                onChange={(e) => setLoadingCity(e.target.value)}
-                placeholder="مثال: لاہور، ملتان، ساہیوال، وغیرہ"
-                className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:border-[#123A6D] outline-none min-h-[44px]"
-              />
-              <div className="flex flex-wrap gap-1 pt-1">
-                {['لاہور', 'کراچی', 'ملتان', 'فیصل آباد', 'ساہیوال'].map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => setLoadingCity(c)}
-                    className="text-[10px] bg-slate-200/80 hover:bg-emerald-100 text-slate-700 px-2 py-0.5 rounded-md"
-                  >
-                    {c}
-                  </button>
-                ))}
-              </div>
-
-              <div className="pt-1">
-                <label className="text-[11px] font-medium text-slate-500 block mb-0.5">
-                  پک اپ لوکیشن / گودام
-                </label>
+        {/* ===== Route card (inDrive style) ===== */}
+        <div className="mt-3 bg-white rounded-3xl border border-slate-200 overflow-hidden">
+          <div className="flex items-stretch">
+            <div className="flex flex-col items-center px-4 py-4">
+              <span className="w-3 h-3 rounded-full" style={{ backgroundColor: IDRIVE_GREEN_DARK }} />
+              <span className="w-0.5 flex-1 bg-slate-200 my-1" />
+              <MapPin className="w-4 h-4 text-slate-800" />
+            </div>
+            <div className="flex-1 divide-y divide-slate-100">
+              <div className="py-3 pr-1 pl-4">
+                <label className="text-[11px] font-bold text-slate-400 block">کہاں سے؟ (Pickup)</label>
+                <input
+                  type="text"
+                  required
+                  value={loadingCity}
+                  onChange={(e) => setLoadingCity(e.target.value)}
+                  placeholder="پک اپ شہر"
+                  className="w-full text-base font-extrabold text-slate-900 outline-none placeholder:text-slate-300 placeholder:font-bold bg-transparent"
+                />
                 <input
                   type="text"
                   value={loadingLocation}
                   onChange={(e) => setLoadingLocation(e.target.value)}
-                  placeholder="مثال: ٹھوکر نیاز بیگ یا غلہ منڈی"
-                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none"
+                  placeholder="گودام / علاقہ (اختیاری)"
+                  className="w-full text-xs font-bold text-slate-500 outline-none placeholder:text-slate-300 bg-transparent mt-0.5"
                 />
               </div>
-
-              {/* Exact pickup pin on map — source of truth for 7km matching */}
-              <div className="pt-2">
-                <PickupMapPicker
-                  lat={pickupPinLat}
-                  lng={pickupPinLng}
-                  onChange={(la, ln) => {
-                    setPickupPinLat(la);
-                    setPickupPinLng(ln);
-                  }}
+              <div className="py-3 pr-1 pl-4">
+                <label className="text-[11px] font-bold text-slate-400 block">کہاں تک؟ (Destination)</label>
+                <input
+                  type="text"
+                  required
+                  value={destinationCity}
+                  onChange={(e) => setDestinationCity(e.target.value)}
+                  placeholder="منزل کا شہر"
+                  className="w-full text-base font-extrabold text-slate-900 outline-none placeholder:text-slate-300 placeholder:font-bold bg-transparent"
                 />
-              </div>
-            </div>
-
-            {/* منزل کا شہر (FREE TEXT) */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 block">
-                منزل کا شہر (ڈیلیوری سٹی - ٹائپ کریں) <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={destinationCity}
-                onChange={(e) => setDestinationCity(e.target.value)}
-                placeholder="مثال: کراچی، اسلام آباد، پشاور، وغیرہ"
-                className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:border-[#123A6D] outline-none min-h-[44px]"
-              />
-              <div className="flex flex-wrap gap-1 pt-1">
-                {['کراچی', 'راولپنڈی', 'پشاور', 'کوئٹہ', 'رحیم یار خان'].map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => setDestinationCity(c)}
-                    className="text-[10px] bg-slate-200/80 hover:bg-emerald-100 text-slate-700 px-2 py-0.5 rounded-md"
-                  >
-                    {c}
-                  </button>
-                ))}
-              </div>
-
-              <div className="pt-1">
-                <label className="text-[11px] font-medium text-slate-500 block mb-0.5">
-                  ڈیلیوری لوکیشن / اتارنے کی جگہ
-                </label>
                 <input
                   type="text"
                   value={destinationLocation}
                   onChange={(e) => setDestinationLocation(e.target.value)}
-                  placeholder="مثال: پورٹ قاسم / نیو سبزی منڈی"
-                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none"
+                  placeholder="اتارنے کی جگہ (اختیاری)"
+                  className="w-full text-xs font-bold text-slate-500 outline-none placeholder:text-slate-300 bg-transparent mt-0.5"
                 />
               </div>
             </div>
-
           </div>
         </div>
 
-        {/* 2. GOODS & VEHICLE (MULTIPLE VEHICLE SELECTION & FREE TYPING) */}
-        <div className="bg-slate-50/80 rounded-2xl p-4 sm:p-5 border border-slate-200 space-y-4">
-          <h3 className="font-extrabold text-sm sm:text-base text-[#08284F] border-b border-slate-200 pb-2 flex items-center gap-2">
-            <Truck className="w-4 h-4 text-[#123A6D]" />
-            <span>سامان اور مطلوبہ گاڑی (Multiple Vehicles Allowed)</span>
+        {/* ===== Map pin (exact pickup) ===== */}
+        <PickupMapPicker
+          lat={pickupPinLat}
+          lng={pickupPinLng}
+          onChange={(la, ln) => { setPickupPinLat(la); setPickupPinLng(ln); }}
+        />
+
+        {/* ===== Vehicle selector — ALL 41 types, inDrive rows ===== */}
+        <div>
+          <h3 className="font-extrabold text-slate-900 text-base mb-2 px-1">
+            گاڑی منتخب کریں <span className="text-xs font-bold text-slate-400">({PAKISTAN_VEHICLE_TYPES.length} اقسام)</span>
           </h3>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            
-            {/* سامان کی تفصیل */}
-            <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">
-                سامان کی تفصیل (Goods) <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={goods}
-                onChange={(e) => setGoods(e.target.value)}
-                placeholder="مثال: چاول کے تھیلے، لوہا و سریا، کھاد، وغیرہ"
-                className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:border-[#123A6D] outline-none min-h-[44px]"
-              />
-              <div className="flex flex-wrap gap-1 mt-1.5">
-                {POPULAR_GOODS.slice(0, 5).map((g) => (
-                  <button
-                    key={g}
-                    type="button"
-                    onClick={() => setGoods(g)}
-                    className="text-[10px] bg-slate-200/80 hover:bg-emerald-100 text-slate-700 px-2 py-0.5 rounded-md"
+          <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden max-h-80 overflow-y-auto">
+            {PAKISTAN_VEHICLE_TYPES.map((v) => {
+              const selected = vehicleType === v.value;
+              return (
+                <button
+                  key={v.value}
+                  type="button"
+                  onClick={() => setVehicleType(v.value)}
+                  className="w-full flex items-center gap-3 px-4 py-3 border-b border-slate-100 last:border-0 text-right transition min-h-[56px]"
+                  style={selected ? { backgroundColor: SELECTED_BLUE } : undefined}
+                >
+                  <span
+                    className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
+                    style={selected ? { backgroundColor: '#fff' } : { backgroundColor: '#F3F4F6' }}
                   >
-                    + {g}
-                  </button>
-                ))}
-              </div>
-            </div>
+                    <Truck className="w-5 h-5 text-slate-800" />
+                  </span>
+                  <span className="flex-1">
+                    <span className="block font-extrabold text-slate-900 text-sm" dir="ltr">{v.value}</span>
+                    <span className="block text-[11px] font-bold text-slate-500">{v.urdu}</span>
+                  </span>
+                  {selected && (
+                    <span
+                      className="w-6 h-6 rounded-full flex items-center justify-center text-sm font-black shrink-0"
+                      style={{ backgroundColor: IDRIVE_GREEN }}
+                    >
+                      ✓
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-            {/* وزن / مقدار */}
+        {/* ===== Goods + your offer (negotiation starts here) ===== */}
+        <div className="bg-white rounded-3xl border border-slate-200 p-4 space-y-3">
+          <div>
+            <label className="text-xs font-extrabold text-slate-900 block mb-1.5">
+              <Package className="w-3.5 h-3.5 inline ml-1" />
+              سامان کی تفصیل <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              required
+              value={goods}
+              onChange={(e) => setGoods(e.target.value)}
+              placeholder="مثال: چاول کے تھیلے، سریا، کھاد"
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-slate-400 min-h-[52px]"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">
-                وزن / بوریوں کی تعداد (Quantity / Weight)
-              </label>
+              <label className="text-xs font-extrabold text-slate-900 block mb-1.5">وزن / مقدار</label>
               <input
                 type="text"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
-                placeholder="مثال: 35 ٹن یا 600 بوریاں"
-                className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:border-[#123A6D] outline-none min-h-[44px]"
+                placeholder="35 ٹن"
+                className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold outline-none min-h-[52px]"
               />
             </div>
-
-          </div>
-
-          {/* ============================================================== */}
-          {/* MULTI-LOAD SECTION (ایک سے زائد لوڈ شامل کریں) */}
-          {/* ============================================================== */}
-          <div className="bg-emerald-50/70 p-4 sm:p-5 rounded-2xl border border-emerald-200/90 space-y-4">
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <div>
-                <h3 className="font-extrabold text-sm sm:text-base text-[#08284F] flex items-center gap-1.5">
-                  <Package className="w-4 h-4 text-[#19A974]" />
-                  <span>ایک سے زائد لوڈ شامل کریں (Multi-Load)</span>
-                </h3>
-                <p className="text-xs text-slate-500">
-                  اگر اس سلپ یا واٹس ایپ میسج میں 2 یا زائد گندم/مکئی/چاول کے لوڈز ہیں تو یہاں بٹن سے شامل کریں۔
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setAdditionalLoads([
-                    ...additionalLoads,
-                    { goods: '', loadingCity: loadingCity || 'بہاولپور', destinationCity: destinationCity || 'کراچی', quantity: '', vehicleType: '22 Wheeler' }
-                  ]);
-                }}
-                className="bg-[#19A974] hover:bg-[#169163] text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-xs flex items-center gap-1.5 transition active:scale-95"
-              >
-                <Plus className="w-4 h-4" />
-                <span>+ دوسرا لوڈ (2nd Load) شامل کریں</span>
-              </button>
-            </div>
-
-            {additionalLoads.map((al, idx) => (
-              <div key={idx} className="bg-white p-4 rounded-xl border-2 border-emerald-400/50 space-y-3 relative shadow-2xs">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                  <span className="font-extrabold text-xs text-emerald-900 bg-emerald-100 px-3 py-1 rounded-full">
-                    لوڈ نمبر {idx + 2}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAdditionalLoads(additionalLoads.filter((_, i) => i !== idx));
-                    }}
-                    className="text-red-600 hover:text-red-800 text-xs font-bold flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-red-50 transition"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>حذف کریں</span>
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1">سامان کا نام (مثال: گندم، مکئی، چاول)</label>
-                    <input
-                      type="text"
-                      required
-                      value={al.goods}
-                      onChange={(e) => {
-                        const updated = [...additionalLoads];
-                        updated[idx].goods = e.target.value;
-                        setAdditionalLoads(updated);
-                      }}
-                      placeholder="مثال: مکئی لوڈنگ / گندم"
-                      className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:bg-white outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1">پک اپ شہر</label>
-                    <input
-                      type="text"
-                      required
-                      value={al.loadingCity}
-                      onChange={(e) => {
-                        const updated = [...additionalLoads];
-                        updated[idx].loadingCity = e.target.value;
-                        setAdditionalLoads(updated);
-                      }}
-                      placeholder="مثال: بہاولپور / کبیروالا"
-                      className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:bg-white outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1">ڈیلیوری شہر</label>
-                    <input
-                      type="text"
-                      required
-                      value={al.destinationCity}
-                      onChange={(e) => {
-                        const updated = [...additionalLoads];
-                        updated[idx].destinationCity = e.target.value;
-                        setAdditionalLoads(updated);
-                      }}
-                      placeholder="مثال: کراچی"
-                      className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:bg-white outline-none"
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* MULTIPLE VEHICLE SELECTION & CUSTOM TYPING */}
-          <div className="space-y-2 pt-2 border-t border-slate-200">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-slate-800 block">
-                گاڑی کی قسم (ایک یا ایک سے زائد منتخب کریں یا خود ٹائپ کریں) <span className="text-red-500">*</span>
-              </label>
-              <span className="text-[11px] text-emerald-800 font-bold bg-emerald-100 px-2 py-0.5 rounded-full">
-                ملٹیپل سلیکشن دستیاب ہے
-              </span>
-            </div>
-
-            {/* Free Text Input for Vehicle Type */}
-            <input
-              type="text"
-              required
-              value={vehicleType}
-              onChange={(e) => {
-                setVehicleType(e.target.value);
-                setSelectedVehicleChips(e.target.value.split('،').map((s) => s.trim()).filter(Boolean));
-              }}
-              placeholder="مثال: 22 Wheeler، 10 Wheeler، شاہزور، مزدہ 16 فٹ"
-              className="w-full bg-white border-2 border-slate-300 focus:border-[#19A974] rounded-xl px-3.5 py-2.5 text-sm text-slate-900 outline-none font-bold"
-            />
-
-            {/* Clickable Multi-Select Vehicle Chips */}
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              {COMMON_VEHICLES.map((v) => {
-                const isSelected = selectedVehicleChips.includes(v) || vehicleType.includes(v);
-                return (
-                  <button
-                    key={v}
-                    type="button"
-                    onClick={() => handleToggleVehicleChip(v)}
-                    className={`text-xs px-3 py-1.5 rounded-xl font-bold border transition flex items-center gap-1 ${
-                      isSelected
-                        ? 'bg-[#123A6D] text-white border-[#123A6D] shadow-xs'
-                        : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
-                    }`}
-                  >
-                    {isSelected && <Check className="w-3.5 h-3.5 text-emerald-300" />}
-                    <span>{v}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Body Type & Vehicle Number */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-200">
             <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">
-                باڈی ساخت (ٹائپ کریں یا کلک کریں)
-              </label>
-              <input
-                type="text"
-                value={bodyType}
-                onChange={(e) => setBodyType(e.target.value)}
-                placeholder="فل باڈی، ہاف باڈی، پھٹا، کنٹینر"
-                className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-sm text-slate-900 outline-none"
-              />
-              <div className="flex flex-wrap gap-1.5 mt-1.5">
-                {COMMON_BODIES.map((b) => (
-                  <button
-                    key={b}
-                    type="button"
-                    onClick={() => setBodyType(b)}
-                    className={`text-[11px] px-2.5 py-1 rounded-lg border font-bold ${
-                      bodyType === b ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-100 text-slate-700 border-slate-200'
-                    }`}
-                  >
-                    {b}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">
-                گاڑی نمبر (اختیاری)
-              </label>
-              <input
-                type="text"
-                value={vehicleNumber}
-                onChange={(e) => setVehicleNumber(e.target.value)}
-                placeholder="مثال: TL-9821 یا KHI-4320"
-                className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-sm text-slate-900 outline-none font-mono"
-              />
-            </div>
-          </div>
-
-        </div>
-
-        {/* 3. 5 ADDITIONAL CONTACTS WITH NAME AND MOBILE NUMBER */}
-        <div className="bg-slate-50/80 rounded-2xl p-4 sm:p-5 border border-slate-200 space-y-3">
-          <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-            <h3 className="font-extrabold text-sm sm:text-base text-[#08284F] flex items-center gap-2">
-              <Phone className="w-4 h-4 text-[#19A974]" />
-              <span>اضافی 5 رابطہ نمبرز بمع نام (Contact Person Name & Phone)</span>
-            </h3>
-            <span className="text-[11px] text-slate-500">ہر نمبر کے ساتھ نام بھی درج کریں</span>
-          </div>
-
-          <p className="text-xs text-slate-500">
-            بنیادی رابطہ نمبر: <strong className="text-slate-800 font-mono">{addaProfile.primaryPhone}</strong> ({addaProfile.managerName})
-          </p>
-
-          <div className="space-y-2.5">
-            {namedContacts.map((contact, index) => (
-              <div key={index} className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-white p-2.5 rounded-xl border border-slate-200">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-slate-400 min-w-[20px]">{index + 1}.</span>
-                  <input
-                    type="text"
-                    value={contact.name}
-                    onChange={(e) => handleContactChange(index, 'name', e.target.value)}
-                    placeholder={`رابطہ کار کا نام ${index + 1} (مثال: حاجی طارق)`}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:bg-white outline-none"
-                  />
-                </div>
-                <div>
-                  <input
-                    type="tel"
-                    value={contact.number}
-                    onChange={(e) => handleContactChange(index, 'number', e.target.value)}
-                    placeholder={`موبائل نمبر ${index + 1} (03001234567)`}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:bg-white outline-none font-mono ltr-content"
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* 4. FARE OFFER & SPECIAL INSTRUCTIONS */}
-        <div className="bg-slate-50/80 rounded-2xl p-4 sm:p-5 border border-slate-200 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">
-                پیشکش کرایہ / فریٹ (اختیاری)
+              <label className="text-xs font-extrabold text-slate-900 block mb-1.5">
+                💰 آپ کی آفر <span className="text-slate-400 font-bold">(کرایہ)</span>
               </label>
               <input
                 type="text"
                 value={fareOffer}
                 onChange={(e) => setFareOffer(e.target.value)}
-                placeholder="مثال: 85,000 روپے یا حسبِ فیصلہ"
-                className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">
-                ضروری ہدایات (اختیاری)
-              </label>
-              <input
-                type="text"
-                value={specialInstructions}
-                onChange={(e) => setSpecialInstructions(e.target.value)}
-                placeholder="مثال: ترپال کا انتظام ضروری ہے، شام 6 بجے تک گاڑی درکار ہے"
-                className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 outline-none"
+                placeholder="Rs 85,000"
+                className="w-full bg-slate-50 border-2 rounded-2xl px-4 py-3 text-sm font-extrabold outline-none min-h-[52px]"
+                style={{ borderColor: IDRIVE_GREEN }}
               />
             </div>
           </div>
+          <p className="text-[11px] font-bold text-slate-400 leading-relaxed">
+            💡 یہ آپ کی ابتدائی آفر ہے — ڈرائیور قبول یا جوابی آفر دے سکتا ہے (inDrive طرز)
+          </p>
         </div>
 
-        {/* Submit Button */}
-        <div className="pt-2">
+        {/* ===== Collapsible: details ===== */}
+        <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden">
           <button
-            type="submit"
-            disabled={geocoding}
-            className="w-full bg-[#123A6D] hover:bg-[#0D2D57] text-white py-4 px-6 rounded-2xl font-extrabold text-base shadow-lg shadow-blue-950/20 active:scale-98 transition flex items-center justify-center gap-2 disabled:opacity-60"
+            type="button"
+            onClick={() => setShowDetails((s) => !s)}
+            className="w-full flex items-center justify-between px-4 py-3.5 text-sm font-extrabold text-slate-900 min-h-[52px]"
           >
-            <PlusCircle className="w-5 h-5 text-emerald-300" />
-            <span>{geocoding ? 'لوکیشن معلوم کی جا رہی ہے…' : 'ڈیجیٹل لوڈ سلپ تیار اور محفوظ کریں'}</span>
+            <span>مزید تفصیلات</span>
+            <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform ${showDetails ? 'rotate-180' : ''}`} />
           </button>
+          {showDetails && (
+            <div className="px-4 pb-4 space-y-3 border-t border-slate-100 pt-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-500 block mb-1">باڈی</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {['فل باڈی', 'ہاف باڈی', 'پھٹا', 'کنٹینر'].map((b) => (
+                      <button
+                        key={b}
+                        type="button"
+                        onClick={() => setBodyType(b)}
+                        className="text-[11px] px-2.5 py-1.5 rounded-xl border font-bold"
+                        style={bodyType === b ? { backgroundColor: SELECTED_BLUE, borderColor: '#90CAF9' } : { backgroundColor: '#F9FAFB', borderColor: '#E5E7EB' }}
+                      >
+                        {b}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 block mb-1">تاریخ</label>
+                  <input
+                    type="date"
+                    value={loadDate}
+                    onChange={(e) => setLoadDate(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-bold"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-500 block mb-1">ہدایات (اختیاری)</label>
+                <input
+                  type="text"
+                  value={specialInstructions}
+                  onChange={(e) => setSpecialInstructions(e.target.value)}
+                  placeholder="مثال: ترپال ضروری ہے"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold outline-none"
+                />
+              </div>
+              {additionalLoads.map((al, idx) => (
+                <div key={idx} className="bg-slate-50 rounded-2xl p-3 space-y-2 relative border border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-extrabold">اضافی لوڈ {idx + 2}</span>
+                    <button type="button" onClick={() => setAdditionalLoads(additionalLoads.filter((_, i) => i !== idx))} className="text-red-500">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <input type="text" value={al.goods} onChange={(e) => { const u = [...additionalLoads]; u[idx].goods = e.target.value; setAdditionalLoads(u); }} placeholder="سامان" className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold outline-none" />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input type="text" value={al.loadingCity} onChange={(e) => { const u = [...additionalLoads]; u[idx].loadingCity = e.target.value; setAdditionalLoads(u); }} placeholder="پک اپ شہر" className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold outline-none" />
+                    <input type="text" value={al.destinationCity} onChange={(e) => { const u = [...additionalLoads]; u[idx].destinationCity = e.target.value; setAdditionalLoads(u); }} placeholder="منزل" className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold outline-none" />
+                  </div>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => setAdditionalLoads([...additionalLoads, { goods: '', loadingCity: loadingCity || '', destinationCity: destinationCity || '', quantity: '' }])}
+                className="inline-flex items-center gap-1 text-xs font-extrabold text-slate-700"
+              >
+                <Plus className="w-4 h-4" /> دوسرا لوڈ شامل کریں
+              </button>
+            </div>
+          )}
         </div>
 
-      </form>
+        {/* ===== Collapsible: contacts ===== */}
+        <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setShowContacts((s) => !s)}
+            className="w-full flex items-center justify-between px-4 py-3.5 text-sm font-extrabold text-slate-900 min-h-[52px]"
+          >
+            <span className="inline-flex items-center gap-1.5"><Phone className="w-4 h-4" /> رابطہ نمبرز</span>
+            <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform ${showContacts ? 'rotate-180' : ''}`} />
+          </button>
+          {showContacts && (
+            <div className="px-4 pb-4 space-y-2 border-t border-slate-100 pt-3">
+              <p className="text-[11px] font-bold text-slate-400">بنیادی: <span className="font-mono" dir="ltr">{addaProfile.primaryPhone}</span></p>
+              {namedContacts.map((c, i) => (
+                <div key={i} className="grid grid-cols-2 gap-2">
+                  <input type="text" value={c.name} onChange={(e) => { const u = [...namedContacts]; u[i] = { ...u[i], name: e.target.value }; setNamedContacts(u); }} placeholder="نام" className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold outline-none" />
+                  <input type="tel" value={c.number} onChange={(e) => { const u = [...namedContacts]; u[i] = { ...u[i], number: e.target.value }; setNamedContacts(u); }} placeholder="03001234567" className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold outline-none font-mono" dir="ltr" />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
+        {/* ===== Reuse previous ===== */}
+        {recentSlips.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+            {recentSlips.slice(0, 3).map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => handleApplyPreviousSlip(s)}
+                className="shrink-0 bg-slate-100 text-slate-700 text-[11px] px-3 py-2 rounded-xl font-bold"
+              >
+                ↺ {s.loadingCity} ➔ {s.destinationCity}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* ===== BIG inDrive green button ===== */}
+        <button
+          type="submit"
+          disabled={geocoding}
+          className="w-full py-4 rounded-3xl font-black text-slate-900 text-lg min-h-[60px] active:scale-[0.98] disabled:opacity-60 shadow-lg"
+          style={{ backgroundColor: IDRIVE_GREEN }}
+        >
+          {geocoding ? 'لوکیشن معلوم کی جا رہی ہے…' : 'ریکویسٹ بنائیں'}
+        </button>
+        <p className="text-center text-[11px] font-bold text-slate-400 -mt-2" dir="ltr">Create request</p>
+
+        {onOpenVoiceModal && (
+          <button
+            type="button"
+            onClick={onOpenVoiceModal}
+            className="w-full py-3 rounded-2xl bg-slate-900 text-white font-extrabold text-sm flex items-center justify-center gap-2 min-h-[52px]"
+          >
+            <Mic className="w-4 h-4 text-lime-300" />
+            🎙️ وائس سے لوڈ بنائیں
+          </button>
+        )}
+
+        {/* ===== inDrive headline ===== */}
+        <div className="text-center pt-4 pb-2" dir="ltr">
+          <h2 className="font-black text-slate-900 uppercase" style={{ fontSize: '1.9rem', lineHeight: 1.15 }}>
+            Wheels for<br />
+            <span style={{ backgroundColor: IDRIVE_GREEN, padding: '0 12px', borderRadius: 6 }}>Every Need</span>
+          </h2>
+          <p className="text-slate-500 text-sm font-bold mt-3" dir="rtl">ہر ضرورت کے لیے پہیے — پاکستان بھر میں</p>
+        </div>
+
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="w-full text-slate-400 text-xs font-bold py-2"
+          >
+            منسوخ کریں
+          </button>
+        )}
+      </form>
     </div>
   );
 };

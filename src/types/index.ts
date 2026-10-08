@@ -89,6 +89,21 @@ export interface SingleLoadItem {
   fareOffer?: string;
 }
 
+/**
+ * PriceOffer — one bid in the inDrive-style negotiation thread.
+ * Adda opens with their price; driver counters; back-and-forth until
+ * someone accepts. Only the latest 'pending' offer awaits a response.
+ */
+export interface PriceOffer {
+  id: string;
+  by: 'adda' | 'driver';
+  byName: string;
+  byPhone: string;
+  amount: string;
+  createdAt: string;
+  status: 'pending' | 'accepted' | 'declined';
+}
+
 export interface LoadSlip {
   id: string; // Unique format: PKCLYYYYMMDDXXXXXX
   addaId: string;
@@ -148,6 +163,16 @@ export interface LoadSlip {
 
   // InDrive-style negotiation: driver's counter offer
   driverOffer?: string;
+
+  // --- inDrive-style price negotiation thread ---
+  // Adda posts with their price → driver counters → adda counters → deal.
+  // Only the latest 'pending' offer awaits a response (turn-taking).
+  offers?: PriceOffer[];
+  /** Agreed price when a deal is struck (accepted offer amount) */
+  finalFare?: string;
+
+  /** inDrive Freight-style trip kind: city (intracity) | freight | intercity */
+  tripKind?: 'city' | 'freight' | 'intercity';
 
   // Lifecycle (Yango-style history)
   completedAt?: string;

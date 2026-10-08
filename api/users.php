@@ -2,7 +2,7 @@
 // PK Cargo Link - Robust Users Persistent Storage API for Hostinger
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -154,6 +154,38 @@ function verifyUserPassword($storedUser, $attempt) {
 }
 
 $method = $_SERVER['REQUEST_METHOD'];
+
+if ($method === 'DELETE') {
+    // Delete one user by id or phone (admin/data-wipe). No blocklist:
+    // wiped users stay wiped unless a client re-registers.
+    $id = isset($_GET['id']) ? trim((string)$_GET['id']) : '';
+    $phone = isset($_GET['phone']) ? preg_replace('/[^0-9]/', '', (string)$_GET['phone']) : '';
+    if (empty($id) && empty($phone)) {
+        $input = file_get_contents('php://input');
+        if ($input) {
+            $body = json_decode($input, true);
+            if (is_array($body)) {
+                if (isset($body['id'])) $id = trim((string)$body['id']);
+                if (isset($body['phone'])) $phone = preg_replace('/[^0-9]/', '', (string)$body['phone']);
+            }
+        }
+    }
+    if (empty($id) && empty($phone)) {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'error' => 'id or phone required']);
+        exit;
+    }
+    $users = readAllUsers();
+    $filtered = array_values(array_filter($users, function ($u) use ($id, $phone) {
+        if ($id !== '' && isset($u['id']) && (string)$u['id'] === $id) return false;
+        if ($phone !== '' && isset($u['phone']) && preg_replace('/[^0-9]/', '', (string)$u['phone']) === $phone) return false;
+        return true;
+    }));
+    $deleted = count($users) - count($filtered);
+    writeAllUsers($filtered);
+    echo json_encode(['ok' => true, 'deleted' => $deleted, 'remaining' => count($filtered)], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 if ($method === 'GET') {
     $users = readAllUsers();

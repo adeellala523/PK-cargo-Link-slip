@@ -14,8 +14,10 @@ interface DriverHomeViewProps {
   verificationStatus: VerificationStatus;
   online: boolean;
   onToggleOnline: () => void;
-  /** Accept with optional InDrive-style counter offer */
-  onAcceptLoad: (slip: LoadSlip, counterOffer?: string) => void;
+  /** inDrive-style: accept the adda's price = instant deal */
+  onAcceptLoad: (slip: LoadSlip) => void;
+  /** inDrive-style: counter with own price = negotiation, load stays active */
+  onCounterLoad: (slip: LoadSlip, amount: string) => void;
   onDeclineLoad: (slip: LoadSlip) => void;
   declinedIds: string[];
   onViewSlip: (slip: LoadSlip) => void;
@@ -54,6 +56,7 @@ export const DriverHomeView: React.FC<DriverHomeViewProps> = ({
   online,
   onToggleOnline,
   onAcceptLoad,
+  onCounterLoad,
   onDeclineLoad,
   declinedIds,
   onViewSlip,
@@ -246,7 +249,8 @@ export const DriverHomeView: React.FC<DriverHomeViewProps> = ({
             <IncomingRequestBanner
               slip={incoming}
               canAccept={verificationStatus === 'verified'}
-              onAccept={(offer) => onAcceptLoad(incoming, offer)}
+              onAccept={() => onAcceptLoad(incoming)}
+              onCounter={(amount) => onCounterLoad(incoming, amount)}
               onDecline={() => onDeclineLoad(incoming)}
               onView={() => onViewSlip(incoming)}
             />
@@ -261,6 +265,7 @@ export const DriverHomeView: React.FC<DriverHomeViewProps> = ({
               onViewSlip={onViewSlip}
               acceptedSet={acceptedSet}
               onAcceptLoad={onAcceptLoad}
+              onCounterLoad={onCounterLoad}
               onDeclineLoad={onDeclineLoad}
               locked={false}
               canAccept={verificationStatus === 'verified'}
@@ -283,10 +288,11 @@ export const DriverHomeView: React.FC<DriverHomeViewProps> = ({
 const IncomingRequestBanner: React.FC<{
   slip: LoadSlip;
   canAccept: boolean;
-  onAccept: (offer?: string) => void;
+  onAccept: () => void;
+  onCounter: (amount: string) => void;
   onDecline: () => void;
   onView: () => void;
-}> = ({ slip, canAccept, onAccept, onDecline, onView }) => {
+}> = ({ slip, canAccept, onAccept, onCounter, onDecline, onView }) => {
   const [secs, setSecs] = useState(REQUEST_TTL_SECS);
   const [offer, setOffer] = useState('');
   const [showOffer, setShowOffer] = useState(false);
@@ -367,7 +373,7 @@ const IncomingRequestBanner: React.FC<{
           </button>
           <button
             type="button"
-            onClick={() => onAccept(offer.trim() || undefined)}
+            onClick={() => (showOffer && offer.trim() ? onCounter(offer.trim()) : onAccept())}
             disabled={!canAccept}
             className={`flex-1 inline-flex items-center justify-center gap-2 font-extrabold text-base rounded-2xl min-h-[52px] transition active:scale-[0.98] ${
               canAccept ? 'text-[#0B2A5B] shadow-[0_8px_24px_rgba(245,163,1,0.35)]' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
@@ -375,7 +381,7 @@ const IncomingRequestBanner: React.FC<{
             style={canAccept ? { background: 'linear-gradient(135deg, #FFC531 0%, #F5A301 60%, #E8930C 100%)' } : undefined}
           >
             <CheckCircle2 className="w-5 h-5" />
-            قبول کریں
+            {showOffer && offer.trim() ? 'جوابی آفر بھیجیں' : 'قبول کریں'}
           </button>
           <button
             type="button"
@@ -448,14 +454,15 @@ interface LoadListProps {
   onCityFilter: (c: string) => void;
   onViewSlip: (s: LoadSlip) => void;
   acceptedSet: Set<string>;
-  onAcceptLoad: (s: LoadSlip, offer?: string) => void;
+  onAcceptLoad: (s: LoadSlip) => void;
+  onCounterLoad: (s: LoadSlip, amount: string) => void;
   onDeclineLoad: (s: LoadSlip) => void;
   locked: boolean;
   canAccept?: boolean;
 }
 
 const LoadList: React.FC<LoadListProps> = ({
-  items, cities, cityFilter, onCityFilter, onViewSlip, acceptedSet, onAcceptLoad, onDeclineLoad, locked, canAccept = true,
+  items, cities, cityFilter, onCityFilter, onViewSlip, acceptedSet, onAcceptLoad, onCounterLoad, onDeclineLoad, locked, canAccept = true,
 }) => (
   <section className="space-y-3">
     <div className="flex items-center justify-between px-1">
@@ -495,7 +502,8 @@ const LoadList: React.FC<LoadListProps> = ({
             locked={locked}
             canAccept={canAccept}
             distanceKm={distKm}
-            onAccept={(offer) => onAcceptLoad(slip, offer)}
+            onAccept={() => onAcceptLoad(slip)}
+            onCounter={(amount) => onCounterLoad(slip, amount)}
             onDecline={() => onDeclineLoad(slip)}
             onView={() => onViewSlip(slip)}
           />
@@ -513,10 +521,11 @@ const DriverLoadCard: React.FC<{
   locked: boolean;
   canAccept: boolean;
   distanceKm?: number | null;
-  onAccept: (offer?: string) => void;
+  onAccept: () => void;
+  onCounter: (amount: string) => void;
   onDecline: () => void;
   onView: () => void;
-}> = ({ slip, accepted, locked, canAccept, distanceKm = null, onAccept, onDecline, onView }) => {
+}> = ({ slip, accepted, locked, canAccept, distanceKm = null, onAccept, onCounter, onDecline, onView }) => {
   const [offer, setOffer] = useState('');
   const [showOffer, setShowOffer] = useState(false);
   const ago = timeAgo(slip.createdAt);
@@ -599,7 +608,7 @@ const DriverLoadCard: React.FC<{
             )}
             <button
               type="button"
-              onClick={() => onAccept(offer.trim() || undefined)}
+              onClick={() => (showOffer && offer.trim() ? onCounter(offer.trim()) : onAccept())}
               disabled={locked || !canAccept}
               title={locked ? 'پہلے لاگ ان کریں' : !canAccept ? 'پہلے تصدیق مکمل کریں' : 'لوڈ قبول کریں'}
               className={`flex-1 inline-flex items-center justify-center gap-1.5 font-extrabold text-sm py-3 rounded-2xl min-h-[52px] transition active:scale-[0.98] ${
@@ -610,7 +619,7 @@ const DriverLoadCard: React.FC<{
               style={locked || !canAccept ? undefined : { background: 'linear-gradient(135deg, #FFC531 0%, #F5A301 60%, #E8930C 100%)' }}
             >
               <CheckCircle2 className="w-5 h-5" />
-              قبول کریں
+              {showOffer && offer.trim() ? 'جوابی آفر بھیجیں' : 'قبول کریں'}
             </button>
           </>
         )}

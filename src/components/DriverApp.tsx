@@ -8,6 +8,8 @@ import { DriverLocationShare } from './DriverLocationShare';
 import { LoadSlipCard } from './LoadSlipCard';
 import { MyVehicleView } from './MyVehicleView';
 import { LoadChat } from './LoadChat';
+import { NegotiationCard } from './NegotiationCard';
+import { getActiveOffer, placeCounterOffer, acceptActiveOffer } from '../utils/negotiation';
 import { AddaLoginView } from './AddaLoginView';
 import { VerificationView } from './VerificationView';
 import { VerificationBadge } from './VerificationBadge';
@@ -131,20 +133,18 @@ export const DriverApp: React.FC = () => {
     try { StorageService.incrementSlipViews(slip.id); } catch { /* ignore */ }
   };
 
-  /** Yango Pro style accept: mark slip booked by this driver + optional counter offer */
-  const acceptLoad = (slip: LoadSlip, counterOffer?: string) => {
+  /**
+   * inDrive-style DEAL: driver accepts the adda's current pending offer.
+   * Books the load at the agreed price → tracking + private chat open.
+   */
+  const acceptLoad = (slip: LoadSlip) => {
     if (!driver) { setLoginMode('login'); navigate('d-login'); return; }
     if (verificationStatus !== 'verified') { navigate('d-verification'); return; }
-    if (!window.confirm(`کیا آپ یہ لوڈ قبول کرتے ہیں؟\n${slip.loadingCity} تا ${slip.destinationCity}${counterOffer ? `\nآپ کی آفر: ${counterOffer}` : ''}`)) return;
+    const active = getActiveOffer(slip);
+    const price = active ? active.amount : (slip.fareOffer || '');
+    if (!window.confirm(`ڈیل پکی کریں؟\n${slip.loadingCity} تا ${slip.destinationCity}\nطے شدہ کرایہ: ${price}`)) return;
 
-    const updated: LoadSlip = {
-      ...slip,
-      status: 'booked',
-      acceptedByDriverName: driver.driverName,
-      acceptedByDriverPhone: driver.phone,
-      acceptedAt: new Date().toISOString(),
-      ...(counterOffer ? { driverOffer: counterOffer } : {}),
-    };
+    const updated = acceptActiveOffer(slip, driver);
     try {
       StorageService.updateSlip(updated);
       setSlips((prev) => prev.map((s) => (s.id === slip.id ? updated : s)));
@@ -153,8 +153,8 @@ export const DriverApp: React.FC = () => {
     // In-app notification (same-browser) for the adda side
     try {
       NotificationService.addNotification({
-        title: '✅ ڈرائیور نے لوڈ قبول کر لیا!',
-        message: `${driver.driverName} نے لوڈ (${slip.loadingCity} تا ${slip.destinationCity}) قبول کیا${counterOffer ? ` — آفر: ${counterOffer}` : ''}۔`,
+        title: '🤝 ڈرائیور نے ڈیل قبول کر لی!',
+        message: `${driver.driverName} نے لوڈ (${slip.loadingCity} تا ${slip.destinationCity}) ${updated.finalFare} پر قبول کیا۔`,
         type: 'slip_booked',
         slipId: slip.id,
         route: `${slip.loadingCity} تا ${slip.destinationCity}`,
@@ -165,6 +165,35 @@ export const DriverApp: React.FC = () => {
     } catch { /* ignore */ }
     setActiveSlip(updated);
     setTab('d-slip-detail');
+  };
+
+  /**
+   * inDrive-style COUNTER: driver proposes their own price.
+   * Load stays ACTIVE — this is negotiation, not a booking.
+   */
+  const counterLoad = (slip: LoadSlip, amount: string) => {
+    if (!driver) { setLoginMode('login'); navigate('d-login'); return; }
+    if (verificationStatus !== 'verified') { navigate('d-verification'); return; }
+    const a = amount.trim();
+    if (!a) return;
+    const updated = placeCounterOffer(slip, 'driver', driver.driverName, driver.phone, a);
+    try {
+      StorageService.updateSlip(updated);
+      setSlips((prev) => prev.map((s) => (s.id === slip.id ? updated : s)));
+    } catch { /* ignore */ }
+    try {
+      NotificationService.addNotification({
+        title: '💰 ڈرائیور کی جوابی آفر!',
+        message: `${driver.driverName} نے لوڈ (${slip.loadingCity} تا ${slip.destinationCity}) کے لیے ${a} کی آفر دی۔`,
+        type: 'driver_match',
+        slipId: slip.id,
+        route: `${slip.loadingCity} تا ${slip.destinationCity}`,
+        driverPhone: driver.phone,
+        driverName: driver.driverName,
+        vehicleType: driver.vehicleType,
+      });
+    } catch { /* ignore */ }
+    setActiveSlip(updated);
   };
 
   const declineLoad = (slip: LoadSlip) => {
@@ -248,6 +277,7 @@ export const DriverApp: React.FC = () => {
               online={online}
               onToggleOnline={() => setOnline((o) => !o)}
               onAcceptLoad={acceptLoad}
+              onCounterLoad={counterLoad}
               onDeclineLoad={declineLoad}
               declinedIds={declinedIds}
               onViewSlip={viewSlip}
@@ -278,6 +308,23 @@ export const DriverApp: React.FC = () => {
               onUpdateSlip={() => {}}
               onNavigateToDriverLogin={() => { setLoginMode('login'); navigate('d-login'); }}
             />
+            {/* inDrive-style negotiation thread (driver side) */}
+            {driver && activeSlip.status === 'active' && (activeSlip.offers || []).length > 0 && (
+              <NegotiationCard
+                slip={activeSlip}
+                myRole="driver"
+                myName={driver.driverName}
+                myPhone={driver.phone}
+                driver={driver}
+                onUpdate={(updated) => {
+                  setActiveSlip(updated);
+                  setSlips((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+                  if (updated.status === 'booked') {
+                    setAcceptedIds((prev) => (prev.includes(updated.id) ? prev : [...prev, updated.id]));
+                  }
+                }}
+              />
+            )}
             {/* Direct payment note — driver gets paid directly by adda, no commission */}
             <div className="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-4 flex items-start gap-3" dir="rtl">
               <Banknote className="w-6 h-6 text-emerald-700 flex-shrink-0 mt-0.5" />
