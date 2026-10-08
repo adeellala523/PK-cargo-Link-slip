@@ -23,12 +23,15 @@ import { sanitizePhoneForCall, getWhatsAppShareUrl } from '../utils/formatters';
 import { StorageService } from '../services/storage';
 import { TruckMatchesSection } from './MatchSections';
 import { notifyForNewTruck } from '../utils/matchNotify';
+import { VerificationBadge } from './VerificationBadge';
+import { getVerificationStatus, getPostingBlockReason, resolveVerificationUser } from '../utils/verification';
 
 interface AvailableTrucksViewProps {
   slips: LoadSlip[];
   onViewSlip?: (slip: LoadSlip) => void;
   onNavigateToDriverPortal?: () => void;
   onNavigateToAddaLogin?: () => void;
+  onNavigateToVerification?: () => void;
 }
 
 const POPULAR_CITIES = [
@@ -47,6 +50,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
   onViewSlip,
   onNavigateToDriverPortal,
   onNavigateToAddaLogin,
+  onNavigateToVerification,
 }) => {
   // Check logged in user status
   const isDriverLoggedIn = StorageService.isDriverLoggedIn();
@@ -134,6 +138,19 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
     if (!isDriverLoggedIn && !isManagerLoggedIn) {
       setFormError('گاڑی لسٹ کرنے کے لیے پہلے رجسٹرڈ ڈرائیور یا اڈا منیجر کے طور پر لاگ ان کریں۔');
       return;
+    }
+
+    // Verification gate: unverified users cannot list vehicles
+    {
+      const vPhone = isDriverLoggedIn && currentDriver ? currentDriver.phone : ((currentProfile as any)?.primaryPhone || '');
+      const vRole: 'driver' | 'adda_manager' = isDriverLoggedIn ? 'driver' : 'adda_manager';
+      const vUser = vPhone ? resolveVerificationUser(vPhone, vRole) : null;
+      const blockReason = getPostingBlockReason(vUser);
+      if (blockReason) {
+        setFormError(blockReason);
+        if (onNavigateToVerification) onNavigateToVerification();
+        return;
+      }
     }
 
     if (!ownerName.trim()) {
@@ -443,6 +460,15 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                             {count > 0 && <span className="text-amber-700 font-normal">({count})</span>}
                           </span>
                         );
+                      })()}
+                      {/* Verification Badge */}
+                      {(() => {
+                        const cp = (truck.createdByPhone || truck.phone || '').replace(/[^0-9]/g, '');
+                        const u = cp ? StorageService.getUsers().find(
+                          (x) => (x.phone || '').replace(/[^0-9]/g, '') === cp ||
+                                 (x.whatsappNumber || '').replace(/[^0-9]/g, '') === cp
+                        ) : undefined;
+                        return <VerificationBadge status={getVerificationStatus(u)} />;
                       })()}
                     </div>
                     <div className="flex items-center gap-1.5 text-xs text-slate-500">
