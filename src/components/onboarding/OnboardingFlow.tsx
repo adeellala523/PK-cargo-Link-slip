@@ -154,7 +154,12 @@ export function OnboardingFlow({ onDone }: { onDone: () => void }) {
       setGeo(g);
       setCreating(true);
       setCreateError(null);
-      try {
+      // Overall safety timeout: NEVER hang forever. If anything takes >15s,
+      // fall back to local-only account creation.
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('timeout')), 15000)
+      );
+      const createFlow = async () => {
         let city: string | null = null;
         if (g.lat !== null && g.lng !== null) {
           city = await reverseGeocodeCity(g.lat, g.lng);
@@ -200,8 +205,45 @@ export function OnboardingFlow({ onDone }: { onDone: () => void }) {
         }
         setAccount(created);
         setStep('verification');
-      } catch {
-        setCreateError('اکاؤنٹ بنانے میں مسئلہ ہوا — دوبارہ کوشش کریں');
+      };
+      try {
+        await Promise.race([createFlow(), timeoutPromise]);
+      } catch (e: any) {
+        if (e?.message === 'timeout') {
+          // Emergency offline fallback: create account locally, sync later
+          try {
+            const fullPhone = `0${phone10}`;
+            const localUser: UserAccount = {
+              id: `user_${Date.now()}_local`,
+              phone: fullPhone,
+              password: password,
+              role,
+              addaName: name,
+              managerName: name,
+              city: 'پاکستان',
+              address: '',
+              whatsappNumber: fullPhone,
+              status: 'active',
+              subscriptionPlan: 'monthly',
+              subscriptionStartedAt: new Date().toISOString(),
+              subscriptionExpiresAt: new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString(),
+              isApprovedByAdmin: true,
+              createdAt: new Date().toISOString(),
+              driverDetails: role === 'driver' && vehicleType ? { vehicleType } : undefined,
+            } as UserAccount;
+            const users = StorageService.getUsers();
+            users.unshift(localUser);
+            try { localStorage.setItem('pkcargolink_users', JSON.stringify(users)); } catch {}
+            StorageService.setCurrentUser(localUser);
+            setAccount(localUser);
+            setStep('verification');
+            return;
+          } catch {
+            setCreateError('اکاؤنٹ بنانے میں مسئلہ ہوا — دوبارہ کوشش کریں');
+          }
+        } else {
+          setCreateError('اکاؤنٹ بنانے میں مسئلہ ہوا — دوبارہ کوشش کریں');
+        }
       } finally {
         setCreating(false);
       }
