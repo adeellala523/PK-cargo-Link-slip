@@ -65,6 +65,10 @@ function AppInner() {
     if (cu && cu.role === 'driver') {
       return <DriverApp />;
     }
+    // Driver login via login page uses separate driver session
+    if (StorageService.isDriverLoggedIn()) {
+      return <DriverApp />;
+    }
   } catch {
     /* fall through to main site */
   }
@@ -936,11 +940,11 @@ function AppInner() {
             loads visible ONLY to logged-in drivers. Public visitors get a
             login prompt; adda managers are sent back to their dashboard. */}
         {currentTab === 'driver' && (
-          !isLoggedIn ? (
+          !(StorageService.isDriverLoggedIn() || (isLoggedIn && currentUserRole === 'driver')) ? (
             <div className="px-4 pt-8 max-w-md mx-auto">
               <LoadsLoginPrompt onLogin={() => navigateTo('login')} />
             </div>
-          ) : currentUserRole === 'driver' ? (
+          ) : (StorageService.isDriverLoggedIn() || currentUserRole === 'driver') ? (
           <>
             <div className="px-4 pt-3">
               <VerificationNudgeBanner
