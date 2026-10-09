@@ -476,6 +476,7 @@ export const StorageService = {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(users),
+            signal: AbortSignal.timeout(4000),
           });
         } catch {}
 
