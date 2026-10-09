@@ -684,9 +684,6 @@ function AppInner() {
         onOpenNotifications={() => setIsNotificationCenterOpen(true)}
       />
 
-      {/* Nationwide transporters strike notice (temporary) */}
-      <StrikeBanner />
-
       {/* Main Content Area */}
       <main className="flex-1 max-w-5xl w-full mx-auto px-3 sm:px-4 pt-4 sm:pt-6 pb-28 md:pb-10">
         
