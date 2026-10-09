@@ -1222,6 +1222,31 @@ export const StorageService = {
       return { success: true, message: 'ڈرائیور لاگ ان کامیاب!', driver: found };
     }
 
+    // 3) Check UserAccount storage (onboarding-created driver accounts)
+    const userAcc = this.getUsers().find(
+      (u) => u.phone.replace(/[^0-9]/g, '') === cleanP && (u as any).role === 'driver'
+    );
+    if (userAcc) {
+      if ((userAcc as any).password && pw && (userAcc as any).password !== pw) {
+        return { success: false, message: 'درج کردہ پاس ورڈ درست نہیں ہے۔' };
+      }
+      const det = (userAcc as any).driverDetails || {};
+      const driver: DriverAccount = {
+        id: String(userAcc.id),
+        driverName: userAcc.managerName || 'ڈرائیور',
+        phone: String(userAcc.phone),
+        whatsappNumber: userAcc.whatsappNumber || String(userAcc.phone),
+        vehicleType: det.vehicleType || '22 Wheeler',
+        bodyType: det.bodyType || '',
+        vehicleNumber: det.vehicleNumber || '',
+        currentCity: det.currentCity || userAcc.city || '',
+        preferredRoute: det.preferredRoute || '',
+        createdAt: userAcc.createdAt,
+      };
+      this.setDriverLoggedIn(true, driver);
+      return { success: true, message: 'ڈرائیور لاگ ان کامیاب!', driver };
+    }
+
     return { success: false, message: 'یہ فون نمبر بطور ڈرائیور رجسٹرڈ نہیں ہے۔ پہلے نیا ڈرائیور اکاؤنٹ بنائیں!' };
   },
 
