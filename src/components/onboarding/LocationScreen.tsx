@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-import {
-  OnboardingShell, BrandMark, OnboardingButton, OnboardingHeading, OnboardingSub, SkipLink,
-} from './OnboardingUI';
+import { OnboardingShell } from './OnboardingUI';
 
 export interface GeoPoint {
   lat: number | null;
@@ -9,8 +7,9 @@ export interface GeoPoint {
 }
 
 /**
- * LocationScreen — Yango-style "share your location" screen, adapted for cargo.
- * Truck illustration, amber CTA, uses browser geolocation (skippable).
+ * LocationScreen — inDrive-style "Turn your location on".
+ * Bold headline, illustration, grey description,
+ * GREEN "Enable location services" button, GREY "Skip" button.
  */
 export function LocationScreen({
   onNext,
@@ -44,32 +43,52 @@ export function LocationScreen({
 
   return (
     <OnboardingShell>
-      <div className="pt-6 flex items-center justify-between">
-        <button onClick={onBack} className="text-neutral-500 text-2xl px-2" aria-label="واپس">→</button>
-        <BrandMark />
-        <span className="w-8" />
-      </div>
-
-      <div className="flex-1 flex flex-col items-center justify-center text-center py-8">
-        <div className="text-[5rem] leading-none select-none" aria-hidden>🚛</div>
-        <div className="mt-8 space-y-3 px-2">
-          <OnboardingHeading>اپنی لوکیشن شیئر کریں تاکہ قریبی لوڈز جلدی ملیں</OnboardingHeading>
-          <OnboardingSub>
-            ہم آپ کی لوکیشن قریبی لوڈز اور ڈرائیورز تلاش کرنے کے لیے استعمال کرتے ہیں
-          </OnboardingSub>
+      <div dir="ltr" className="flex-1 flex flex-col">
+        <div className="pt-6 flex items-center justify-between">
+          <button onClick={onBack} className="text-black text-2xl px-2" aria-label="Back">←</button>
+          <span className="font-extrabold text-black text-lg">Location</span>
+          <span className="w-8" />
         </div>
-        {denied && (
-          <p className="text-amber-600 text-sm mt-4 leading-6">
-            لوکیشن کی اجازت نہیں ملی — آپ بعد میں بھی آن کر سکتے ہیں
-          </p>
-        )}
-      </div>
 
-      <div className="pb-4 text-center">
-        <OnboardingButton onClick={handleShare} disabled={busy}>
-          {busy ? 'لوکیشن لی جا رہی ہے…' : 'لوکیشن شیئر کریں'}
-        </OnboardingButton>
-        <SkipLink onClick={() => onNext({ lat: null, lng: null })}>چھوڑیں</SkipLink>
+        <div className="flex-1 flex flex-col items-center justify-center text-center py-6">
+          <div
+            className="rounded-3xl flex items-center justify-center select-none"
+            style={{ backgroundColor: '#B5E61D', width: 200, height: 200 }}
+            aria-hidden
+          >
+            <span style={{ fontSize: '5.5rem' }}>📍</span>
+          </div>
+          <h1 className="text-black font-extrabold mt-8" style={{ fontSize: '1.9rem', lineHeight: 1.2 }}>
+            Turn your location on
+          </h1>
+          <p className="text-neutral-500 mt-3 text-base px-6 leading-6">
+            We need your location to find nearby loads, pinpoint pickup and
+            destination points, and keep you safe
+          </p>
+          {denied && (
+            <p className="text-red-500 text-sm mt-4">
+              Location permission denied — you can enable it later
+            </p>
+          )}
+        </div>
+
+        <div className="pb-6 space-y-3">
+          <button
+            onClick={handleShare}
+            disabled={busy}
+            className="w-full rounded-2xl py-4 text-lg font-bold text-black transition active:scale-[0.98] disabled:opacity-50"
+            style={{ backgroundColor: '#B5E61D' }}
+          >
+            {busy ? 'Getting location…' : 'Enable location services'}
+          </button>
+          <button
+            onClick={() => onNext({ lat: null, lng: null })}
+            className="w-full rounded-2xl py-4 text-lg font-bold text-black transition active:scale-[0.98]"
+            style={{ backgroundColor: '#F0F0F0' }}
+          >
+            Skip
+          </button>
+        </div>
       </div>
     </OnboardingShell>
   );

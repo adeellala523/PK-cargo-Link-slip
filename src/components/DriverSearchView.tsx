@@ -136,7 +136,7 @@ export const DriverSearchView: React.FC<DriverSearchViewProps> = ({
       {/* Header & Search Form */}
       <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200 space-y-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#08284F]">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#111111]">
             لوڈ تلاش کریں
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
@@ -145,7 +145,7 @@ export const DriverSearchView: React.FC<DriverSearchViewProps> = ({
         </div>
 
         {/* Search Form (ZERO DROPDOWNS) */}
-        <div className="bg-[#F4F7FB] p-4 sm:p-5 rounded-2xl border border-slate-200 space-y-3.5">
+        <div className="bg-[#FFFFFF] p-4 sm:p-5 rounded-2xl border border-slate-200 space-y-3.5">
           <div className="flex items-center justify-between text-xs font-bold text-slate-700 border-b border-slate-200 pb-2">
             <span>تلاش کی ترتیبات (شہر اور گاڑی ٹائپ کریں)</span>
             <button
@@ -209,7 +209,7 @@ export const DriverSearchView: React.FC<DriverSearchViewProps> = ({
                   onClick={() => setSelectedCityChip(c)}
                   className={`text-xs px-2.5 py-1 rounded-lg border font-bold transition ${
                     selectedCityChip === c
-                      ? 'bg-[#123A6D] text-white border-[#123A6D]'
+                      ? 'bg-[#1E1E1E] text-white border-[#1E1E1E]'
                       : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
                   }`}
                 >
@@ -235,7 +235,7 @@ export const DriverSearchView: React.FC<DriverSearchViewProps> = ({
 
       {/* Results Header */}
       <div className="flex items-center justify-between px-2 text-xs text-slate-500 font-bold">
-        <span>دستیاب فعال لوڈز: <strong className="text-[#123A6D]">{filteredSlips.length}</strong></span>
+        <span>دستیاب فعال لوڈز: <strong className="text-[#1E1E1E]">{filteredSlips.length}</strong></span>
         <span>براہِ راست کال و واٹس ایپ رابطہ</span>
       </div>
 

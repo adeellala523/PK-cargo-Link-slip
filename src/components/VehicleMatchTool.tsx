@@ -67,9 +67,9 @@ export const VehicleMatchTool: React.FC<{ slip: LoadSlip }> = ({ slip }) => {
         <span className="inline-flex items-center gap-2">
           <span
             className="w-9 h-9 rounded-2xl flex items-center justify-center shrink-0"
-            style={{ background: 'linear-gradient(135deg, #FFC531 0%, #F5A301 100%)' }}
+            style={{ background: 'linear-gradient(135deg, #CDF463 0%, #B5E61D 100%)' }}
           >
-            <Truck className="w-5 h-5 text-[#0B2A5B]" />
+            <Truck className="w-5 h-5 text-[#111111]" />
           </span>
           <span className="text-right">
             <span className="block">🚛 موزوں گاڑیاں تلاش کریں</span>
@@ -104,7 +104,7 @@ export const VehicleMatchTool: React.FC<{ slip: LoadSlip }> = ({ slip }) => {
                       <Truck className="w-5 h-5 text-emerald-700" />
                     </span>
                     <div>
-                      <p className="font-extrabold text-sm text-[#08284F]">{t.driverOrOwnerName}</p>
+                      <p className="font-extrabold text-sm text-[#111111]">{t.driverOrOwnerName}</p>
                       <p className="text-[11px] text-slate-500 font-bold mt-0.5 flex items-center gap-1 flex-wrap">
                         <bdi>{t.vehicleType}</bdi>
                         <span>•</span>
@@ -117,7 +117,7 @@ export const VehicleMatchTool: React.FC<{ slip: LoadSlip }> = ({ slip }) => {
                     </div>
                   </div>
                   {distanceKm != null && (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-extrabold text-[#0B2A5B] bg-amber-50 border border-amber-300 px-2.5 py-1 rounded-full shrink-0">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-extrabold text-[#111111] bg-amber-50 border border-amber-300 px-2.5 py-1 rounded-full shrink-0">
                       <Navigation className="w-3 h-3" />
                       {formatDistanceKm(distanceKm)}
                     </span>
@@ -131,7 +131,7 @@ export const VehicleMatchTool: React.FC<{ slip: LoadSlip }> = ({ slip }) => {
                 <div className="flex items-center gap-2">
                   <a
                     href={`tel:${sanitizePhoneForCall(t.phone)}`}
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 text-xs font-extrabold text-[#123A6D] bg-blue-50 hover:bg-blue-100 px-4 py-2.5 rounded-xl transition min-h-[44px] border border-blue-200"
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 text-xs font-extrabold text-[#1E1E1E] bg-blue-50 hover:bg-blue-100 px-4 py-2.5 rounded-xl transition min-h-[44px] border border-blue-200"
                   >
                     <Phone className="w-4 h-4" />
                     <span className="font-mono" dir="ltr">{t.phone}</span>

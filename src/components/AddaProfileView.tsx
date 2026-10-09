@@ -180,9 +180,9 @@ export const AddaProfileView: React.FC<AddaProfileViewProps> = ({
       {onNavigateToVerification && (
         <button
           onClick={onNavigateToVerification}
-          className="w-full bg-white rounded-3xl p-5 shadow-sm border border-slate-200 flex items-center gap-4 text-right hover:border-[#F5A301]"
+          className="w-full bg-white rounded-3xl p-5 shadow-sm border border-slate-200 flex items-center gap-4 text-right hover:border-[#B5E61D]"
         >
-          <div className="w-12 h-12 rounded-2xl bg-[#0B2A5B] flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 rounded-2xl bg-[#111111] flex items-center justify-center shrink-0">
             <ShieldCheck className="w-6 h-6 text-amber-400" />
           </div>
           <div className="flex-1">
@@ -227,7 +227,7 @@ export const AddaProfileView: React.FC<AddaProfileViewProps> = ({
                 value={addaName}
                 onChange={(e) => setAddaName(e.target.value)}
                 placeholder="مثال: بسم اللہ گڈز ٹرانسپورٹ کمپنی"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#123A6D] outline-none"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#1E1E1E] outline-none"
                 required
               />
             </div>
@@ -242,7 +242,7 @@ export const AddaProfileView: React.FC<AddaProfileViewProps> = ({
                 value={managerName}
                 onChange={(e) => setManagerName(e.target.value)}
                 placeholder="مثال: ملک محمد اسلم"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#123A6D] outline-none"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#1E1E1E] outline-none"
                 required
               />
             </div>
@@ -257,7 +257,7 @@ export const AddaProfileView: React.FC<AddaProfileViewProps> = ({
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
                 placeholder="مثال: لاہور، کراچی، ملتان، وغیرہ"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#123A6D] outline-none"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#1E1E1E] outline-none"
                 required
               />
             </div>
@@ -272,7 +272,7 @@ export const AddaProfileView: React.FC<AddaProfileViewProps> = ({
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder="مثال: شیر شاہ روڈ، نزد پرانا غلہ منڈی"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#123A6D] outline-none"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#1E1E1E] outline-none"
               />
             </div>
 
@@ -323,7 +323,7 @@ export const AddaProfileView: React.FC<AddaProfileViewProps> = ({
                 value={primaryPhone}
                 onChange={(e) => setPrimaryPhone(e.target.value)}
                 placeholder="03001234567"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm font-mono ltr-content focus:bg-white focus:border-[#123A6D] outline-none"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm font-mono ltr-content focus:bg-white focus:border-[#1E1E1E] outline-none"
                 required
               />
             </div>
@@ -337,7 +337,7 @@ export const AddaProfileView: React.FC<AddaProfileViewProps> = ({
                 value={whatsappNumber}
                 onChange={(e) => setWhatsappNumber(e.target.value)}
                 placeholder="03001234567"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm font-mono ltr-content focus:bg-white focus:border-[#123A6D] outline-none"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm font-mono ltr-content focus:bg-white focus:border-[#1E1E1E] outline-none"
                 required
               />
             </div>
@@ -484,7 +484,7 @@ export const AddaProfileView: React.FC<AddaProfileViewProps> = ({
         <div className="pt-2">
           <button
             type="submit"
-            className="w-full bg-[#123A6D] hover:bg-[#0D2D57] text-white py-4 px-6 rounded-2xl font-bold text-base shadow-md active:scale-95 transition flex items-center justify-center gap-2"
+            className="w-full bg-[#1E1E1E] hover:bg-[#0D2D57] text-white py-4 px-6 rounded-2xl font-bold text-base shadow-md active:scale-95 transition flex items-center justify-center gap-2"
           >
             <Save className="w-5 h-5 text-emerald-300" />
             <span>اڈا پروفائل و رابطہ نمبرز محفوظ کریں</span>

@@ -208,15 +208,15 @@ export const LoadChat: React.FC<LoadChatProps> = ({ slipId, myRole, myName, myPh
   const otherLabel = myRole === 'driver' ? 'اڈا مینیجر' : 'ڈرائیور';
 
   return (
-    <div className="rounded-3xl border-2 border-[#0B2A5B]/15 bg-white overflow-hidden font-nafees" dir="rtl">
+    <div className="rounded-3xl border-2 border-[#111111]/15 bg-white overflow-hidden font-nafees" dir="rtl">
       {/* Header / toggle */}
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between gap-2 px-4 py-3.5 bg-gradient-to-l from-[#0B2A5B] to-[#123A6D] text-white min-h-[56px]"
+        className="w-full flex items-center justify-between gap-2 px-4 py-3.5 bg-gradient-to-l from-[#111111] to-[#1E1E1E] text-white min-h-[56px]"
       >
         <span className="inline-flex items-center gap-2 font-extrabold text-sm">
-          <Lock className="w-4 h-4 text-[#F5A301]" />
+          <Lock className="w-4 h-4 text-[#B5E61D]" />
           پرائیویٹ چیٹ — {otherName || otherLabel}
         </span>
         <span className="inline-flex items-center gap-2">
@@ -256,17 +256,17 @@ export const LoadChat: React.FC<LoadChatProps> = ({ slipId, myRole, myName, myPh
                     <div
                       className={`max-w-[80%] rounded-2xl px-3 py-2 shadow-sm ${
                         mine
-                          ? 'text-[#0B2A5B]'
+                          ? 'text-[#111111]'
                           : 'bg-white border border-slate-200 text-slate-800'
                       }`}
                       style={
                         mine
-                          ? { background: 'linear-gradient(135deg, #FFC531 0%, #F5A301 100%)' }
+                          ? { background: 'linear-gradient(135deg, #CDF463 0%, #B5E61D 100%)' }
                           : undefined
                       }
                     >
                       {!mine && (
-                        <p className="text-[10px] font-extrabold text-[#0B2A5B] mb-0.5">{m.senderName}</p>
+                        <p className="text-[10px] font-extrabold text-[#111111] mb-0.5">{m.senderName}</p>
                       )}
                       {m.kind === 'voice' && m.audioUrl ? (
                         <button
@@ -276,7 +276,7 @@ export const LoadChat: React.FC<LoadChatProps> = ({ slipId, myRole, myName, myPh
                         >
                           <span
                             className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
-                              mine ? 'bg-[#0B2A5B] text-white' : 'bg-[#0B2A5B]/10 text-[#0B2A5B]'
+                              mine ? 'bg-[#111111] text-white' : 'bg-[#111111]/10 text-[#111111]'
                             }`}
                           >
                             {playingId === m.id ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
@@ -288,7 +288,7 @@ export const LoadChat: React.FC<LoadChatProps> = ({ slipId, myRole, myName, myPh
                       ) : (
                         <p className="text-sm font-bold leading-relaxed whitespace-pre-wrap break-words">{m.text}</p>
                       )}
-                      <p className={`text-[10px] mt-1 font-bold ${mine ? 'text-[#0B2A5B]/70' : 'text-slate-400'}`}>
+                      <p className={`text-[10px] mt-1 font-bold ${mine ? 'text-[#111111]/70' : 'text-slate-400'}`}>
                         {chatTime(m.createdAt)}
                       </p>
                     </div>
@@ -340,8 +340,8 @@ export const LoadChat: React.FC<LoadChatProps> = ({ slipId, myRole, myName, myPh
                       type="button"
                       onClick={() => void handleSendVoice()}
                       disabled={sending}
-                      className="inline-flex items-center gap-1.5 text-[#0B2A5B] text-xs font-extrabold px-4 py-2.5 rounded-xl min-h-[44px] disabled:opacity-60"
-                      style={{ background: 'linear-gradient(135deg, #FFC531 0%, #F5A301 100%)' }}
+                      className="inline-flex items-center gap-1.5 text-[#111111] text-xs font-extrabold px-4 py-2.5 rounded-xl min-h-[44px] disabled:opacity-60"
+                      style={{ background: 'linear-gradient(135deg, #CDF463 0%, #B5E61D 100%)' }}
                     >
                       <Send className="w-4 h-4" />
                       {sending ? '…' : 'بھیجیں'}
@@ -359,9 +359,9 @@ export const LoadChat: React.FC<LoadChatProps> = ({ slipId, myRole, myName, myPh
                 type="button"
                 onClick={() => void startRecording()}
                 aria-label="وائس نوٹ ریکارڈ کریں"
-                className="w-11 h-11 rounded-2xl bg-[#0B2A5B]/5 hover:bg-[#0B2A5B]/10 flex items-center justify-center shrink-0 active:scale-95"
+                className="w-11 h-11 rounded-2xl bg-[#111111]/5 hover:bg-[#111111]/10 flex items-center justify-center shrink-0 active:scale-95"
               >
-                <Mic className="w-5 h-5 text-[#0B2A5B]" />
+                <Mic className="w-5 h-5 text-[#111111]" />
               </button>
               <input
                 type="text"
@@ -371,7 +371,7 @@ export const LoadChat: React.FC<LoadChatProps> = ({ slipId, myRole, myName, myPh
                   if (e.key === 'Enter') void handleSendText();
                 }}
                 placeholder="پیغام لکھیں…"
-                className="flex-1 bg-slate-100 rounded-2xl px-4 py-2.5 text-sm font-bold text-slate-800 outline-none focus:bg-slate-50 focus:ring-2 focus:ring-[#F5A301]/50 min-h-[44px]"
+                className="flex-1 bg-slate-100 rounded-2xl px-4 py-2.5 text-sm font-bold text-slate-800 outline-none focus:bg-slate-50 focus:ring-2 focus:ring-[#B5E61D]/50 min-h-[44px]"
               />
               <button
                 type="button"
@@ -379,9 +379,9 @@ export const LoadChat: React.FC<LoadChatProps> = ({ slipId, myRole, myName, myPh
                 disabled={!text.trim() || sending}
                 aria-label="بھیجیں"
                 className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 active:scale-95 disabled:opacity-40"
-                style={{ background: 'linear-gradient(135deg, #FFC531 0%, #F5A301 100%)' }}
+                style={{ background: 'linear-gradient(135deg, #CDF463 0%, #B5E61D 100%)' }}
               >
-                <Send className="w-5 h-5 text-[#0B2A5B]" />
+                <Send className="w-5 h-5 text-[#111111]" />
               </button>
             </div>
           )}

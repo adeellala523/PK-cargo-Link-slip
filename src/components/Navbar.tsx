@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Truck, Search, ShieldCheck, UserCheck, Menu, X, Download, Share2, Bell, MessageSquare, QrCode } from 'lucide-react';
 import { NotificationService } from '../services/notificationService';
+import { SideDrawer, DrawerSection } from './SideDrawer';
+import { StorageService } from '../services/storage';
 import { GEMINI_LIVE_ENABLED } from '../config/featureFlags';
 
 interface NavbarProps {
@@ -22,6 +24,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenNotifications,
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const drawerUser = (() => { try { return StorageService.getCurrentUser(); } catch { return null; } })();
+  const drawerUserName = drawerUser?.managerName || drawerUser?.addaName || '';
+  const drawerUserRole: 'driver' | 'adda_manager' = drawerUser?.role === 'driver' ? 'driver' : 'adda_manager';
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [canInstall, setCanInstall] = useState(false);
   const [unreadCount, setUnreadCount] = useState<number>(NotificationService.getUnreadCount());
@@ -64,7 +69,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-[#123A6D] text-white shadow-md border-b border-emerald-500/30">
+    <header className="sticky top-0 z-40 bg-[#1E1E1E] text-white shadow-md border-b border-emerald-500/30">
       <div className="max-w-5xl mx-auto px-3 sm:px-4">
         <div className="flex items-center justify-between h-16 sm:h-20">
           
@@ -91,7 +96,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={() => setCurrentTab('home')}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                currentTab === 'home' ? 'bg-[#08284F] text-white' : 'text-slate-200 hover:bg-white/10'
+                currentTab === 'home' ? 'bg-[#111111] text-white' : 'text-slate-200 hover:bg-white/10'
               }`}
             >
               ہوم
@@ -99,7 +104,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={() => setCurrentTab('search')}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                currentTab === 'search' ? 'bg-[#08284F] text-white' : 'text-slate-200 hover:bg-white/10'
+                currentTab === 'search' ? 'bg-[#111111] text-white' : 'text-slate-200 hover:bg-white/10'
               }`}
             >
               📦 مال / لوڈ تلاش کریں
@@ -115,7 +120,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={() => setCurrentTab('verify')}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                currentTab === 'verify' ? 'bg-[#08284F] text-white' : 'text-slate-200 hover:bg-white/10'
+                currentTab === 'verify' ? 'bg-[#111111] text-white' : 'text-slate-200 hover:bg-white/10'
               }`}
             >
               سلپ ویریفائی کریں
@@ -131,7 +136,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={() => setCurrentTab('plans')}
               className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${
-                currentTab === 'plans' ? 'bg-[#F5A301] text-[#0B2A5B]' : 'text-amber-300 hover:bg-white/10'
+                currentTab === 'plans' ? 'bg-[#B5E61D] text-[#111111]' : 'text-amber-300 hover:bg-white/10'
               }`}
             >
               💳 پلانز
@@ -139,7 +144,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={() => setCurrentTab('verification')}
               className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${
-                currentTab === 'verification' ? 'bg-[#F5A301] text-[#0B2A5B]' : 'text-amber-300 hover:bg-white/10'
+                currentTab === 'verification' ? 'bg-[#B5E61D] text-[#111111]' : 'text-amber-300 hover:bg-white/10'
               }`}
             >
               🛡️ تصدیق
@@ -147,7 +152,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={() => setCurrentTab('about')}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                currentTab === 'about' ? 'bg-[#08284F] text-white' : 'text-slate-200 hover:bg-white/10'
+                currentTab === 'about' ? 'bg-[#111111] text-white' : 'text-slate-200 hover:bg-white/10'
               }`}
             >
               ہمارے بارے میں
@@ -167,7 +172,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={() => setCurrentTab('contact')}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                currentTab === 'contact' ? 'bg-[#08284F] text-white' : 'text-slate-200 hover:bg-white/10'
+                currentTab === 'contact' ? 'bg-[#111111] text-white' : 'text-slate-200 hover:bg-white/10'
               }`}
             >
               رابطہ
@@ -186,7 +191,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   onClick={() => setCurrentTab('profile')}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    currentTab === 'profile' ? 'bg-[#08284F] text-white' : 'text-slate-200 hover:bg-white/10'
+                    currentTab === 'profile' ? 'bg-[#111111] text-white' : 'text-slate-200 hover:bg-white/10'
                   }`}
                 >
                   پروفائل
@@ -249,171 +254,34 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/* Mobile Dropdown Menu */}
-        {menuOpen && (
-          <div className="lg:hidden py-3 px-2 border-t border-white/10 space-y-1.5 bg-[#08284F] rounded-b-2xl mb-2 animate-in fade-in slide-in-from-top-2 duration-200 shadow-xl">
-            <button
-              onClick={() => { setCurrentTab('home'); setMenuOpen(false); }}
-              className={`w-full text-right px-3 py-2.5 rounded-xl text-base font-medium min-h-[44px] flex items-center ${
-                currentTab === 'home' ? 'bg-[#19A974] text-white' : 'text-slate-200 hover:bg-white/5'
-              }`}
-            >
-              ہوم
-            </button>
-            <button
-              onClick={() => { setCurrentTab('search'); setMenuOpen(false); }}
-              className={`w-full text-right px-3 py-2.5 rounded-xl text-base font-medium min-h-[44px] flex items-center ${
-                currentTab === 'search' ? 'bg-[#19A974] text-white' : 'text-slate-200 hover:bg-white/5'
-              }`}
-            >
-              📦 کارگو لوڈز (مال کی سلپس)
-            </button>
-            <button
-              onClick={() => { setCurrentTab('trucks'); setMenuOpen(false); }}
-              className={`w-full text-right px-3 py-2.5 rounded-xl text-base font-medium min-h-[44px] flex items-center ${
-                currentTab === 'trucks' ? 'bg-[#19A974] text-white' : 'text-slate-200 hover:bg-white/5'
-              }`}
-            >
-              🚚 دستیاب گاڑیاں (خالی ٹرک)
-            </button>
-            <button
-              onClick={() => { setCurrentTab('verify'); setMenuOpen(false); }}
-              className={`w-full text-right px-3 py-2.5 rounded-xl text-base font-medium min-h-[44px] flex items-center ${
-                currentTab === 'verify' ? 'bg-[#19A974] text-white' : 'text-slate-200 hover:bg-white/5'
-              }`}
-            >
-              ✅ سلپ ویریفائی کریں
-            </button>
-            <button
-              onClick={() => { setCurrentTab('driver'); setMenuOpen(false); }}
-              className={`w-full text-right px-3 py-2.5 rounded-xl text-base font-medium min-h-[44px] flex items-center justify-between ${
-                currentTab === 'driver' ? 'bg-[#19A974] text-white' : 'text-emerald-300 hover:bg-white/5'
-              }`}
-            >
-              <span>🚛 ڈرائیور پورٹل</span>
-              <span className="bg-emerald-500/30 text-emerald-200 text-xs px-2 py-0.5 rounded-full font-nafees">
-                ڈرائیور
-              </span>
-            </button>
-            <button
-              onClick={() => { setCurrentTab('plans'); setMenuOpen(false); }}
-              className={`w-full text-right px-3 py-2.5 rounded-xl text-base font-bold min-h-[44px] flex items-center justify-between ${
-                currentTab === 'plans' ? 'bg-[#F5A301] text-[#0B2A5B]' : 'text-amber-300 hover:bg-white/5'
-              }`}
-            >
-              <span>💳 سبسکرپشن پلانز</span>
-              <span className="bg-[#19A974]/30 text-emerald-200 text-xs px-2 py-0.5 rounded-full font-nafees">
-                پہلا مہینہ مفت
-              </span>
-            </button>
-            <button
-              onClick={() => { setCurrentTab('verification'); setMenuOpen(false); }}
-              className={`w-full text-right px-3 py-2.5 rounded-xl text-base font-bold min-h-[44px] flex items-center justify-between ${
-                currentTab === 'verification' ? 'bg-[#F5A301] text-[#0B2A5B]' : 'text-amber-300 hover:bg-white/5'
-              }`}
-            >
-              <span>🛡️ تصدیق</span>
-              <span className="bg-white/10 text-amber-200 text-xs px-2 py-0.5 rounded-full font-nafees">
-                لازمی
-              </span>
-            </button>
-            <button
-              onClick={() => { setCurrentTab('about'); setMenuOpen(false); }}
-              className={`w-full text-right px-3 py-2.5 rounded-xl text-base font-medium min-h-[44px] flex items-center ${
-                currentTab === 'about' ? 'bg-[#19A974] text-white' : 'text-slate-200 hover:bg-white/5'
-              }`}
-            >
-              ہمارے بارے میں
-            </button>
-            <button
-              onClick={() => { setCurrentTab('payment-settings'); setMenuOpen(false); }}
-              className={`w-full text-right px-3 py-2.5 rounded-xl text-base font-bold min-h-[44px] flex items-center justify-between ${
-                currentTab === 'payment-settings' ? 'bg-[#19A974] text-white' : 'text-amber-300 hover:bg-white/5'
-              }`}
-            >
-              <span>🎙️ AI وائس پیمنٹ</span>
-              <span className="bg-amber-500/30 text-amber-200 text-xs px-2 py-0.5 rounded-full font-nafees">
-                {GEMINI_LIVE_ENABLED ? '500/ماہ' : 'عارضی معطل'}
-              </span>
-            </button>
-            <button
-              onClick={() => { setCurrentTab('contact'); setMenuOpen(false); }}
-              className={`w-full text-right px-3 py-2.5 rounded-xl text-base font-medium min-h-[44px] flex items-center ${
-                currentTab === 'contact' ? 'bg-[#19A974] text-white' : 'text-slate-200 hover:bg-white/5'
-              }`}
-            >
-              رابطہ کریں
-            </button>
-
-            {isLoggedIn ? (
-              <>
-                <div className="border-t border-white/10 my-1 pt-1"></div>
-                <button
-                  onClick={() => { setCurrentTab('dashboard'); setMenuOpen(false); }}
-                  className={`w-full text-right px-3 py-2.5 rounded-xl text-base font-medium min-h-[44px] flex items-center ${
-                    currentTab === 'dashboard' ? 'bg-[#19A974] text-white' : 'text-emerald-300 hover:bg-white/5'
-                  }`}
-                >
-                  📊 اڈا ڈیش بورڈ
-                </button>
-                <button
-                  onClick={() => { setCurrentTab('my-slips'); setMenuOpen(false); }}
-                  className={`w-full text-right px-3 py-2.5 rounded-xl text-base font-medium min-h-[44px] flex items-center ${
-                    currentTab === 'my-slips' ? 'bg-[#19A974] text-white' : 'text-slate-200 hover:bg-white/5'
-                  }`}
-                >
-                  📋 میری سلپس
-                </button>
-                <button
-                  onClick={() => { setCurrentTab('profile'); setMenuOpen(false); }}
-                  className={`w-full text-right px-3 py-2.5 rounded-xl text-base font-medium min-h-[44px] flex items-center ${
-                    currentTab === 'profile' ? 'bg-[#19A974] text-white' : 'text-slate-200 hover:bg-white/5'
-                  }`}
-                >
-                  🏢 اڈا پروفائل
-                </button>
-                <button
-                  onClick={() => { setCurrentTab('whatsapp-groups'); setMenuOpen(false); }}
-                  className={`w-full text-right px-3 py-2.5 rounded-xl text-base font-medium min-h-[44px] flex items-center ${
-                    currentTab === 'whatsapp-groups' ? 'bg-[#19A974] text-white' : 'text-slate-200 hover:bg-white/5'
-                  }`}
-                >
-                  💬 WhatsApp گروپس
-                </button>
-                <button
-                  onClick={() => { onLogout(); setMenuOpen(false); }}
-                  className="w-full text-right px-3 py-2.5 rounded-xl text-base font-medium text-red-300 hover:bg-red-500/20 min-h-[44px] flex items-center"
-                >
-                  لاگ آؤٹ
-                </button>
-              </>
-            ) : (
-              <button
-                onClick={() => { setCurrentTab('login'); setMenuOpen(false); }}
-                className={`w-full text-right px-3 py-2.5 rounded-xl text-base font-bold min-h-[44px] flex items-center bg-[#19A974] text-white mt-1`}
-              >
-                🔐 لاگ ان / نیا اکاؤنٹ بنائیں
-              </button>
-            )}
-
-            {/* App Download Option in Menu */}
-            <div className="pt-2 border-t border-white/10 mt-2">
-              <button
-                onClick={() => {
-                  if (canInstall && deferredPrompt) {
-                    handleInstallClick();
-                  } else {
-                    alert('اینڈرائیڈ یا آئی فون پر ایپ انسٹال کرنے کے لیے کروم / سفاری براؤزر کے مینیو (Option/Share) پر کلک کر کے "Add to Home screen" یا "Install App" پر کلک کریں۔');
-                  }
-                  setMenuOpen(false);
-                }}
-                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white px-3.5 py-3 rounded-xl text-sm font-bold shadow-md border border-emerald-400/40 cursor-pointer active:scale-95 transition"
-              >
-                <Download className="w-4 h-4 text-amber-300" />
-                <span>📲 ایپ ڈاؤن لوڈ کریں (Install App)</span>
-              </button>
-            </div>
-          </div>
-        )}
+        {/* inDrive-style side drawer (replaces old dropdown menu) */}
+        <SideDrawer
+          open={menuOpen}
+          userName={drawerUserName}
+          role={drawerUserRole}
+          onClose={() => setMenuOpen(false)}
+          onNavigate={(section) => {
+            const tabMap: Record<string, string> = {
+              home: 'home',
+              my_requests: 'my-slips',
+              history: 'my-slips',
+              my_vehicles: 'fleet',
+              verification: 'verification',
+              settings: 'payment-settings',
+              help: 'about',
+              support: 'contact',
+              profile: 'profile',
+            };
+            if (section === 'notifications' && onOpenNotifications) {
+              onOpenNotifications();
+              return;
+            }
+            const tab = tabMap[section];
+            if (tab) setCurrentTab(tab);
+          }}
+          onDriverMode={() => setCurrentTab('driver')}
+          onLogout={isLoggedIn ? onLogout : undefined}
+        />
       </div>
     </header>
   );

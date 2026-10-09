@@ -57,21 +57,21 @@ export const MyVehicleView: React.FC<MyVehicleViewProps> = ({
     return (
       <div className="bg-white rounded-3xl border border-slate-100 p-8 text-center font-nafees" dir="rtl">
         <User className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-        <h2 className="font-extrabold text-[#0B2A5B] text-lg mb-2">میری گاڑی</h2>
+        <h2 className="font-extrabold text-[#111111] text-lg mb-2">میری گاڑی</h2>
         <p className="text-sm text-slate-500 font-bold mb-5">اپنی گاڑی دیکھنے کے لیے پہلے لاگ ان کریں</p>
         <div className="space-y-2.5">
           <button
             type="button"
             onClick={onNavigateToLogin}
-            className="w-full py-3.5 rounded-2xl bg-[#0B2A5B] text-white font-extrabold min-h-[52px] active:scale-[0.98]"
+            className="w-full py-3.5 rounded-2xl bg-[#111111] text-white font-extrabold min-h-[52px] active:scale-[0.98]"
           >
             لاگ ان کریں
           </button>
           <button
             type="button"
             onClick={onNavigateToRegister}
-            className="w-full py-3.5 rounded-2xl font-extrabold text-[#0B2A5B] min-h-[52px] active:scale-[0.98]"
-            style={{ background: 'linear-gradient(135deg, #FFC531 0%, #F5A301 60%, #E8930C 100%)' }}
+            className="w-full py-3.5 rounded-2xl font-extrabold text-[#111111] min-h-[52px] active:scale-[0.98]"
+            style={{ background: 'linear-gradient(135deg, #CDF463 0%, #B5E61D 60%, #E8930C 100%)' }}
           >
             نیا اکاؤنٹ بنائیں
           </button>
@@ -142,12 +142,12 @@ export const MyVehicleView: React.FC<MyVehicleViewProps> = ({
       <div className="bg-white rounded-3xl border border-slate-100 p-4 flex items-center gap-3">
         <span
           className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
-          style={{ background: 'linear-gradient(135deg, #FFC531 0%, #F5A301 100%)' }}
+          style={{ background: 'linear-gradient(135deg, #CDF463 0%, #B5E61D 100%)' }}
         >
-          <Truck className="w-6 h-6 text-[#0B2A5B]" />
+          <Truck className="w-6 h-6 text-[#111111]" />
         </span>
         <div>
-          <h2 className="font-extrabold text-[#0B2A5B]">میری گاڑی</h2>
+          <h2 className="font-extrabold text-[#111111]">میری گاڑی</h2>
           <p className="text-[11px] text-slate-500 font-bold">
             صرف آپ کی اپنی گاڑی — دوسرے ڈرائیورز کی گاڑیاں یہاں نظر نہیں آتیں
           </p>
@@ -193,7 +193,7 @@ export const MyVehicleView: React.FC<MyVehicleViewProps> = ({
             value={vehicleType}
             onChange={(e) => setVehicleType(e.target.value)}
             placeholder="مثال: 22 Wheeler، مزدہ"
-            className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#0B2A5B] outline-none min-h-[48px] font-bold"
+            className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#111111] outline-none min-h-[48px] font-bold"
           />
           <div className="flex flex-wrap gap-1.5 mt-2">
             {PAKISTAN_VEHICLE_VALUES.slice(0, 12).map((v) => (
@@ -202,7 +202,7 @@ export const MyVehicleView: React.FC<MyVehicleViewProps> = ({
                 type="button"
                 onClick={() => setVehicleType(v)}
                 className={`text-[11px] px-2.5 py-1 rounded-lg border font-bold ${
-                  vehicleType === v ? 'bg-[#0B2A5B] text-white border-[#0B2A5B]' : 'bg-slate-100 text-slate-700 border-slate-200'
+                  vehicleType === v ? 'bg-[#111111] text-white border-[#111111]' : 'bg-slate-100 text-slate-700 border-slate-200'
                 }`}
               >
                 <bdi>{v}</bdi>
@@ -221,7 +221,7 @@ export const MyVehicleView: React.FC<MyVehicleViewProps> = ({
                   type="button"
                   onClick={() => setBodyType(b)}
                   className={`text-xs px-3 py-1.5 rounded-xl font-bold border ${
-                    bodyType === b ? 'bg-[#0B2A5B] text-white border-[#0B2A5B]' : 'bg-slate-100 text-slate-700 border-slate-200'
+                    bodyType === b ? 'bg-[#111111] text-white border-[#111111]' : 'bg-slate-100 text-slate-700 border-slate-200'
                   }`}
                 >
                   {b}
@@ -236,7 +236,7 @@ export const MyVehicleView: React.FC<MyVehicleViewProps> = ({
               value={vehicleNumber}
               onChange={(e) => setVehicleNumber(e.target.value)}
               placeholder="مثال: LES-1234"
-              className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white outline-none min-h-[48px] font-mono"
+              className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white outline-none min-h-[48px] font-mono"
             />
           </div>
         </div>
@@ -251,7 +251,7 @@ export const MyVehicleView: React.FC<MyVehicleViewProps> = ({
               value={currentCity}
               onChange={(e) => setCurrentCity(e.target.value)}
               placeholder="مثال: لاہور"
-              className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white outline-none min-h-[48px]"
+              className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white outline-none min-h-[48px]"
             />
           </div>
           <div>
@@ -261,7 +261,7 @@ export const MyVehicleView: React.FC<MyVehicleViewProps> = ({
               value={locationDetails}
               onChange={(e) => setLocationDetails(e.target.value)}
               placeholder="مثال: ٹھوکر نیاز بیگ"
-              className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white outline-none min-h-[48px]"
+              className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white outline-none min-h-[48px]"
             />
           </div>
         </div>
@@ -273,15 +273,15 @@ export const MyVehicleView: React.FC<MyVehicleViewProps> = ({
             value={preferredRoute}
             onChange={(e) => setPreferredRoute(e.target.value)}
             placeholder="مثال: لاہور تا کراچی"
-            className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white outline-none min-h-[48px]"
+            className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white outline-none min-h-[48px]"
           />
         </div>
 
         <button
           type="submit"
           disabled={saving}
-          className="w-full py-4 rounded-2xl font-extrabold text-[#0B2A5B] text-base min-h-[56px] active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60"
-          style={{ background: 'linear-gradient(135deg, #FFC531 0%, #F5A301 60%, #E8930C 100%)' }}
+          className="w-full py-4 rounded-2xl font-extrabold text-[#111111] text-base min-h-[56px] active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60"
+          style={{ background: 'linear-gradient(135deg, #CDF463 0%, #B5E61D 60%, #E8930C 100%)' }}
         >
           <Save className="w-5 h-5" />
           <span>{saving ? 'محفوظ ہو رہی ہے…' : existingTruck ? 'گاڑی اپ ڈیٹ کریں' : 'میری گاڑی محفوظ کریں'}</span>

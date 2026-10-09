@@ -225,15 +225,15 @@ export const DriverApp: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-slate-100/70 text-slate-900 font-nafees" dir="rtl">
       {/* Driver app header */}
-      <header className="sticky top-0 z-40 bg-[#0B2A5B] text-white shadow-lg no-print">
+      <header className="sticky top-0 z-40 bg-[#111111] text-white shadow-lg no-print">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <span className="w-10 h-10 rounded-2xl flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, #FFC531 0%, #F5A301 100%)' }}>
-              <Truck className="w-5 h-5 text-[#0B2A5B]" />
+              style={{ background: 'linear-gradient(135deg, #CDF463 0%, #B5E61D 100%)' }}>
+              <Truck className="w-5 h-5 text-[#111111]" />
             </span>
             <div>
-              <h1 className="font-extrabold text-base leading-tight">PK Cargo <span className="text-[#F5A301]">Driver</span></h1>
+              <h1 className="font-extrabold text-base leading-tight">PK Cargo <span className="text-[#B5E61D]">Driver</span></h1>
               <p className="text-[10px] text-slate-300 font-bold">ڈرائیور ایپ • driver.pkcargolink.com</p>
             </div>
           </div>
@@ -353,8 +353,8 @@ export const DriverApp: React.FC = () => {
               <button
                 type="button"
                 onClick={() => acceptLoad(activeSlip)}
-                className="w-full py-4 rounded-2xl font-extrabold text-[#0B2A5B] text-base min-h-[56px] active:scale-[0.98] no-print"
-                style={{ background: 'linear-gradient(135deg, #FFC531 0%, #F5A301 60%, #E8930C 100%)' }}
+                className="w-full py-4 rounded-2xl font-extrabold text-[#111111] text-base min-h-[56px] active:scale-[0.98] no-print"
+                style={{ background: 'linear-gradient(135deg, #CDF463 0%, #B5E61D 60%, #E8930C 100%)' }}
               >
                 ✅ یہ لوڈ قبول کریں
               </button>
@@ -416,7 +416,7 @@ export const DriverApp: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => { setLoginMode('login'); navigate('d-login'); }}
-                    className="mt-4 bg-[#0B2A5B] text-white font-bold rounded-xl px-6 py-3 min-h-[48px]"
+                    className="mt-4 bg-[#111111] text-white font-bold rounded-xl px-6 py-3 min-h-[48px]"
                   >
                     لاگ ان کریں
                   </button>
@@ -439,7 +439,7 @@ export const DriverApp: React.FC = () => {
       <div className="no-print max-w-5xl w-full mx-auto px-4 pb-24 md:pb-8">
         <a
           href={getOtherSideUrl()}
-          className="flex items-center justify-center gap-2 text-xs font-bold text-slate-500 hover:text-[#0B2A5B] py-3"
+          className="flex items-center justify-center gap-2 text-xs font-bold text-slate-500 hover:text-[#111111] py-3"
         >
           <ExternalLink className="w-3.5 h-3.5" />
           اڈا مینیجر ہیں؟ pkcargolink.com کھولیں
@@ -490,21 +490,21 @@ const DriverProfilePanel: React.FC<{
     return (
       <div className="bg-white rounded-3xl border border-slate-100 p-8 text-center">
         <User className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-        <h2 className="font-extrabold text-[#0B2A5B] text-lg mb-2">پروفائل</h2>
+        <h2 className="font-extrabold text-[#111111] text-lg mb-2">پروفائل</h2>
         <p className="text-sm text-slate-500 font-bold mb-5">اپنا ڈرائیور اکاؤنٹ بنائیں یا لاگ ان کریں</p>
         <div className="space-y-2.5">
           <button
             type="button"
             onClick={onNavigateToLogin}
-            className="w-full py-3.5 rounded-2xl bg-[#0B2A5B] text-white font-extrabold min-h-[52px] active:scale-[0.98]"
+            className="w-full py-3.5 rounded-2xl bg-[#111111] text-white font-extrabold min-h-[52px] active:scale-[0.98]"
           >
             لاگ ان کریں
           </button>
           <button
             type="button"
             onClick={onNavigateToRegister}
-            className="w-full py-3.5 rounded-2xl font-extrabold text-[#0B2A5B] min-h-[52px] active:scale-[0.98]"
-            style={{ background: 'linear-gradient(135deg, #FFC531 0%, #F5A301 60%, #E8930C 100%)' }}
+            className="w-full py-3.5 rounded-2xl font-extrabold text-[#111111] min-h-[52px] active:scale-[0.98]"
+            style={{ background: 'linear-gradient(135deg, #CDF463 0%, #B5E61D 60%, #E8930C 100%)' }}
           >
             نیا اکاؤنٹ بنائیں
           </button>
@@ -516,10 +516,10 @@ const DriverProfilePanel: React.FC<{
   return (
     <div className="space-y-4">
       {/* Header card */}
-      <div className="bg-gradient-to-br from-[#0B2A5B] to-[#123A6D] rounded-3xl p-5 text-white">
+      <div className="bg-gradient-to-br from-[#111111] to-[#1E1E1E] rounded-3xl p-5 text-white">
         <div className="flex items-center gap-3.5">
           <span className="w-14 h-14 rounded-2xl bg-white/15 flex items-center justify-center">
-            <User className="w-7 h-7 text-[#F5A301]" />
+            <User className="w-7 h-7 text-[#B5E61D]" />
           </span>
           <div className="flex-1">
             <h2 className="font-extrabold text-lg">{driver.driverName || 'ڈرائیور'}</h2>
@@ -532,17 +532,17 @@ const DriverProfilePanel: React.FC<{
         </div>
         <div className="grid grid-cols-3 gap-2 mt-4">
           <div className="bg-white/10 rounded-2xl p-3 text-center">
-            <p className="text-xl font-extrabold text-[#F5A301]">{acceptedCount}</p>
+            <p className="text-xl font-extrabold text-[#B5E61D]">{acceptedCount}</p>
             <p className="text-[10px] font-bold text-slate-300">قبول شدہ لوڈز</p>
           </div>
           <div className="bg-white/10 rounded-2xl p-3 text-center">
-            <p className="text-xl font-extrabold text-[#F5A301] flex items-center justify-center gap-1">
+            <p className="text-xl font-extrabold text-[#B5E61D] flex items-center justify-center gap-1">
               <MapPin className="w-4 h-4" />
             </p>
             <p className="text-[10px] font-bold text-slate-300 mt-1">{driver.currentCity || '—'}</p>
           </div>
           <div className="bg-white/10 rounded-2xl p-3 text-center">
-            <p className="text-xl font-extrabold text-[#F5A301]">{online ? '🟢' : '⚪'}</p>
+            <p className="text-xl font-extrabold text-[#B5E61D]">{online ? '🟢' : '⚪'}</p>
             <p className="text-[10px] font-bold text-slate-300">{online ? 'آن لائن' : 'آف لائن'}</p>
           </div>
         </div>
@@ -550,9 +550,9 @@ const DriverProfilePanel: React.FC<{
 
       {/* Actions */}
       <div className="bg-white rounded-3xl border border-slate-100 divide-y divide-slate-100 overflow-hidden">
-        <ProfileRow icon={<Truck className="w-5 h-5 text-[#0B2A5B]" />} label="میری گاڑی" sub={driver.vehicleType ? `${driver.vehicleType}${driver.vehicleNumber ? ' • ' + driver.vehicleNumber : ''}` : 'درج کریں'} onClick={onNavigateToTruck} />
-        <ProfileRow icon={<ShieldCheck className="w-5 h-5 text-[#0B2A5B]" />} label="تصدیق (KYC)" sub="لائسنس، نمبر پلیٹ، شناختی کارڈ" onClick={onNavigateToVerification} badge={<VerificationBadge status={verificationStatus} size="sm" />} />
-        <ProfileRow icon={<PackageCheck className="w-5 h-5 text-[#0B2A5B]" />} label="قبول شدہ لوڈز" sub={`${acceptedCount} لوڈز`} onClick={() => {}} />
+        <ProfileRow icon={<Truck className="w-5 h-5 text-[#111111]" />} label="میری گاڑی" sub={driver.vehicleType ? `${driver.vehicleType}${driver.vehicleNumber ? ' • ' + driver.vehicleNumber : ''}` : 'درج کریں'} onClick={onNavigateToTruck} />
+        <ProfileRow icon={<ShieldCheck className="w-5 h-5 text-[#111111]" />} label="تصدیق (KYC)" sub="لائسنس، نمبر پلیٹ، شناختی کارڈ" onClick={onNavigateToVerification} badge={<VerificationBadge status={verificationStatus} size="sm" />} />
+        <ProfileRow icon={<PackageCheck className="w-5 h-5 text-[#111111]" />} label="قبول شدہ لوڈز" sub={`${acceptedCount} لوڈز`} onClick={() => {}} />
       </div>
 
       <button
@@ -590,9 +590,9 @@ const ProfileRow: React.FC<{
     onClick={onClick}
     className="w-full flex items-center gap-3 px-4 py-3.5 text-right active:bg-slate-50 transition min-h-[60px]"
   >
-    <span className="w-10 h-10 rounded-xl bg-[#F4F7FB] flex items-center justify-center shrink-0">{icon}</span>
+    <span className="w-10 h-10 rounded-xl bg-[#FFFFFF] flex items-center justify-center shrink-0">{icon}</span>
     <span className="flex-1">
-      <span className="block font-extrabold text-sm text-[#0B2A5B]">{label}</span>
+      <span className="block font-extrabold text-sm text-[#111111]">{label}</span>
       {sub && <span className="block text-[11px] text-slate-500 font-bold mt-0.5">{sub}</span>}
     </span>
     {badge || <ChevronLeft className="w-4 h-4 text-slate-300 rotate-180 shrink-0" />}
@@ -623,7 +623,7 @@ const DriverHistorySection: React.FC<{
   return (
     <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden" dir="rtl">
       <div className="px-4 pt-4 pb-2 flex items-center justify-between">
-        <h3 className="font-extrabold text-[#0B2A5B] text-sm">میری لوڈ ہسٹری ({mine.length})</h3>
+        <h3 className="font-extrabold text-[#111111] text-sm">میری لوڈ ہسٹری ({mine.length})</h3>
       </div>
       <div className="flex gap-2 px-4 pb-3">
         {([
@@ -636,7 +636,7 @@ const DriverHistorySection: React.FC<{
             type="button"
             onClick={() => setFilter(f.k)}
             className={`px-4 py-1.5 rounded-full text-[11px] font-extrabold border min-h-[34px] ${
-              filter === f.k ? 'bg-[#0B2A5B] text-white border-[#0B2A5B]' : 'bg-white text-slate-500 border-slate-200'
+              filter === f.k ? 'bg-[#111111] text-white border-[#111111]' : 'bg-white text-slate-500 border-slate-200'
             }`}
           >
             {f.l}
@@ -655,7 +655,7 @@ const DriverHistorySection: React.FC<{
               className="w-full flex items-center justify-between px-4 py-3 active:bg-slate-50 text-right"
             >
               <div>
-                <p className="text-sm font-extrabold text-[#0B2A5B]">{s.loadingCity} تا {s.destinationCity}</p>
+                <p className="text-sm font-extrabold text-[#111111]">{s.loadingCity} تا {s.destinationCity}</p>
                 <p className="text-[11px] text-slate-500 font-bold mt-0.5">
                   {s.completedAt ? '✅ مکمل' : s.status === 'active' ? '🟢 جاری' : '📌 بک'}
                 </p>

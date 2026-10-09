@@ -61,18 +61,18 @@ export function RoleSelectScreen({
               onClick={() => setSelected(c.key)}
               className={`w-full flex items-center gap-4 rounded-3xl px-5 py-5 border-2 text-right transition active:scale-[0.98] ${
                 active
-                  ? 'border-[#F5A301] bg-amber-50'
+                  ? 'border-[#B5E61D] bg-amber-50'
                   : 'border-neutral-200 bg-white'
               }`}
             >
               <span className="text-4xl" aria-hidden>{c.emoji}</span>
               <span className="flex-1">
-                <span className="block text-base font-extrabold text-[#0B2A5B]">{c.title}</span>
+                <span className="block text-base font-extrabold text-[#111111]">{c.title}</span>
                 <span className="block text-xs font-bold text-neutral-500 mt-1">{c.desc}</span>
               </span>
               <span
                 className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                  active ? 'border-[#F5A301] bg-[#F5A301]' : 'border-neutral-300'
+                  active ? 'border-[#B5E61D] bg-[#B5E61D]' : 'border-neutral-300'
                 }`}
                 aria-hidden
               >

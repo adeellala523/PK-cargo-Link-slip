@@ -74,19 +74,19 @@ export const LoadRequestCard: React.FC<LoadRequestCardProps> = ({ slip, onViewSl
 
       {/* Detail chips */}
       <div className="px-4 pt-2.5 flex flex-wrap gap-1.5">
-        <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-[#F4F7FB] text-slate-700 px-2.5 py-1.5 rounded-xl border border-slate-100">
-          <Package className="w-3.5 h-3.5 text-[#123A6D]" />
+        <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-[#FFFFFF] text-slate-700 px-2.5 py-1.5 rounded-xl border border-slate-100">
+          <Package className="w-3.5 h-3.5 text-[#1E1E1E]" />
           {slip.goods || 'حاضر مال'}
         </span>
         {slip.vehicleType && (
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-[#F4F7FB] text-slate-700 px-2.5 py-1.5 rounded-xl border border-slate-100 ltr-content">
-            <Truck className="w-3.5 h-3.5 text-[#123A6D]" />
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-[#FFFFFF] text-slate-700 px-2.5 py-1.5 rounded-xl border border-slate-100 ltr-content">
+            <Truck className="w-3.5 h-3.5 text-[#1E1E1E]" />
             {slip.vehicleType}
           </span>
         )}
         {(slip.quantity || slip.weight) && (
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-[#F4F7FB] text-slate-700 px-2.5 py-1.5 rounded-xl border border-slate-100">
-            <Weight className="w-3.5 h-3.5 text-[#123A6D]" />
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-[#FFFFFF] text-slate-700 px-2.5 py-1.5 rounded-xl border border-slate-100">
+            <Weight className="w-3.5 h-3.5 text-[#1E1E1E]" />
             {slip.quantity || slip.weight}
           </span>
         )}
@@ -98,7 +98,7 @@ export const LoadRequestCard: React.FC<LoadRequestCardProps> = ({ slip, onViewSl
           <Banknote className="w-4 h-4 text-[#B97A0A]" />
           کرایہ
         </span>
-        <span className="text-sm font-extrabold text-[#0B2A5B]">
+        <span className="text-sm font-extrabold text-[#111111]">
           {fare ? <span className="num-badge">{fare}</span> : 'بات چیت پر'}
         </span>
       </div>
@@ -108,7 +108,7 @@ export const LoadRequestCard: React.FC<LoadRequestCardProps> = ({ slip, onViewSl
         <a
           href={`tel:${sanitizePhoneForCall(slip.primaryPhone)}`}
           onClick={(e) => e.stopPropagation()}
-          className="flex-1 inline-flex items-center justify-center gap-1.5 bg-[#123A6D] hover:bg-[#0D2D57] text-white font-extrabold text-sm py-3 rounded-2xl transition active:scale-[0.98] min-h-[48px]"
+          className="flex-1 inline-flex items-center justify-center gap-1.5 bg-[#1E1E1E] hover:bg-[#0D2D57] text-white font-extrabold text-sm py-3 rounded-2xl transition active:scale-[0.98] min-h-[48px]"
         >
           <Phone className="w-4 h-4" />
           <span>کال کریں</span>
@@ -130,7 +130,7 @@ export const LoadRequestCard: React.FC<LoadRequestCardProps> = ({ slip, onViewSl
           type="button"
           onClick={() => onViewSlip(slip)}
           title="مکمل سلپ دیکھیں"
-          className="w-12 h-12 shrink-0 inline-flex items-center justify-center bg-[#F4F7FB] hover:bg-slate-200 text-[#123A6D] rounded-2xl border border-slate-200 transition active:scale-95"
+          className="w-12 h-12 shrink-0 inline-flex items-center justify-center bg-[#FFFFFF] hover:bg-slate-200 text-[#1E1E1E] rounded-2xl border border-slate-200 transition active:scale-95"
         >
           <Eye className="w-5 h-5" />
         </button>

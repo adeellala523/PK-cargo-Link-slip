@@ -40,12 +40,12 @@ export const DriverBottomNav: React.FC<DriverBottomNavProps> = ({
               className="relative flex flex-col items-center justify-center gap-0.5 flex-1 py-1.5 rounded-2xl transition active:scale-95 min-h-[56px]"
             >
               {t.active && (
-                <span className="absolute top-0.5 w-8 h-1 rounded-full bg-[#F5A301]" aria-hidden="true" />
+                <span className="absolute top-0.5 w-8 h-1 rounded-full bg-[#B5E61D]" aria-hidden="true" />
               )}
               <Icon
-                className={`w-[24px] h-[24px] ${t.active ? 'text-[#0B2A5B] stroke-[2.4]' : 'text-slate-400'}`}
+                className={`w-[24px] h-[24px] ${t.active ? 'text-[#111111] stroke-[2.4]' : 'text-slate-400'}`}
               />
-              <span className={`text-[12px] leading-tight ${t.active ? 'font-extrabold text-[#0B2A5B]' : 'font-bold text-slate-400'}`}>
+              <span className={`text-[12px] leading-tight ${t.active ? 'font-extrabold text-[#111111]' : 'font-bold text-slate-400'}`}>
                 {t.label}
               </span>
               {t.key === 'd-loads' && pendingCount > 0 && (

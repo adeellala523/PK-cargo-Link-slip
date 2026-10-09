@@ -154,7 +154,7 @@ export const DriverPortalView: React.FC<DriverPortalViewProps> = ({
               <ShieldCheck className="w-3.5 h-3.5 text-[#19A974]" />
               <span>ڈرائیور پورٹل و سروسز</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#08284F]">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#111111]">
               ڈرائیور لاگ ان و رجسٹریشن لازمی ہے
             </h1>
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
@@ -164,9 +164,9 @@ export const DriverPortalView: React.FC<DriverPortalViewProps> = ({
 
           {/* Features Grid for Drivers */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-right max-w-2xl mx-auto">
-            <div className="bg-[#F4F7FB] p-3.5 rounded-2xl border border-slate-200 space-y-1">
+            <div className="bg-[#FFFFFF] p-3.5 rounded-2xl border border-slate-200 space-y-1">
               <div className="flex items-center gap-2 text-xs font-bold text-slate-900">
-                <Search className="w-4 h-4 text-[#123A6D]" />
+                <Search className="w-4 h-4 text-[#1E1E1E]" />
                 <span>لائیو لوڈ سرچ</span>
               </div>
               <p className="text-[11px] text-slate-500">
@@ -174,7 +174,7 @@ export const DriverPortalView: React.FC<DriverPortalViewProps> = ({
               </p>
             </div>
 
-            <div className="bg-[#F4F7FB] p-3.5 rounded-2xl border border-slate-200 space-y-1">
+            <div className="bg-[#FFFFFF] p-3.5 rounded-2xl border border-slate-200 space-y-1">
               <div className="flex items-center gap-2 text-xs font-bold text-slate-900">
                 <Truck className="w-4 h-4 text-[#19A974]" />
                 <span>خالی گاڑی لسٹنگ</span>
@@ -184,7 +184,7 @@ export const DriverPortalView: React.FC<DriverPortalViewProps> = ({
               </p>
             </div>
 
-            <div className="bg-[#F4F7FB] p-3.5 rounded-2xl border border-slate-200 space-y-1">
+            <div className="bg-[#FFFFFF] p-3.5 rounded-2xl border border-slate-200 space-y-1">
               <div className="flex items-center gap-2 text-xs font-bold text-slate-900">
                 <Navigation className="w-4 h-4 text-amber-600" />
                 <span>ٹرپ اپ ڈیٹس</span>
@@ -200,7 +200,7 @@ export const DriverPortalView: React.FC<DriverPortalViewProps> = ({
             <button
               type="button"
               onClick={onNavigateToDriverLogin}
-              className="w-full sm:w-auto flex-1 bg-[#123A6D] hover:bg-[#0D2D57] text-white py-3.5 px-6 rounded-xl font-bold text-sm shadow-md transition active:scale-95 flex items-center justify-center gap-2"
+              className="w-full sm:w-auto flex-1 bg-[#1E1E1E] hover:bg-[#0D2D57] text-white py-3.5 px-6 rounded-xl font-bold text-sm shadow-md transition active:scale-95 flex items-center justify-center gap-2"
             >
               <User className="w-4 h-4" />
               <span>ڈرائیور لاگ ان کریں</span>
@@ -218,12 +218,12 @@ export const DriverPortalView: React.FC<DriverPortalViewProps> = ({
 
           {/* Separate Workflow for Adda Managers */}
           <div className="pt-4 border-t border-slate-100 flex items-center justify-center gap-2 text-xs text-slate-500">
-            <Building2 className="w-4 h-4 text-[#123A6D]" />
+            <Building2 className="w-4 h-4 text-[#1E1E1E]" />
             <span>کیا آپ گڈز اڈا منیجر ہیں؟</span>
             <button
               type="button"
               onClick={onNavigateToAddaLogin}
-              className="text-[#123A6D] font-bold hover:underline"
+              className="text-[#1E1E1E] font-bold hover:underline"
             >
               اڈا منیجر لاگ ان و رجسٹریشن یہاں سے کریں ➔
             </button>
@@ -250,7 +250,7 @@ export const DriverPortalView: React.FC<DriverPortalViewProps> = ({
               <Truck className="w-3.5 h-3.5 text-[#19A974]" />
               <span>ڈرائیور ڈیش بورڈ (Driver Dashboard)</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#08284F]">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#111111]">
               ڈرائیور پورٹل
             </h1>
           </div>
@@ -272,7 +272,7 @@ export const DriverPortalView: React.FC<DriverPortalViewProps> = ({
         </div>
 
         {/* DRIVER PROFILE CARD */}
-        <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-[#F4F7FB] p-4 sm:p-5 rounded-2xl border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-[#FFFFFF] p-4 sm:p-5 rounded-2xl border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-[#19A974] text-white flex items-center justify-center font-bold shadow-sm">
               <Truck className="w-6 h-6" />
@@ -318,7 +318,7 @@ export const DriverPortalView: React.FC<DriverPortalViewProps> = ({
               onClick={() => setIsUpdatingTrip(!isUpdatingTrip)}
               className="inline-flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-2xs min-h-[42px]"
             >
-              <Navigation className="w-3.5 h-3.5 text-[#123A6D]" />
+              <Navigation className="w-3.5 h-3.5 text-[#1E1E1E]" />
               <span>لوکیشن اپ ڈیٹ کریں</span>
             </button>
 
@@ -339,7 +339,7 @@ export const DriverPortalView: React.FC<DriverPortalViewProps> = ({
         {isUpdatingTrip && (
           <form onSubmit={handleSaveTripUpdate} className="bg-white p-4 sm:p-5 rounded-2xl border-2 border-emerald-300 shadow-sm space-y-3 animate-in fade-in duration-200">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-[#123A6D]">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-[#1E1E1E]">
                 <Navigation className="w-4 h-4 text-emerald-600" />
                 <span>لائیو ٹرپ اور موجودہ لوکیشن اپ ڈیٹ</span>
               </div>
@@ -370,7 +370,7 @@ export const DriverPortalView: React.FC<DriverPortalViewProps> = ({
                   value={currentCityInput}
                   onChange={(e) => setCurrentCityInput(e.target.value)}
                   placeholder="مثال: لاہور، ملتان، کراچی"
-                  className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2 text-sm focus:bg-white focus:border-[#19A974] outline-none min-h-[42px]"
+                  className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2 text-sm focus:bg-white focus:border-[#19A974] outline-none min-h-[42px]"
                 />
               </div>
 
@@ -434,7 +434,7 @@ export const DriverPortalView: React.FC<DriverPortalViewProps> = ({
         
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Search className="w-4 h-4 text-[#123A6D]" />
+            <Search className="w-4 h-4 text-[#1E1E1E]" />
             <h2 className="text-base sm:text-lg font-bold text-slate-900">
               لائیو کارگو لوڈ تلاش کریں
             </h2>
@@ -451,7 +451,7 @@ export const DriverPortalView: React.FC<DriverPortalViewProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="روانگی شہر، منزل کا شہر، یا سامان کا نام خود ٹائپ کریں (مثال: لاہور، کراچی، چاول، ملتان)..."
-            className="w-full bg-[#F4F7FB] border border-slate-300 rounded-2xl pr-11 pl-4 py-3.5 text-sm text-slate-900 focus:bg-white focus:border-[#123A6D] outline-none min-h-[48px]"
+            className="w-full bg-[#FFFFFF] border border-slate-300 rounded-2xl pr-11 pl-4 py-3.5 text-sm text-slate-900 focus:bg-white focus:border-[#1E1E1E] outline-none min-h-[48px]"
           />
           <Search className="w-5 h-5 text-slate-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
           {searchQuery && (
@@ -476,7 +476,7 @@ export const DriverPortalView: React.FC<DriverPortalViewProps> = ({
                 onClick={() => setSelectedCity(c)}
                 className={`text-xs px-3 py-1.5 rounded-xl font-bold border transition ${
                   selectedCity === c
-                    ? 'bg-[#123A6D] text-white border-[#123A6D] shadow-xs'
+                    ? 'bg-[#1E1E1E] text-white border-[#1E1E1E] shadow-xs'
                     : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
                 }`}
               >
@@ -491,7 +491,7 @@ export const DriverPortalView: React.FC<DriverPortalViewProps> = ({
       {/* 4. AVAILABLE LOADS LIST */}
       <div className="space-y-3.5">
         <div className="flex items-center justify-between px-1">
-          <h2 className="text-base sm:text-lg font-extrabold text-[#08284F]">
+          <h2 className="text-base sm:text-lg font-extrabold text-[#111111]">
             فعال و دستیاب لوڈز ({matchingSlips.length})
           </h2>
           {(searchQuery || selectedCity !== 'تمام پاکستان') && (
@@ -501,7 +501,7 @@ export const DriverPortalView: React.FC<DriverPortalViewProps> = ({
                 setSearchQuery('');
                 setSelectedCity('تمام پاکستان');
               }}
-              className="text-xs text-[#123A6D] hover:underline font-bold"
+              className="text-xs text-[#1E1E1E] hover:underline font-bold"
             >
               فلٹرز ری سیٹ کریں
             </button>
@@ -529,7 +529,7 @@ export const DriverPortalView: React.FC<DriverPortalViewProps> = ({
                     📍 {slip.loadingCity}
                   </span>
                   <span className="text-slate-400 font-bold">➔</span>
-                  <span className="text-xs font-bold text-[#123A6D] bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200">
+                  <span className="text-xs font-bold text-[#1E1E1E] bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200">
                     🏁 {slip.destinationCity}
                   </span>
                 </div>
@@ -564,7 +564,7 @@ export const DriverPortalView: React.FC<DriverPortalViewProps> = ({
                 <div className="flex items-center gap-2">
                   <a
                     href={`tel:${sanitizePhoneForCall(slip.primaryPhone)}`}
-                    className="inline-flex items-center gap-1.5 bg-[#123A6D] hover:bg-[#0D2D57] text-white px-3.5 py-2 rounded-xl text-xs font-bold transition min-h-[38px]"
+                    className="inline-flex items-center gap-1.5 bg-[#1E1E1E] hover:bg-[#0D2D57] text-white px-3.5 py-2 rounded-xl text-xs font-bold transition min-h-[38px]"
                   >
                     <Phone className="w-3.5 h-3.5 text-emerald-300" />
                     <span>کال کریں ({slip.primaryPhone})</span>
@@ -587,7 +587,7 @@ export const DriverPortalView: React.FC<DriverPortalViewProps> = ({
                 <button
                   type="button"
                   onClick={() => onViewSlip(slip)}
-                  className="inline-flex items-center gap-1.5 text-xs text-[#123A6D] hover:underline font-bold px-3 py-2 min-h-[38px]"
+                  className="inline-flex items-center gap-1.5 text-xs text-[#1E1E1E] hover:underline font-bold px-3 py-2 min-h-[38px]"
                 >
                   <FileText className="w-3.5 h-3.5" />
                   <span>مکمل لوڈ سلپ اور لائیو اسٹیٹس دیکھیں</span>

@@ -87,7 +87,7 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
       {/* 1. SECTION 9: HEADING & SUBHEADING */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#08284F]">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#111111]">
             السلام علیکم، {profile.addaName || profile.managerName || 'اڈا منیجر'}
           </h1>
           <p className="text-sm text-slate-500 font-medium">
@@ -111,14 +111,14 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
           <div className="flex items-center gap-3.5">
             {/* Small PK Cargo Link monogram */}
-            <div className="w-12 h-12 rounded-2xl bg-[#123A6D] text-white flex items-center justify-center flex-shrink-0 shadow-sm border border-emerald-400/30">
+            <div className="w-12 h-12 rounded-2xl bg-[#1E1E1E] text-white flex items-center justify-center flex-shrink-0 shadow-sm border border-emerald-400/30">
               <Truck className="w-6 h-6 text-emerald-300" />
             </div>
             <div>
               <span className="text-[11px] text-slate-400 font-bold block uppercase tracking-wider">
                 Powered by PK Cargo Link
               </span>
-              <h2 className="text-2xl sm:text-3xl font-black text-[#08284F]">
+              <h2 className="text-2xl sm:text-3xl font-black text-[#111111]">
                 {profile.addaName || 'اڈا کا نام درج نہیں'}
               </h2>
               <p className="text-xs sm:text-sm text-slate-600">
@@ -130,7 +130,7 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
           <button
             type="button"
             onClick={onNavigateToProfile}
-            className="self-end sm:self-auto text-xs font-bold text-[#123A6D] hover:underline bg-[#F4F7FB] px-3 py-1.5 rounded-lg border border-slate-200"
+            className="self-end sm:self-auto text-xs font-bold text-[#1E1E1E] hover:underline bg-[#FFFFFF] px-3 py-1.5 rounded-lg border border-slate-200"
           >
             پروفائل ایڈٹ کریں
           </button>
@@ -144,7 +144,7 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
           <div className="flex flex-wrap gap-2">
             {profile.namedContacts && profile.namedContacts.length > 0 ? (
               profile.namedContacts.map((c, idx) => (
-                <div key={idx} className="inline-flex items-center gap-1.5 bg-[#F4F7FB] border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-800">
+                <div key={idx} className="inline-flex items-center gap-1.5 bg-[#FFFFFF] border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-800">
                   <a
                     href={`tel:${sanitizePhoneForCall(c.number)}`}
                     className="inline-flex items-center gap-1 hover:text-[#19A974] font-bold"
@@ -169,7 +169,7 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
               <span className="text-xs text-slate-400">کوئی رابطہ نمبر درج نہیں۔ اڈا پروفائل میں شامل کریں۔</span>
             ) : (
               contacts.map((phone, idx) => (
-                <div key={idx} className="inline-flex items-center gap-1.5 bg-[#F4F7FB] border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-800">
+                <div key={idx} className="inline-flex items-center gap-1.5 bg-[#FFFFFF] border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-800">
                   <a
                     href={`tel:${sanitizePhoneForCall(phone)}`}
                     className="inline-flex items-center gap-1 hover:text-[#19A974] font-mono ltr-content font-bold"
@@ -200,7 +200,7 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
         {/* آج کی سلپس */}
         <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-sm border border-slate-200">
           <span className="text-xs text-slate-500 font-bold block">آج کی سلپس</span>
-          <span className="text-2xl sm:text-3xl font-extrabold text-[#123A6D] font-mono mt-1 block">
+          <span className="text-2xl sm:text-3xl font-extrabold text-[#1E1E1E] font-mono mt-1 block">
             {todaySlips.length}
           </span>
         </div>
@@ -230,7 +230,7 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
           <button
             type="button"
             onClick={onOpenVoiceModal}
-            className="w-full bg-gradient-to-r from-[#123A6D] via-[#0E335C] to-[#19A974] hover:from-[#0d2a4f] hover:to-[#168a5f] text-white p-4 rounded-2xl sm:rounded-3xl shadow-md border-2 border-emerald-400/40 flex items-center justify-between transition active:scale-98 text-right cursor-pointer"
+            className="w-full bg-gradient-to-r from-[#1E1E1E] via-[#0E335C] to-[#19A974] hover:from-[#0d2a4f] hover:to-[#168a5f] text-white p-4 rounded-2xl sm:rounded-3xl shadow-md border-2 border-emerald-400/40 flex items-center justify-between transition active:scale-98 text-right cursor-pointer"
           >
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-2xl bg-white/20 text-amber-300 flex items-center justify-center flex-shrink-0">
@@ -246,13 +246,13 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
                 </p>
               </div>
             </div>
-            <span className="bg-white text-[#123A6D] font-bold text-xs px-3.5 py-2 rounded-xl shadow-xs hidden sm:inline-block flex-shrink-0">
+            <span className="bg-white text-[#1E1E1E] font-bold text-xs px-3.5 py-2 rounded-xl shadow-xs hidden sm:inline-block flex-shrink-0">
               بول کر بنائیں →
             </span>
           </button>
         )}
 
-        <h3 className="text-base font-bold text-[#08284F]">
+        <h3 className="text-base font-bold text-[#111111]">
           اہم ایکشنز
         </h3>
 
@@ -272,9 +272,9 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
           <button
             type="button"
             onClick={onNavigateToFleet ? onNavigateToFleet : onNavigateToTrucks}
-            className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-white hover:bg-slate-50 border border-slate-200 text-[#08284F] shadow-sm active:scale-95 transition min-h-[88px] text-center"
+            className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-white hover:bg-slate-50 border border-slate-200 text-[#111111] shadow-sm active:scale-95 transition min-h-[88px] text-center"
           >
-            <Truck className="w-6 h-6 sm:w-7 sm:h-7 text-[#0B2A5B] mb-1" />
+            <Truck className="w-6 h-6 sm:w-7 sm:h-7 text-[#111111] mb-1" />
             <span className="font-bold text-sm sm:text-base">میری گاڑیاں</span>
           </button>
 
@@ -282,7 +282,7 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
           <button
             type="button"
             onClick={onNavigateToTrucks ? onNavigateToTrucks : onNavigateToSearch}
-            className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-white hover:bg-slate-50 border border-slate-200 text-[#08284F] shadow-sm active:scale-95 transition min-h-[88px] text-center"
+            className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-white hover:bg-slate-50 border border-slate-200 text-[#111111] shadow-sm active:scale-95 transition min-h-[88px] text-center"
           >
             <Truck className="w-6 h-6 sm:w-7 sm:h-7 text-[#FF9F43] mb-1" />
             <span className="font-bold text-sm sm:text-base">دستیاب گاڑی</span>
@@ -292,9 +292,9 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
           <button
             type="button"
             onClick={onNavigateToMySlips}
-            className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-white hover:bg-slate-50 border border-slate-200 text-[#08284F] shadow-sm active:scale-95 transition min-h-[88px] text-center"
+            className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-white hover:bg-slate-50 border border-slate-200 text-[#111111] shadow-sm active:scale-95 transition min-h-[88px] text-center"
           >
-            <FileText className="w-6 h-6 sm:w-7 sm:h-7 text-[#123A6D] mb-1" />
+            <FileText className="w-6 h-6 sm:w-7 sm:h-7 text-[#1E1E1E] mb-1" />
             <span className="font-bold text-sm sm:text-base">میری سلپس</span>
           </button>
 
@@ -302,9 +302,9 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
           <button
             type="button"
             onClick={onNavigateToSearch ? onNavigateToSearch : onNavigateToMySlips}
-            className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-white hover:bg-slate-50 border border-slate-200 text-[#08284F] shadow-sm active:scale-95 transition min-h-[88px] text-center"
+            className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-white hover:bg-slate-50 border border-slate-200 text-[#111111] shadow-sm active:scale-95 transition min-h-[88px] text-center"
           >
-            <Search className="w-6 h-6 sm:w-7 sm:h-7 text-[#123A6D] mb-1" />
+            <Search className="w-6 h-6 sm:w-7 sm:h-7 text-[#1E1E1E] mb-1" />
             <span className="font-bold text-sm sm:text-base">لوڈ تلاش کریں</span>
           </button>
 
@@ -312,7 +312,7 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
           <button
             type="button"
             onClick={onNavigateToGroups}
-            className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-white hover:bg-slate-50 border border-slate-200 text-[#08284F] shadow-sm active:scale-95 transition min-h-[88px] text-center"
+            className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-white hover:bg-slate-50 border border-slate-200 text-[#111111] shadow-sm active:scale-95 transition min-h-[88px] text-center"
           >
             <MessageSquare className="w-6 h-6 sm:w-7 sm:h-7 text-[#25D366] mb-1" />
             <span className="font-bold text-sm sm:text-base">WhatsApp گروپس</span>
@@ -322,7 +322,7 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
           <button
             type="button"
             onClick={onNavigateToProfile}
-            className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-white hover:bg-slate-50 border border-slate-200 text-[#08284F] shadow-sm active:scale-95 transition min-h-[88px] text-center"
+            className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-white hover:bg-slate-50 border border-slate-200 text-[#111111] shadow-sm active:scale-95 transition min-h-[88px] text-center"
           >
             <User className="w-6 h-6 sm:w-7 sm:h-7 text-[#7567E8] mb-1" />
             <span className="font-bold text-sm sm:text-base">اڈا پروفائل</span>
@@ -334,7 +334,7 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
       {/* 5. RECENT SLIPS SECTION (Section 9) */}
       <div className="space-y-3">
         <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-          <h3 className="text-lg font-bold text-[#08284F]">
+          <h3 className="text-lg font-bold text-[#111111]">
             حالیہ سلپس
           </h3>
           <button
@@ -368,7 +368,7 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-bold bg-[#F4F7FB] px-2 py-0.5 rounded text-[#123A6D]">
+                    <span className="font-mono text-xs font-bold bg-[#FFFFFF] px-2 py-0.5 rounded text-[#1E1E1E]">
                       {slip.id}
                     </span>
 
@@ -429,7 +429,7 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-[11px] font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 px-2 py-0.5 rounded-md flex items-center gap-1">
-                      <Eye className="w-3 h-3 text-[#123A6D]" />
+                      <Eye className="w-3 h-3 text-[#1E1E1E]" />
                       <span>{slip.viewsCount || 0} ڈرائیورز نے دیکھی</span>
                     </span>
                     <span className="text-xs text-slate-400 font-mono">
@@ -439,7 +439,7 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
                 </div>
 
                 <div className="flex items-center justify-between text-sm">
-                  <div className="font-bold text-[#08284F]">
+                  <div className="font-bold text-[#111111]">
                     {slip.loadingCity} ➔ {slip.destinationCity}
                   </div>
                   <div className="text-xs text-slate-600 bg-slate-50 px-2 py-1 rounded-md">
@@ -473,7 +473,7 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
                     <button
                       type="button"
                       onClick={() => onDuplicateSlip(slip)}
-                      className="inline-flex items-center gap-1 text-xs font-bold text-[#123A6D] hover:text-[#08284F] bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition min-h-[36px]"
+                      className="inline-flex items-center gap-1 text-xs font-bold text-[#1E1E1E] hover:text-[#111111] bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition min-h-[36px]"
                       title="پرانا ڈیٹا اٹھا کر نیا سلپ بنائیں"
                     >
                       <RotateCcw className="w-3.5 h-3.5" />

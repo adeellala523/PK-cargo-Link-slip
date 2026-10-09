@@ -968,7 +968,7 @@ function AppInner() {
               <button
                 type="button"
                 onClick={() => navigateTo('dashboard')}
-                className="mt-4 bg-[#0B2A5B] text-white font-extrabold rounded-2xl px-8 py-3.5 min-h-[52px]"
+                className="mt-4 bg-[#111111] text-white font-extrabold rounded-2xl px-8 py-3.5 min-h-[52px]"
               >
                 ڈیش بورڈ پر واپس جائیں
               </button>
@@ -1070,7 +1070,7 @@ function AppInner() {
                   <p className="text-sm text-slate-500 mt-2">ڈرائیور یا اڈا مینیجر اکاؤنٹ سے لاگ ان کریں</p>
                   <button
                     onClick={() => navigateTo('login')}
-                    className="mt-4 bg-[#0B2A5B] text-white font-bold rounded-xl px-6 py-3"
+                    className="mt-4 bg-[#111111] text-white font-bold rounded-xl px-6 py-3"
                   >
                     لاگ ان کریں
                   </button>

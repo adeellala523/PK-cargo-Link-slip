@@ -131,7 +131,7 @@ export const VerificationView: React.FC<VerificationViewProps> = ({ user, onSave
       />
 
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-[#0B2A5B] text-white px-4 py-3 flex items-center gap-3 shadow">
+      <div className="sticky top-0 z-10 bg-[#111111] text-white px-4 py-3 flex items-center gap-3 shadow">
         <button onClick={onBack} className="p-2 -mr-2 rounded-full hover:bg-white/10" aria-label="واپس">
           <ArrowRight className="w-5 h-5" />
         </button>
@@ -224,7 +224,7 @@ export const VerificationView: React.FC<VerificationViewProps> = ({ user, onSave
                   <button
                     onClick={handleUseCurrentLocation}
                     disabled={locating || status === 'pending'}
-                    className="mt-3 w-full flex items-center justify-center gap-2 bg-[#0B2A5B] text-white rounded-xl py-3 font-bold disabled:opacity-50"
+                    className="mt-3 w-full flex items-center justify-center gap-2 bg-[#111111] text-white rounded-xl py-3 font-bold disabled:opacity-50"
                   >
                     {locating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Navigation className="w-5 h-5" />}
                     {locating ? 'لوکیشن لی جا رہی ہے…' : '📍 موجودہ لوکیشن استعمال کریں'}
@@ -270,10 +270,10 @@ export const VerificationView: React.FC<VerificationViewProps> = ({ user, onSave
                 <button
                   onClick={() => pickFile(key)}
                   disabled={uploading || locked}
-                  className="mt-3 w-full border-2 border-dashed border-slate-300 rounded-xl py-6 flex flex-col items-center gap-2 text-slate-500 disabled:opacity-50 hover:border-[#F5A301] hover:text-slate-700"
+                  className="mt-3 w-full border-2 border-dashed border-slate-300 rounded-xl py-6 flex flex-col items-center gap-2 text-slate-500 disabled:opacity-50 hover:border-[#B5E61D] hover:text-slate-700"
                 >
                   {uploading ? (
-                    <Loader2 className="w-8 h-8 animate-spin text-[#F5A301]" />
+                    <Loader2 className="w-8 h-8 animate-spin text-[#B5E61D]" />
                   ) : (
                     <>
                       <span className="flex items-center gap-2">
@@ -299,7 +299,7 @@ export const VerificationView: React.FC<VerificationViewProps> = ({ user, onSave
           <button
             onClick={handleSubmit}
             disabled={!allDone || submitting}
-            className="w-full bg-gradient-to-l from-[#F5A301] to-[#e08e00] text-white font-bold rounded-2xl py-4 text-lg shadow-lg disabled:opacity-40 disabled:shadow-none flex items-center justify-center gap-2"
+            className="w-full bg-gradient-to-l from-[#B5E61D] to-[#e08e00] text-white font-bold rounded-2xl py-4 text-lg shadow-lg disabled:opacity-40 disabled:shadow-none flex items-center justify-center gap-2"
           >
             {submitting ? <Loader2 className="w-6 h-6 animate-spin" /> : <ShieldCheck className="w-6 h-6" />}
             {submitting ? 'بھیجا جا رہا ہے…' : 'جائزے کے لیے بھیجیں'}

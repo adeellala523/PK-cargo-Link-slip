@@ -57,12 +57,12 @@ export const AddaFleetView: React.FC<AddaFleetViewProps> = ({ profile, onNavigat
     return (
       <div className="bg-white rounded-3xl border border-slate-100 p-8 text-center font-nafees" dir="rtl">
         <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-        <h2 className="font-extrabold text-[#0B2A5B] text-lg mb-2">میری گاڑیاں</h2>
+        <h2 className="font-extrabold text-[#111111] text-lg mb-2">میری گاڑیاں</h2>
         <p className="text-sm text-slate-500 font-bold mb-5">اپنی گاڑیاں دیکھنے کے لیے پہلے لاگ ان کریں</p>
         <button
           type="button"
           onClick={onNavigateToLogin}
-          className="px-8 py-3.5 rounded-2xl bg-[#0B2A5B] text-white font-extrabold min-h-[52px]"
+          className="px-8 py-3.5 rounded-2xl bg-[#111111] text-white font-extrabold min-h-[52px]"
         >
           لاگ ان کریں
         </button>
@@ -161,12 +161,12 @@ export const AddaFleetView: React.FC<AddaFleetViewProps> = ({ profile, onNavigat
         <div className="flex items-center gap-3">
           <span
             className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
-            style={{ background: 'linear-gradient(135deg, #FFC531 0%, #F5A301 100%)' }}
+            style={{ background: 'linear-gradient(135deg, #CDF463 0%, #B5E61D 100%)' }}
           >
-            <Truck className="w-6 h-6 text-[#0B2A5B]" />
+            <Truck className="w-6 h-6 text-[#111111]" />
           </span>
           <div>
-            <h1 className="font-extrabold text-[#0B2A5B] text-lg">میری گاڑیاں</h1>
+            <h1 className="font-extrabold text-[#111111] text-lg">میری گاڑیاں</h1>
             <p className="text-[11px] text-slate-500 font-bold">
               {profile.addaName} کی فلیٹ • {myTrucks.length} گاڑیاں
             </p>
@@ -212,11 +212,11 @@ export const AddaFleetView: React.FC<AddaFleetViewProps> = ({ profile, onNavigat
             <div key={t.id} className="bg-white rounded-3xl border border-slate-200 p-4 space-y-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2.5">
-                  <span className="w-11 h-11 rounded-2xl bg-[#F4F7FB] flex items-center justify-center shrink-0">
-                    <Truck className="w-6 h-6 text-[#0B2A5B]" />
+                  <span className="w-11 h-11 rounded-2xl bg-[#FFFFFF] flex items-center justify-center shrink-0">
+                    <Truck className="w-6 h-6 text-[#111111]" />
                   </span>
                   <div>
-                    <p className="font-extrabold text-[#08284F]">
+                    <p className="font-extrabold text-[#111111]">
                       <bdi>{t.vehicleType}</bdi>
                       {t.vehicleNumber && <span className="font-mono text-sm"> • {t.vehicleNumber}</span>}
                     </p>
@@ -267,7 +267,7 @@ export const AddaFleetView: React.FC<AddaFleetViewProps> = ({ profile, onNavigat
                     <button
                       type="button"
                       onClick={() => openEdit(t)}
-                      className="inline-flex items-center gap-1 text-xs font-extrabold text-[#0B2A5B] bg-blue-50 border border-blue-200 px-3 py-2 rounded-xl min-h-[40px]"
+                      className="inline-flex items-center gap-1 text-xs font-extrabold text-[#111111] bg-blue-50 border border-blue-200 px-3 py-2 rounded-xl min-h-[40px]"
                     >
                       <Pencil className="w-3.5 h-3.5" />
                       ایڈٹ
@@ -293,7 +293,7 @@ export const AddaFleetView: React.FC<AddaFleetViewProps> = ({ profile, onNavigat
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-slate-900/75">
           <div className="bg-white rounded-3xl max-w-lg w-full max-h-[92vh] overflow-y-auto p-5 space-y-4" role="dialog">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-extrabold text-[#0B2A5B]">
+              <h3 className="font-extrabold text-[#111111]">
                 {editingId ? 'گاڑی ایڈٹ کریں' : 'نئی گاڑی شامل کریں'}
               </h3>
               <button
@@ -321,7 +321,7 @@ export const AddaFleetView: React.FC<AddaFleetViewProps> = ({ profile, onNavigat
                   value={form.vehicleType}
                   onChange={(e) => setForm({ ...form, vehicleType: e.target.value })}
                   placeholder="مثال: 22 Wheeler، مزدہ"
-                  className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm font-bold text-slate-900 outline-none min-h-[48px]"
+                  className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm font-bold text-slate-900 outline-none min-h-[48px]"
                 />
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {PAKISTAN_VEHICLE_VALUES.slice(0, 12).map((v) => (
@@ -330,7 +330,7 @@ export const AddaFleetView: React.FC<AddaFleetViewProps> = ({ profile, onNavigat
                       type="button"
                       onClick={() => setForm({ ...form, vehicleType: v })}
                       className={`text-[11px] px-2.5 py-1 rounded-lg border font-bold ${
-                        form.vehicleType === v ? 'bg-[#0B2A5B] text-white border-[#0B2A5B]' : 'bg-slate-100 text-slate-700 border-slate-200'
+                        form.vehicleType === v ? 'bg-[#111111] text-white border-[#111111]' : 'bg-slate-100 text-slate-700 border-slate-200'
                       }`}
                     >
                       <bdi>{v}</bdi>
@@ -347,7 +347,7 @@ export const AddaFleetView: React.FC<AddaFleetViewProps> = ({ profile, onNavigat
                     value={form.vehicleNumber}
                     onChange={(e) => setForm({ ...form, vehicleNumber: e.target.value })}
                     placeholder="LES-1234"
-                    className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 outline-none min-h-[48px] font-mono"
+                    className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 outline-none min-h-[48px] font-mono"
                   />
                 </div>
                 <div>
@@ -359,7 +359,7 @@ export const AddaFleetView: React.FC<AddaFleetViewProps> = ({ profile, onNavigat
                         type="button"
                         onClick={() => setForm({ ...form, bodyType: b })}
                         className={`text-[11px] px-2.5 py-1.5 rounded-lg border font-bold ${
-                          form.bodyType === b ? 'bg-[#0B2A5B] text-white border-[#0B2A5B]' : 'bg-slate-100 text-slate-700 border-slate-200'
+                          form.bodyType === b ? 'bg-[#111111] text-white border-[#111111]' : 'bg-slate-100 text-slate-700 border-slate-200'
                         }`}
                       >
                         {b}
@@ -379,7 +379,7 @@ export const AddaFleetView: React.FC<AddaFleetViewProps> = ({ profile, onNavigat
                     value={form.currentCity}
                     onChange={(e) => setForm({ ...form, currentCity: e.target.value })}
                     placeholder="لاہور"
-                    className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 outline-none min-h-[48px]"
+                    className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 outline-none min-h-[48px]"
                   />
                 </div>
                 <div>
@@ -389,7 +389,7 @@ export const AddaFleetView: React.FC<AddaFleetViewProps> = ({ profile, onNavigat
                     value={form.locationDetails}
                     onChange={(e) => setForm({ ...form, locationDetails: e.target.value })}
                     placeholder="اڈا / گودام"
-                    className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 outline-none min-h-[48px]"
+                    className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 outline-none min-h-[48px]"
                   />
                 </div>
               </div>
@@ -401,15 +401,15 @@ export const AddaFleetView: React.FC<AddaFleetViewProps> = ({ profile, onNavigat
                   value={form.preferredRoute}
                   onChange={(e) => setForm({ ...form, preferredRoute: e.target.value })}
                   placeholder="لاہور تا کراچی"
-                  className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 outline-none min-h-[48px]"
+                  className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 outline-none min-h-[48px]"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={saving}
-                className="w-full py-4 rounded-2xl font-extrabold text-[#0B2A5B] min-h-[56px] disabled:opacity-60"
-                style={{ background: 'linear-gradient(135deg, #FFC531 0%, #F5A301 60%, #E8930C 100%)' }}
+                className="w-full py-4 rounded-2xl font-extrabold text-[#111111] min-h-[56px] disabled:opacity-60"
+                style={{ background: 'linear-gradient(135deg, #CDF463 0%, #B5E61D 60%, #E8930C 100%)' }}
               >
                 {saving ? 'محفوظ ہو رہی ہے…' : editingId ? 'اپ ڈیٹ کریں' : 'فلیٹ میں شامل کریں'}
               </button>

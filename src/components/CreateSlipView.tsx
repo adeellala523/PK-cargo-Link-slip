@@ -1,19 +1,8 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
+import { PAKISTAN_VEHICLE_TYPES } from '../utils/vehicleTypes';
 import {
-  PAKISTAN_VEHICLE_TYPES,
-} from '../utils/vehicleTypes';
-import {
-  MapPin,
-  Truck,
-  Car,
-  Navigation,
-  Package,
-  ChevronDown,
-  Mic,
-  X,
-  Plus,
-  Trash2,
-  Phone,
+  Truck, Car, ChevronRight, ChevronDown, Mic, X, Plus, Trash2,
+  Camera, Bike,
 } from 'lucide-react';
 import { LoadSlip, AddaProfile, NamedContact } from '../types';
 import { generateSlipId } from '../utils/formatters';
@@ -28,27 +17,31 @@ interface CreateSlipViewProps {
   prefillSlip?: LoadSlip | null;
   onCancel?: () => void;
   onOpenVoiceModal?: () => void;
+  onShowMyRequests?: () => void;
 }
 
-const IDRIVE_GREEN = '#B8E62E';
-const IDRIVE_GREEN_DARK = '#9BCB1A';
+const LIME = '#B5E61D';
 const SELECTED_BLUE = '#E3F0FD';
+const FIELD_BG = '#F5F5F5';
 
 type TripKind = 'city' | 'freight' | 'intercity';
+type PickupTime = '10-20 min' | 'Up to 1 hour' | 'Scheduled';
 
-const TRIP_TABS: { key: TripKind; label: string; icon: 'car' | 'truck' }[] = [
-  { key: 'city', label: 'شہر', icon: 'car' },
-  { key: 'freight', label: 'فریٹ', icon: 'truck' },
-  { key: 'intercity', label: 'شہر سے شہر', icon: 'car' },
+const TRIP_TABS: { key: TripKind; label: string; icon: React.ReactNode }[] = [
+  { key: 'city', label: 'City', icon: <Car className="w-6 h-6" /> },
+  { key: 'freight', label: 'Freight', icon: <Truck className="w-6 h-6" /> },
+  { key: 'intercity', label: 'City to city', icon: <Car className="w-6 h-6" /> },
+  { key: 'city', label: 'Couriers', icon: <Bike className="w-6 h-6" /> },
 ];
 
+const PICKUP_TIMES: PickupTime[] = ['10-20 min', 'Up to 1 hour', 'Scheduled'];
+
 /**
- * CreateSlipView — inDrive Freight style load posting (Adeel's direction:
- * copy inDrive Freight EXACTLY).
- * - Top tabs: City | Freight (selected) | City to city
- * - ALL 41 vehicle types as tappable rows (icon + label), selected = blue highlight
- * - Big lime-green "ریکویسٹ بنائیں" button
- * - inDrive negotiation: adda's opening price seeds the bidding thread
+ * CreateSlipView — inDrive Freight form, pixel-close to Adeel's screenshot.
+ * English UI. Service tabs, pickup/destination fields, pickup-time pills,
+ * cargo description, vehicle size selector (ALL 41 types), option pills
+ * (Cash / Easypaisa / JazzCash / loaders / closed body), cargo photo,
+ * your price offer (seeds negotiation), map pin, big green Create request.
  */
 export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
   addaProfile,
@@ -57,76 +50,70 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
   prefillSlip,
   onCancel,
   onOpenVoiceModal,
+  onShowMyRequests,
 }) => {
   const [tripKind, setTripKind] = useState<TripKind>(prefillSlip?.tripKind || 'freight');
 
   // Route
-  const [loadingCity, setLoadingCity] = useState(prefillSlip?.loadingCity || addaProfile.city || 'لاہور');
-  const [loadingLocation, setLoadingLocation] = useState(prefillSlip?.loadingLocation || '');
-  const [destinationCity, setDestinationCity] = useState(prefillSlip?.destinationCity || 'کراچی');
-  const [destinationLocation, setDestinationLocation] = useState(prefillSlip?.destinationLocation || '');
+  const [loadingCity, setLoadingCity] = useState(prefillSlip?.loadingCity || addaProfile.city || '');
+  const [destinationCity, setDestinationCity] = useState(prefillSlip?.destinationCity || '');
   const [pickupPinLat, setPickupPinLat] = useState<number | undefined>(prefillSlip?.pickupLat);
   const [pickupPinLng, setPickupPinLng] = useState<number | undefined>(prefillSlip?.pickupLng);
 
-  // Goods & price (inDrive: YOUR offer starts the negotiation)
+  // inDrive Freight fields
+  const [pickupTime, setPickupTime] = useState<PickupTime>(prefillSlip?.pickupTime || 'Up to 1 hour');
   const [goods, setGoods] = useState(prefillSlip?.goods || '');
-  const [quantity, setQuantity] = useState(prefillSlip?.quantity || prefillSlip?.weight || '');
-  const [fareOffer, setFareOffer] = useState(prefillSlip?.fareOffer || '');
-
-  // Vehicle — single select from all 41 (inDrive style)
   const [vehicleType, setVehicleType] = useState(
     prefillSlip?.vehicleType?.split('،')[0]?.trim() || '22 Wheeler'
   );
-  const [bodyType, setBodyType] = useState(prefillSlip?.bodyType || 'فل باڈی');
+  const [showVehicleList, setShowVehicleList] = useState(false);
+  const [slipPayment, setSlipPayment] = useState<'Cash' | 'Easypaisa' | 'JazzCash'>(
+    prefillSlip?.slipPayment || 'Cash'
+  );
+  const [loaders, setLoaders] = useState<0 | 1 | 2>(prefillSlip?.loaders || 0);
+  const [closedBody, setClosedBody] = useState(prefillSlip?.closedBody || false);
+  const [cargoPhoto, setCargoPhoto] = useState<string | undefined>(prefillSlip?.cargoPhotoUrl);
 
-  // Meta
-  const todayIso = new Date().toISOString().split('T')[0];
-  const [loadDate, setLoadDate] = useState(todayIso);
+  // Price — your opening offer seeds the inDrive negotiation
+  const [fareOffer, setFareOffer] = useState(prefillSlip?.fareOffer || '');
+  const [quantity, setQuantity] = useState(prefillSlip?.quantity || prefillSlip?.weight || '');
   const [specialInstructions, setSpecialInstructions] = useState(prefillSlip?.specialInstructions || '');
 
-  // Collapsibles
-  const [showDetails, setShowDetails] = useState(false);
-  const [showContacts, setShowContacts] = useState(false);
-
-  const [additionalLoads, setAdditionalLoads] = useState<Array<{
-    goods: string; loadingCity: string; destinationCity: string; quantity?: string;
-  }>>(() => prefillSlip?.additionalLoads?.map((a) => ({
-    goods: a.goods, loadingCity: a.loadingCity, destinationCity: a.destinationCity, quantity: a.quantity,
-  })) || []);
-
-  const [namedContacts, setNamedContacts] = useState<NamedContact[]>(() => {
+  const [namedContacts] = useState<NamedContact[]>(() => {
     if (prefillSlip?.namedContacts && prefillSlip.namedContacts.length > 0) return prefillSlip.namedContacts;
     const initial: NamedContact[] = [];
-    if (addaProfile.contact1) initial.push({ name: addaProfile.contact1Name || 'منشی', number: addaProfile.contact1 });
-    while (initial.length < 3) initial.push({ name: '', number: '' });
-    return initial.slice(0, 3);
+    if (addaProfile.contact1) initial.push({ name: addaProfile.contact1Name || 'Munshi', number: addaProfile.contact1 });
+    return initial;
   });
 
   const [errorMessage, setErrorMessage] = useState('');
   const [geocoding, setGeocoding] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
-  const handleApplyPreviousSlip = (slip: LoadSlip) => {
-    setLoadingCity(slip.loadingCity);
-    setLoadingLocation(slip.loadingLocation);
-    setPickupPinLat(slip.pickupLat);
-    setPickupPinLng(slip.pickupLng);
-    setDestinationCity(slip.destinationCity);
-    setDestinationLocation(slip.destinationLocation || '');
-    setGoods(slip.goods);
-    setQuantity(slip.quantity || slip.weight || '');
-    setVehicleType(slip.vehicleType.split('،')[0].trim());
-    setBodyType(slip.bodyType);
-    setFareOffer(slip.fareOffer || '');
-    setSpecialInstructions(slip.specialInstructions || '');
-    if (slip.tripKind) setTripKind(slip.tripKind);
+  const handlePhoto = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const scale = Math.min(1, 800 / img.width);
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        canvas.getContext('2d')?.drawImage(img, 0, 0, canvas.width, canvas.height);
+        setCargoPhoto(canvas.toDataURL('image/jpeg', 0.7));
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!loadingCity.trim()) { setErrorMessage('پک اپ شہر درج کریں'); return; }
-    if (!destinationCity.trim()) { setErrorMessage('منزل کا شہر درج کریں'); return; }
-    if (!goods.trim()) { setErrorMessage('سامان کی تفصیل درج کریں'); return; }
-    if (!vehicleType.trim()) { setErrorMessage('گاڑی منتخب کریں'); return; }
+    if (!loadingCity.trim()) { setErrorMessage('Enter pickup location'); return; }
+    if (!destinationCity.trim()) { setErrorMessage('Enter destination'); return; }
+    if (!goods.trim()) { setErrorMessage('Describe your cargo'); return; }
+    if (!vehicleType.trim()) { setErrorMessage('Select vehicle size'); return; }
     setErrorMessage('');
 
     setGeocoding(true);
@@ -137,388 +124,372 @@ export const CreateSlipView: React.FC<CreateSlipViewProps> = ({
         const coords = await geocodeCity(loadingCity.trim());
         if (coords) { pickupLat = coords.lat; pickupLng = coords.lng; }
       } catch { /* ignore */ }
-      finally { setGeocoding(false); }
-    } else {
-      setGeocoding(false);
     }
+    setGeocoding(false);
 
     const newSlipId = generateSlipId();
-    const validNamedContacts = namedContacts.filter((c) => c && c.number.trim().length > 0);
-
     const newSlip: LoadSlip = {
       id: newSlipId,
       addaId: addaProfile.id || `adda-${Date.now()}`,
-      addaName: addaProfile.addaName || 'گڈز ٹرانسپورٹ اڈا',
+      addaName: addaProfile.addaName || 'Goods Transport Adda',
       addaCity: addaProfile.city || loadingCity,
       addaAddress: addaProfile.address,
       addaLogo: addaProfile.logoUrl,
-      managerName: addaProfile.managerName || 'اڈا مینیجر',
+      managerName: addaProfile.managerName || 'Adda Manager',
       primaryPhone: addaProfile.primaryPhone || '03001234567',
       whatsappNumber: addaProfile.whatsappNumber || addaProfile.primaryPhone || '03001234567',
-      additionalContacts: validNamedContacts.map((c) => c.number.trim()),
-      namedContacts: validNamedContacts,
+      additionalContacts: namedContacts.map((c) => c.number.trim()).filter(Boolean),
+      namedContacts,
       loadingCity: loadingCity.trim(),
-      loadingLocation: loadingLocation.trim() || 'مرکزی اڈا / گودام',
+      loadingLocation: 'Main adda / warehouse',
       pickupLat,
       pickupLng,
       destinationCity: destinationCity.trim(),
-      destinationLocation: destinationLocation.trim() || 'گودام / مرکزی مارکیٹ',
+      destinationLocation: 'Warehouse / market',
       goods: goods.trim(),
       weight: quantity.trim(),
       quantity: quantity.trim(),
       vehicleType: vehicleType.trim(),
-      bodyType: bodyType.trim() || 'فل باڈی',
+      bodyType: closedBody ? 'Closed body' : 'Open',
       fareOffer: fareOffer.trim() || undefined,
       specialInstructions: specialInstructions.trim() || undefined,
       tripKind,
+      pickupTime,
+      slipPayment,
+      loaders,
+      closedBody,
+      cargoPhotoUrl: cargoPhoto,
       status: 'active',
       createdAt: new Date().toISOString(),
       viewsCount: 0,
       sharesCount: 0,
       driverTripStatus: 'not_started',
-      additionalLoads: additionalLoads.filter((al) => al.goods.trim().length > 0).map((al) => ({
-        goods: al.goods, loadingCity: al.loadingCity, destinationCity: al.destinationCity,
-        quantity: al.quantity,
-      })),
     };
 
     const slipWithOffer = seedOpeningOffer(
       newSlip,
-      addaProfile.managerName || addaProfile.addaName || 'اڈا مینیجر',
+      addaProfile.managerName || addaProfile.addaName || 'Adda Manager',
       addaProfile.primaryPhone || '03001234567'
     );
     onSlipCreated(slipWithOffer);
   };
 
+  const fieldCls =
+    'w-full rounded-2xl px-4 py-4 flex items-center justify-between min-h-[60px] text-left transition active:scale-[0.99]';
+  const labelCls = 'text-[13px] text-neutral-400 font-medium';
+  const valueCls = 'text-[17px] font-bold text-black';
+
   return (
-    <div className="max-w-2xl mx-auto font-nafees bg-white min-h-screen" dir="rtl">
-      {/* ===== inDrive Freight top tabs ===== */}
-      <div className="sticky top-0 z-20 bg-white border-b border-slate-100 px-4 pt-3 pb-2">
-        <div className="flex items-center justify-center gap-2">
-          {TRIP_TABS.map((t) => {
-            const selected = tripKind === t.key;
-            const Icon = t.icon === 'truck' ? Truck : Car;
+    <div className="max-w-2xl mx-auto bg-white min-h-screen flex flex-col" dir="ltr">
+      {/* ===== Service tabs (horizontally scrollable) ===== */}
+      <div className="sticky top-0 z-20 bg-white pt-3 pb-2 border-b border-neutral-100">
+        <div className="flex gap-1 overflow-x-auto no-scrollbar px-4">
+          {TRIP_TABS.map((t, i) => {
+            const selected = t.key === tripKind && (t.label !== 'Couriers' || tripKind === 'city');
+            const isFreight = t.label === 'Freight';
+            const active = isFreight ? tripKind === 'freight' : false;
             return (
               <button
-                key={t.key}
+                key={`${t.label}-${i}`}
                 type="button"
-                onClick={() => setTripKind(t.key)}
-                className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-sm font-extrabold transition min-h-[48px]"
-                style={selected ? { backgroundColor: SELECTED_BLUE, color: '#0B2A5B' } : { color: '#6B7280' }}
+                onClick={() => {
+                  if (t.label === 'Couriers') return;
+                  setTripKind(t.key);
+                }}
+                className="flex flex-col items-center gap-1 px-4 py-2 rounded-2xl shrink-0 min-w-[76px] transition"
+                style={active || selected ? { backgroundColor: SELECTED_BLUE } : undefined}
               >
-                <Icon className="w-5 h-5" />
-                <span dir="ltr">{t.key === 'city' ? 'City' : t.key === 'freight' ? 'Freight' : 'City to city'}</span>
-                <span className="text-[11px] font-bold opacity-70">• {t.label}</span>
+                {t.icon}
+                <span className="text-[13px] font-medium text-black whitespace-nowrap">{t.label}</span>
               </button>
             );
           })}
         </div>
+        <h1 className="text-center text-[22px] font-extrabold text-black mt-1">Freight</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="px-4 pb-10 space-y-5">
+      <form ref={formRef} onSubmit={handleSubmit} className="flex-1 px-4 pt-3 pb-40 space-y-3">
         {errorMessage && (
-          <div className="bg-red-50 border border-red-200 text-red-700 p-3.5 rounded-2xl text-xs font-bold mt-3">
+          <div className="bg-red-50 border border-red-200 text-red-700 p-3.5 rounded-2xl text-sm font-bold">
             {errorMessage}
           </div>
         )}
 
-        {/* ===== Route card (inDrive style) ===== */}
-        <div className="mt-3 bg-white rounded-3xl border border-slate-200 overflow-hidden">
-          <div className="flex items-stretch">
-            <div className="flex flex-col items-center px-4 py-4">
-              <span className="w-3 h-3 rounded-full" style={{ backgroundColor: IDRIVE_GREEN_DARK }} />
-              <span className="w-0.5 flex-1 bg-slate-200 my-1" />
-              <MapPin className="w-4 h-4 text-slate-800" />
-            </div>
-            <div className="flex-1 divide-y divide-slate-100">
-              <div className="py-3 pr-1 pl-4">
-                <label className="text-[11px] font-bold text-slate-400 block">کہاں سے؟ (Pickup)</label>
-                <input
-                  type="text"
-                  required
-                  value={loadingCity}
-                  onChange={(e) => setLoadingCity(e.target.value)}
-                  placeholder="پک اپ شہر"
-                  className="w-full text-base font-extrabold text-slate-900 outline-none placeholder:text-slate-300 placeholder:font-bold bg-transparent"
-                />
-                <input
-                  type="text"
-                  value={loadingLocation}
-                  onChange={(e) => setLoadingLocation(e.target.value)}
-                  placeholder="گودام / علاقہ (اختیاری)"
-                  className="w-full text-xs font-bold text-slate-500 outline-none placeholder:text-slate-300 bg-transparent mt-0.5"
-                />
-              </div>
-              <div className="py-3 pr-1 pl-4">
-                <label className="text-[11px] font-bold text-slate-400 block">کہاں تک؟ (Destination)</label>
-                <input
-                  type="text"
-                  required
-                  value={destinationCity}
-                  onChange={(e) => setDestinationCity(e.target.value)}
-                  placeholder="منزل کا شہر"
-                  className="w-full text-base font-extrabold text-slate-900 outline-none placeholder:text-slate-300 placeholder:font-bold bg-transparent"
-                />
-                <input
-                  type="text"
-                  value={destinationLocation}
-                  onChange={(e) => setDestinationLocation(e.target.value)}
-                  placeholder="اتارنے کی جگہ (اختیاری)"
-                  className="w-full text-xs font-bold text-slate-500 outline-none placeholder:text-slate-300 bg-transparent mt-0.5"
-                />
-              </div>
-            </div>
-          </div>
+        {/* Pickup location */}
+        <div className="rounded-2xl" style={{ backgroundColor: FIELD_BG }}>
+          <label className={labelCls + ' px-4 pt-3 block'}>Pickup location</label>
+          <input
+            value={loadingCity}
+            onChange={(e) => setLoadingCity(e.target.value)}
+            placeholder="City"
+            className={valueCls + ' bg-transparent outline-none w-full px-4 pb-3 placeholder:text-neutral-300 placeholder:font-medium'}
+          />
         </div>
 
-        {/* ===== Map pin (exact pickup) ===== */}
+        {/* Destination */}
+        <div className="rounded-2xl" style={{ backgroundColor: FIELD_BG }}>
+          <label className={labelCls + ' px-4 pt-3 block'}>Destination</label>
+          <input
+            value={destinationCity}
+            onChange={(e) => setDestinationCity(e.target.value)}
+            placeholder="Where to?"
+            className={valueCls + ' bg-transparent outline-none w-full px-4 pb-3 placeholder:text-neutral-300 placeholder:font-medium'}
+          />
+        </div>
+
+        {/* Map pin — exact pickup (kept for 7km matching) */}
         <PickupMapPicker
           lat={pickupPinLat}
           lng={pickupPinLng}
           onChange={(la, ln) => { setPickupPinLat(la); setPickupPinLng(ln); }}
         />
 
-        {/* ===== Vehicle selector — ALL 41 types, inDrive rows ===== */}
+        {/* Pickup time */}
         <div>
-          <h3 className="font-extrabold text-slate-900 text-base mb-2 px-1">
-            گاڑی منتخب کریں <span className="text-xs font-bold text-slate-400">({PAKISTAN_VEHICLE_TYPES.length} اقسام)</span>
-          </h3>
-          <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden max-h-80 overflow-y-auto">
-            {PAKISTAN_VEHICLE_TYPES.map((v) => {
-              const selected = vehicleType === v.value;
+          <p className="text-[17px] font-bold text-black mb-2">Pickup time</p>
+          <div className="flex gap-2 flex-wrap">
+            {PICKUP_TIMES.map((pt) => {
+              const active = pickupTime === pt;
               return (
                 <button
-                  key={v.value}
+                  key={pt}
                   type="button"
-                  onClick={() => setVehicleType(v.value)}
-                  className="w-full flex items-center gap-3 px-4 py-3 border-b border-slate-100 last:border-0 text-right transition min-h-[56px]"
-                  style={selected ? { backgroundColor: SELECTED_BLUE } : undefined}
+                  onClick={() => setPickupTime(pt)}
+                  className="px-4 py-2.5 rounded-full text-[15px] font-medium transition min-h-[44px]"
+                  style={
+                    active
+                      ? { backgroundColor: '#000', color: '#fff' }
+                      : { backgroundColor: FIELD_BG, color: '#000' }
+                  }
                 >
-                  <span
-                    className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
-                    style={selected ? { backgroundColor: '#fff' } : { backgroundColor: '#F3F4F6' }}
-                  >
-                    <Truck className="w-5 h-5 text-slate-800" />
-                  </span>
-                  <span className="flex-1">
-                    <span className="block font-extrabold text-slate-900 text-sm" dir="ltr">{v.value}</span>
-                    <span className="block text-[11px] font-bold text-slate-500">{v.urdu}</span>
-                  </span>
-                  {selected && (
-                    <span
-                      className="w-6 h-6 rounded-full flex items-center justify-center text-sm font-black shrink-0"
-                      style={{ backgroundColor: IDRIVE_GREEN }}
-                    >
-                      ✓
-                    </span>
-                  )}
+                  {pt === 'Scheduled' ? 'Schedule delivery ▾' : pt}
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* ===== Goods + your offer (negotiation starts here) ===== */}
-        <div className="bg-white rounded-3xl border border-slate-200 p-4 space-y-3">
-          <div>
-            <label className="text-xs font-extrabold text-slate-900 block mb-1.5">
-              <Package className="w-3.5 h-3.5 inline ml-1" />
-              سامان کی تفصیل <span className="text-red-500">*</span>
-            </label>
+        {/* Description of the cargo */}
+        <button type="button" className={fieldCls} style={{ backgroundColor: FIELD_BG }} onClick={() => {}}>
+          <div className="flex-1">
+            <span className={labelCls}>Description of the cargo</span>
             <input
-              type="text"
-              required
               value={goods}
               onChange={(e) => setGoods(e.target.value)}
-              placeholder="مثال: چاول کے تھیلے، سریا، کھاد"
-              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-slate-400 min-h-[52px]"
+              placeholder="e.g. rice bags, steel, fertilizer"
+              className="block w-full bg-transparent outline-none text-[17px] font-bold text-black placeholder:text-neutral-300 placeholder:font-medium"
+              onClick={(e) => e.stopPropagation()}
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <ChevronRight className="w-5 h-5 text-neutral-400 shrink-0" />
+        </button>
+
+        {/* Vehicle size */}
+        <div>
+          <button
+            type="button"
+            className={fieldCls}
+            style={{ backgroundColor: FIELD_BG }}
+            onClick={() => setShowVehicleList((s) => !s)}
+          >
             <div>
-              <label className="text-xs font-extrabold text-slate-900 block mb-1.5">وزن / مقدار</label>
-              <input
-                type="text"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                placeholder="35 ٹن"
-                className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold outline-none min-h-[52px]"
-              />
+              <span className={labelCls}>Vehicle size</span>
+              <span className={valueCls + ' block'}>{vehicleType}</span>
             </div>
-            <div>
-              <label className="text-xs font-extrabold text-slate-900 block mb-1.5">
-                💰 آپ کی آفر <span className="text-slate-400 font-bold">(کرایہ)</span>
-              </label>
-              <input
-                type="text"
-                value={fareOffer}
-                onChange={(e) => setFareOffer(e.target.value)}
-                placeholder="Rs 85,000"
-                className="w-full bg-slate-50 border-2 rounded-2xl px-4 py-3 text-sm font-extrabold outline-none min-h-[52px]"
-                style={{ borderColor: IDRIVE_GREEN }}
-              />
+            <ChevronDown className={`w-5 h-5 text-neutral-400 transition-transform ${showVehicleList ? 'rotate-180' : ''}`} />
+          </button>
+          {showVehicleList && (
+            <div className="mt-2 rounded-2xl border border-neutral-200 overflow-hidden max-h-72 overflow-y-auto">
+              {PAKISTAN_VEHICLE_TYPES.map((v) => {
+                const selected = vehicleType === v.value;
+                return (
+                  <button
+                    key={v.value}
+                    type="button"
+                    onClick={() => { setVehicleType(v.value); setShowVehicleList(false); }}
+                    className="w-full flex items-center gap-3 px-4 py-3 border-b border-neutral-100 last:border-0 text-left min-h-[56px]"
+                    style={selected ? { backgroundColor: SELECTED_BLUE } : undefined}
+                  >
+                    <span className="w-10 h-10 rounded-xl bg-neutral-100 flex items-center justify-center shrink-0">
+                      <Truck className="w-5 h-5 text-black" />
+                    </span>
+                    <span className="flex-1 text-[15px] font-bold text-black">{v.value}</span>
+                    {selected && (
+                      <span
+                        className="w-6 h-6 rounded-full flex items-center justify-center text-sm font-black shrink-0"
+                        style={{ backgroundColor: LIME }}
+                      >
+                        ✓
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
+          )}
+        </div>
+
+        {/* Options */}
+        <div>
+          <p className="text-[17px] font-bold text-black mb-2">
+            Options <span className="text-neutral-400 font-normal">ⓘ</span>
+          </p>
+          <div className="flex gap-2 flex-wrap">
+            {(['Cash', 'Easypaisa', 'JazzCash'] as const).map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setSlipPayment(p)}
+                className="px-4 py-2.5 rounded-full text-[15px] font-medium min-h-[44px] transition"
+                style={slipPayment === p ? { backgroundColor: '#000', color: '#fff' } : { backgroundColor: FIELD_BG, color: '#000' }}
+              >
+                {p === 'Cash' ? '💵 Cash' : p}
+              </button>
+            ))}
+            {([1, 2] as const).map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => setLoaders(loaders === n ? 0 : n)}
+                className="px-4 py-2.5 rounded-full text-[15px] font-medium min-h-[44px] transition"
+                style={loaders === n ? { backgroundColor: '#000', color: '#fff' } : { backgroundColor: FIELD_BG, color: '#000' }}
+              >
+                {n === 1 ? '🧑‍🔧 One Loader' : '👷👷 Two Loaders'}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => setClosedBody((c) => !c)}
+              className="px-4 py-2.5 rounded-full text-[15px] font-medium min-h-[44px] transition"
+              style={closedBody ? { backgroundColor: '#000', color: '#fff' } : { backgroundColor: FIELD_BG, color: '#000' }}
+            >
+              Closed body truck
+            </button>
           </div>
-          <p className="text-[11px] font-bold text-slate-400 leading-relaxed">
-            💡 یہ آپ کی ابتدائی آفر ہے — ڈرائیور قبول یا جوابی آفر دے سکتا ہے (inDrive طرز)
+        </div>
+
+        {/* Your offer (seeds negotiation) */}
+        <div className="rounded-2xl p-4" style={{ backgroundColor: FIELD_BG }}>
+          <label className={labelCls + ' block mb-1'}>Your offer (PKR)</label>
+          <input
+            value={fareOffer}
+            onChange={(e) => setFareOffer(e.target.value.replace(/[^0-9]/g, ''))}
+            inputMode="numeric"
+            placeholder="85,000"
+            className="w-full bg-transparent outline-none text-[22px] font-extrabold text-black placeholder:text-neutral-300"
+          />
+          <p className="text-[12px] text-neutral-400 mt-1">
+            Drivers can accept or send a counter offer
           </p>
         </div>
 
-        {/* ===== Collapsible: details ===== */}
-        <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden">
-          <button
-            type="button"
-            onClick={() => setShowDetails((s) => !s)}
-            className="w-full flex items-center justify-between px-4 py-3.5 text-sm font-extrabold text-slate-900 min-h-[52px]"
-          >
-            <span>مزید تفصیلات</span>
-            <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform ${showDetails ? 'rotate-180' : ''}`} />
-          </button>
-          {showDetails && (
-            <div className="px-4 pb-4 space-y-3 border-t border-slate-100 pt-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-bold text-slate-500 block mb-1">باڈی</label>
-                  <div className="flex flex-wrap gap-1.5">
-                    {['فل باڈی', 'ہاف باڈی', 'پھٹا', 'کنٹینر'].map((b) => (
-                      <button
-                        key={b}
-                        type="button"
-                        onClick={() => setBodyType(b)}
-                        className="text-[11px] px-2.5 py-1.5 rounded-xl border font-bold"
-                        style={bodyType === b ? { backgroundColor: SELECTED_BLUE, borderColor: '#90CAF9' } : { backgroundColor: '#F9FAFB', borderColor: '#E5E7EB' }}
-                      >
-                        {b}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-slate-500 block mb-1">تاریخ</label>
-                  <input
-                    type="date"
-                    value={loadDate}
-                    onChange={(e) => setLoadDate(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-bold"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="text-xs font-bold text-slate-500 block mb-1">ہدایات (اختیاری)</label>
-                <input
-                  type="text"
-                  value={specialInstructions}
-                  onChange={(e) => setSpecialInstructions(e.target.value)}
-                  placeholder="مثال: ترپال ضروری ہے"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold outline-none"
-                />
-              </div>
-              {additionalLoads.map((al, idx) => (
-                <div key={idx} className="bg-slate-50 rounded-2xl p-3 space-y-2 relative border border-slate-200">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-extrabold">اضافی لوڈ {idx + 2}</span>
-                    <button type="button" onClick={() => setAdditionalLoads(additionalLoads.filter((_, i) => i !== idx))} className="text-red-500">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <input type="text" value={al.goods} onChange={(e) => { const u = [...additionalLoads]; u[idx].goods = e.target.value; setAdditionalLoads(u); }} placeholder="سامان" className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold outline-none" />
-                  <div className="grid grid-cols-2 gap-2">
-                    <input type="text" value={al.loadingCity} onChange={(e) => { const u = [...additionalLoads]; u[idx].loadingCity = e.target.value; setAdditionalLoads(u); }} placeholder="پک اپ شہر" className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold outline-none" />
-                    <input type="text" value={al.destinationCity} onChange={(e) => { const u = [...additionalLoads]; u[idx].destinationCity = e.target.value; setAdditionalLoads(u); }} placeholder="منزل" className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold outline-none" />
-                  </div>
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={() => setAdditionalLoads([...additionalLoads, { goods: '', loadingCity: loadingCity || '', destinationCity: destinationCity || '', quantity: '' }])}
-                className="inline-flex items-center gap-1 text-xs font-extrabold text-slate-700"
-              >
-                <Plus className="w-4 h-4" /> دوسرا لوڈ شامل کریں
+        {/* Weight */}
+        <div className="rounded-2xl" style={{ backgroundColor: FIELD_BG }}>
+          <label className={labelCls + ' px-4 pt-3 block'}>Weight / quantity</label>
+          <input
+            value={quantity}
+            onChange={(e) => setQuantity(e.target.value)}
+            placeholder="35 ton"
+            className={valueCls + ' bg-transparent outline-none w-full px-4 pb-3 placeholder:text-neutral-300 placeholder:font-medium'}
+          />
+        </div>
+
+        {/* Cargo photo */}
+        <div>
+          <p className="text-[17px] font-bold text-black mb-2">Picture of your cargo</p>
+          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePhoto(f); }} />
+          {cargoPhoto ? (
+            <div className="relative rounded-2xl overflow-hidden">
+              <img src={cargoPhoto} alt="Cargo" className="w-full h-40 object-cover" />
+              <button type="button" onClick={() => setCargoPhoto(undefined)} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/70 text-white flex items-center justify-center">
+                <X className="w-4 h-4" />
               </button>
             </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className="w-full rounded-2xl border-2 border-dashed border-neutral-300 py-6 flex items-center justify-center gap-2 text-neutral-400 font-bold"
+            >
+              <Camera className="w-5 h-5" /> Add photo
+            </button>
           )}
         </div>
 
-        {/* ===== Collapsible: contacts ===== */}
-        <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden">
-          <button
-            type="button"
-            onClick={() => setShowContacts((s) => !s)}
-            className="w-full flex items-center justify-between px-4 py-3.5 text-sm font-extrabold text-slate-900 min-h-[52px]"
-          >
-            <span className="inline-flex items-center gap-1.5"><Phone className="w-4 h-4" /> رابطہ نمبرز</span>
-            <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform ${showContacts ? 'rotate-180' : ''}`} />
-          </button>
-          {showContacts && (
-            <div className="px-4 pb-4 space-y-2 border-t border-slate-100 pt-3">
-              <p className="text-[11px] font-bold text-slate-400">بنیادی: <span className="font-mono" dir="ltr">{addaProfile.primaryPhone}</span></p>
-              {namedContacts.map((c, i) => (
-                <div key={i} className="grid grid-cols-2 gap-2">
-                  <input type="text" value={c.name} onChange={(e) => { const u = [...namedContacts]; u[i] = { ...u[i], name: e.target.value }; setNamedContacts(u); }} placeholder="نام" className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold outline-none" />
-                  <input type="tel" value={c.number} onChange={(e) => { const u = [...namedContacts]; u[i] = { ...u[i], number: e.target.value }; setNamedContacts(u); }} placeholder="03001234567" className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold outline-none font-mono" dir="ltr" />
-                </div>
-              ))}
-            </div>
-          )}
+        {/* Notes */}
+        <div className="rounded-2xl" style={{ backgroundColor: FIELD_BG }}>
+          <input
+            value={specialInstructions}
+            onChange={(e) => setSpecialInstructions(e.target.value)}
+            placeholder="Notes (optional)"
+            className="w-full bg-transparent outline-none px-4 py-4 text-[15px] font-medium text-black placeholder:text-neutral-300"
+          />
         </div>
 
-        {/* ===== Reuse previous ===== */}
+        {/* Reuse previous */}
         {recentSlips.length > 0 && (
           <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
             {recentSlips.slice(0, 3).map((s) => (
               <button
                 key={s.id}
                 type="button"
-                onClick={() => handleApplyPreviousSlip(s)}
-                className="shrink-0 bg-slate-100 text-slate-700 text-[11px] px-3 py-2 rounded-xl font-bold"
+                onClick={() => {
+                  setLoadingCity(s.loadingCity); setDestinationCity(s.destinationCity);
+                  setGoods(s.goods); setVehicleType(s.vehicleType.split('،')[0].trim());
+                  setFareOffer(s.fareOffer || '');
+                }}
+                className="shrink-0 text-[13px] px-3 py-2 rounded-xl font-medium whitespace-nowrap"
+                style={{ backgroundColor: FIELD_BG }}
               >
-                ↺ {s.loadingCity} ➔ {s.destinationCity}
+                ↺ {s.loadingCity} → {s.destinationCity}
               </button>
             ))}
           </div>
         )}
 
-        {/* ===== BIG inDrive green button ===== */}
-        <button
-          type="submit"
-          disabled={geocoding}
-          className="w-full py-4 rounded-3xl font-black text-slate-900 text-lg min-h-[60px] active:scale-[0.98] disabled:opacity-60 shadow-lg"
-          style={{ backgroundColor: IDRIVE_GREEN }}
-        >
-          {geocoding ? 'لوکیشن معلوم کی جا رہی ہے…' : 'ریکویسٹ بنائیں'}
-        </button>
-        <p className="text-center text-[11px] font-bold text-slate-400 -mt-2" dir="ltr">Create request</p>
-
         {onOpenVoiceModal && (
           <button
             type="button"
             onClick={onOpenVoiceModal}
-            className="w-full py-3 rounded-2xl bg-slate-900 text-white font-extrabold text-sm flex items-center justify-center gap-2 min-h-[52px]"
+            className="w-full py-3.5 rounded-2xl bg-black text-white font-bold text-[15px] flex items-center justify-center gap-2 min-h-[52px]"
           >
-            <Mic className="w-4 h-4 text-lime-300" />
-            🎙️ وائس سے لوڈ بنائیں
+            <Mic className="w-4 h-4" style={{ color: LIME }} /> Create with voice
           </button>
         )}
 
-        {/* ===== inDrive headline ===== */}
-        <div className="text-center pt-4 pb-2" dir="ltr">
-          <h2 className="font-black text-slate-900 uppercase" style={{ fontSize: '1.9rem', lineHeight: 1.15 }}>
-            Wheels for<br />
-            <span style={{ backgroundColor: IDRIVE_GREEN, padding: '0 12px', borderRadius: 6 }}>Every Need</span>
-          </h2>
-          <p className="text-slate-500 text-sm font-bold mt-3" dir="rtl">ہر ضرورت کے لیے پہیے — پاکستان بھر میں</p>
-        </div>
-
         {onCancel && (
-          <button
-            type="button"
-            onClick={onCancel}
-            className="w-full text-slate-400 text-xs font-bold py-2"
-          >
-            منسوخ کریں
+          <button type="button" onClick={onCancel} className="w-full text-neutral-400 text-sm font-medium py-2">
+            Cancel
           </button>
         )}
       </form>
+
+      {/* ===== Sticky big green Create request ===== */}
+      <div className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-neutral-100 px-4 pt-2 pb-4">
+        <div className="max-w-2xl mx-auto">
+          <button
+            type="button"
+            onClick={() => formRef.current?.requestSubmit()}
+            disabled={geocoding}
+            className="w-full py-4 rounded-2xl font-bold text-black text-[18px] min-h-[58px] active:scale-[0.98] disabled:opacity-60"
+            style={{ backgroundColor: LIME }}
+          >
+            {geocoding ? 'Locating…' : 'Create request'}
+          </button>
+          {onShowMyRequests && (
+            <div className="flex mt-1">
+              <button type="button" className="flex-1 py-2.5 flex flex-col items-center gap-0.5 text-black" onClick={() => window.scrollTo({ top: 0 })}>
+                <Plus className="w-5 h-5" />
+                <span className="text-[12px] font-bold">Create request</span>
+              </button>
+              <button type="button" className="flex-1 py-2.5 flex flex-col items-center gap-0.5 text-neutral-500" onClick={onShowMyRequests}>
+                <span className="text-[18px]">🗂️</span>
+                <span className="text-[12px] font-bold">My requests</span>
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

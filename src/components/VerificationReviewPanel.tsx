@@ -75,7 +75,7 @@ export const VerificationReviewPanel: React.FC<VerificationReviewPanelProps> = (
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
         <div>
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-[#0B2A5B]" />
+            <ShieldCheck className="w-5 h-5 text-[#111111]" />
             <h2 className="text-base sm:text-lg font-bold text-slate-900">تصدیق کی درخواستیں</h2>
             {pendingCount > 0 && (
               <span className="text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-bold">
@@ -91,7 +91,7 @@ export const VerificationReviewPanel: React.FC<VerificationReviewPanelProps> = (
               key={f}
               onClick={() => setFilter(f)}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold ${
-                filter === f ? 'bg-[#0B2A5B] text-white' : 'bg-slate-100 text-slate-600'
+                filter === f ? 'bg-[#111111] text-white' : 'bg-slate-100 text-slate-600'
               }`}
             >
               {f === 'pending' ? '⏳ زیر جائزہ' : f === 'rejected' ? '❌ مسترد' : f === 'verified' ? '✅ تصدیق شدہ' : '📋 تمام'}

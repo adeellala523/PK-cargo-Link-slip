@@ -46,7 +46,7 @@ export function VehicleStep({
                 onClick={() => setSelected(v.value)}
                 className={`rounded-2xl px-3 py-3.5 text-sm font-extrabold border-2 transition active:scale-[0.97] ${
                   active
-                    ? 'border-[#F5A301] bg-amber-50 text-[#0B2A5B]'
+                    ? 'border-[#B5E61D] bg-amber-50 text-[#111111]'
                     : 'border-neutral-200 bg-white text-neutral-700'
                 }`}
               >

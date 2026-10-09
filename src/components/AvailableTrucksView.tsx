@@ -322,7 +322,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
             <Truck className="w-3.5 h-3.5 text-emerald-600" />
             <span>خالی و دستیاب گاڑیاں نیٹ ورک</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#08284F]">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#111111]">
             دستیاب گاڑیاں (Available Trucks)
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
@@ -351,7 +351,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="شہر، روٹ، گاڑی کی قسم، یا ڈرائیور کا نام خود ٹائپ کریں (مثال: لاہور، ٹرالہ، کراچی، وغیرہ)..."
-            className="w-full bg-[#F4F7FB] border border-slate-300 rounded-2xl pr-11 pl-4 py-3.5 text-sm text-slate-900 focus:bg-white focus:border-[#123A6D] outline-none min-h-[48px]"
+            className="w-full bg-[#FFFFFF] border border-slate-300 rounded-2xl pr-11 pl-4 py-3.5 text-sm text-slate-900 focus:bg-white focus:border-[#1E1E1E] outline-none min-h-[48px]"
           />
           <Search className="w-5 h-5 text-slate-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
           {searchTerm && (
@@ -376,7 +376,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                 onClick={() => setSelectedCityBadge(c)}
                 className={`text-xs px-3 py-1.5 rounded-xl font-bold border transition ${
                   selectedCityBadge === c
-                    ? 'bg-[#123A6D] text-white border-[#123A6D] shadow-xs'
+                    ? 'bg-[#1E1E1E] text-white border-[#1E1E1E] shadow-xs'
                     : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
                 }`}
               >
@@ -414,7 +414,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
             <button
               type="button"
               onClick={resetFilters}
-              className="text-[#123A6D] hover:underline font-bold flex items-center gap-1"
+              className="text-[#1E1E1E] hover:underline font-bold flex items-center gap-1"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>تمام فلٹرز ختم کریں</span>
@@ -456,7 +456,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="font-extrabold text-base text-[#08284F]">
+                      <h3 className="font-extrabold text-base text-[#111111]">
                         {truck.driverOrOwnerName}
                       </h3>
                       {truck.vehicleNumber && (
@@ -537,9 +537,9 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
 
               {/* Middle Row: Route & Timing */}
               {truck.preferredRoute && (
-                <div className="bg-[#F4F7FB] px-3.5 py-2 rounded-xl border border-slate-200 text-xs flex items-center justify-between">
+                <div className="bg-[#FFFFFF] px-3.5 py-2 rounded-xl border border-slate-200 text-xs flex items-center justify-between">
                   <div className="flex items-center gap-1.5 text-slate-700">
-                    <span className="font-bold text-[#123A6D]">ترجیحی روٹ:</span>
+                    <span className="font-bold text-[#1E1E1E]">ترجیحی روٹ:</span>
                     <span>{truck.preferredRoute}</span>
                   </div>
                   <span className="text-[11px] text-slate-400 font-mono">
@@ -557,9 +557,9 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                   {/* Call Button */}
                   <a
                     href={`tel:${sanitizePhoneForCall(truck.phone)}`}
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#123A6D] bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-xl transition min-h-[40px] border border-blue-200"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#1E1E1E] bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-xl transition min-h-[40px] border border-blue-200"
                   >
-                    <Phone className="w-3.5 h-3.5 text-[#123A6D]" />
+                    <Phone className="w-3.5 h-3.5 text-[#1E1E1E]" />
                     <span className="font-mono">{truck.phone}</span>
                   </a>
 
@@ -640,7 +640,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                   setIsAddingTruck(false);
                   if (onNavigateToAddaLogin) onNavigateToAddaLogin();
                 }}
-                className="w-full bg-[#123A6D] hover:bg-[#0D2D57] text-white py-3 px-4 rounded-xl font-bold text-sm shadow-md transition active:scale-95 flex items-center justify-center gap-2"
+                className="w-full bg-[#1E1E1E] hover:bg-[#0D2D57] text-white py-3 px-4 rounded-xl font-bold text-sm shadow-md transition active:scale-95 flex items-center justify-center gap-2"
               >
                 <User className="w-4 h-4" />
                 <span>🏢 گڈز اڈا منیجر کے طور پر لاگ ان کریں</span>
@@ -758,7 +758,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                   value={ratingFeedback}
                   onChange={(e) => setRatingFeedback(e.target.value)}
                   placeholder="ڈرائیور کے وقت کی پابندی، محفوظ ڈلیوری اور اخلاق کے بارے میں ریمارکس درج کریں..."
-                  className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl p-3 text-xs sm:text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none"
+                  className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl p-3 text-xs sm:text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none"
                 />
               </div>
 
@@ -861,7 +861,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                     value={ownerName}
                     onChange={(e) => setOwnerName(e.target.value)}
                     placeholder="مثال: ملک یوسف خان"
-                    className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
+                    className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
                   />
                 </div>
 
@@ -875,7 +875,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                     value={ownerPhone}
                     onChange={(e) => setOwnerPhone(e.target.value)}
                     placeholder="03001234567"
-                    className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px] font-mono ltr-content"
+                    className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px] font-mono ltr-content"
                   />
                 </div>
               </div>
@@ -892,7 +892,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                     value={truckCity}
                     onChange={(e) => setTruckCity(e.target.value)}
                     placeholder="مثال: لاہور، کراچی، ملتان"
-                    className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
+                    className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
                   />
                 </div>
 
@@ -905,7 +905,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                     value={truckLocation}
                     onChange={(e) => setTruckLocation(e.target.value)}
                     placeholder="ٹھوکر نیاز بیگ بائی پاس"
-                    className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
+                    className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
                   />
                 </div>
               </div>
@@ -920,7 +920,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                   value={truckVehicleType}
                   onChange={(e) => setTruckVehicleType(e.target.value)}
                   placeholder="مثال: 22 Wheeler، Shahzor، مزدہ 16 فٹ"
-                  className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
+                  className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
                 />
                 <div className="flex flex-wrap gap-1 mt-1.5">
                   {PAKISTAN_VEHICLE_VALUES.slice(0, 12).map((v) => (
@@ -969,7 +969,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                     value={truckNumber}
                     onChange={(e) => setTruckNumber(e.target.value)}
                     placeholder="TL-9821"
-                    className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px] font-mono"
+                    className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px] font-mono"
                   />
                 </div>
               </div>
@@ -984,7 +984,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                   value={preferredRoute}
                   onChange={(e) => setPreferredRoute(e.target.value)}
                   placeholder="مثال: لاہور تا کراچی / پنجاب تا کے پی کے"
-                  className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
+                  className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
                 />
               </div>
 

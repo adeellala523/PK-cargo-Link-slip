@@ -91,7 +91,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       {userCity && (
         <section className="space-y-3">
           <div className="flex items-center justify-between px-1">
-            <h2 className="text-lg font-extrabold text-[#0B2A5B] flex items-center gap-1.5">
+            <h2 className="text-lg font-extrabold text-[#111111] flex items-center gap-1.5">
               <MapPin className="w-5 h-5 text-[#19A974]" />
               <span>{userCity} کے لوڈز</span>
             </h2>
@@ -125,7 +125,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       <section className="space-y-3">
         <div className="flex items-center justify-between px-1">
           <div>
-            <h2 className="text-lg font-extrabold text-[#0B2A5B]">
+            <h2 className="text-lg font-extrabold text-[#111111]">
               تازہ ترین لوڈز
             </h2>
             <p className="text-[11px] text-slate-500 font-bold">
@@ -152,8 +152,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <button
               type="button"
               onClick={onOpenCreate}
-              className="inline-flex items-center gap-2 text-[#0B2A5B] font-extrabold text-sm px-6 py-3 rounded-2xl transition active:scale-95 min-h-[48px] shadow-[0_8px_24px_rgba(245,163,1,0.35)]"
-              style={{ background: 'linear-gradient(135deg, #FFC531 0%, #F5A301 60%, #E8930C 100%)' }}
+              className="inline-flex items-center gap-2 text-[#111111] font-extrabold text-sm px-6 py-3 rounded-2xl transition active:scale-95 min-h-[48px] shadow-[0_8px_24px_rgba(245,163,1,0.35)]"
+              style={{ background: 'linear-gradient(135deg, #CDF463 0%, #B5E61D 60%, #E8930C 100%)' }}
             >
               <PlusCircle className="w-4 h-4" />
               <span>پہلی لوڈ سلپ بنائیں</span>
@@ -172,21 +172,21 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
       {/* 4. TRUST STRIP (compact) */}
       <section className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
-        <h2 className="text-base font-extrabold text-[#0B2A5B] text-center pb-3">
+        <h2 className="text-base font-extrabold text-[#111111] text-center pb-3">
           PK Cargo Link کیوں؟
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {['آسان ڈیجیٹل سلپس', 'WhatsApp شیئرنگ', 'آن لائن ویریفکیشن', 'اڈا رابطہ معلومات', 'موبائل فرینڈلی', 'لوڈ-گاڑی میچنگ'].map((t) => (
-            <div key={t} className="p-3 rounded-2xl bg-[#F4F7FB] border border-slate-100 flex items-center gap-2">
+            <div key={t} className="p-3 rounded-2xl bg-[#FFFFFF] border border-slate-100 flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-[#19A974] flex-shrink-0" />
-              <span className="font-bold text-xs text-[#0B2A5B] leading-tight">{t}</span>
+              <span className="font-bold text-xs text-[#111111] leading-tight">{t}</span>
             </div>
           ))}
         </div>
       </section>
 
       {/* 5. ADDA MANAGER PROMO */}
-      <section className="rounded-3xl p-6 text-white shadow-lg bg-gradient-to-br from-[#123A6D] to-[#08284F] border border-white/10">
+      <section className="rounded-3xl p-6 text-white shadow-lg bg-gradient-to-br from-[#1E1E1E] to-[#111111] border border-white/10">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="space-y-1.5 text-right">
             <h3 className="text-xl font-extrabold">
@@ -200,8 +200,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <button
               type="button"
               onClick={onOpenCreate}
-              className="text-[#0B2A5B] px-6 py-3.5 rounded-2xl font-extrabold text-base shadow-md active:scale-95 transition min-h-[52px] w-full"
-              style={{ background: 'linear-gradient(135deg, #FFC531 0%, #F5A301 60%, #E8930C 100%)' }}
+              className="text-[#111111] px-6 py-3.5 rounded-2xl font-extrabold text-base shadow-md active:scale-95 transition min-h-[52px] w-full"
+              style={{ background: 'linear-gradient(135deg, #CDF463 0%, #B5E61D 60%, #E8930C 100%)' }}
             >
               نئی لوڈ سلپ بنائیں
             </button>

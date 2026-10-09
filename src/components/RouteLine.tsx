@@ -27,7 +27,7 @@ export const RouteLine: React.FC<RouteLineProps> = ({ from, fromSub, to, toSub, 
       <div className="flex flex-col justify-between py-0.5 min-w-0 flex-1">
         <div className="min-w-0">
           <div className="text-[11px] text-slate-400 font-bold leading-tight">کہاں سے</div>
-          <div className={`font-extrabold text-[#0B2A5B] leading-snug truncate ${compact ? 'text-sm' : 'text-base'}`}>
+          <div className={`font-extrabold text-[#111111] leading-snug truncate ${compact ? 'text-sm' : 'text-base'}`}>
             {from}
           </div>
           {fromSub && (
@@ -36,7 +36,7 @@ export const RouteLine: React.FC<RouteLineProps> = ({ from, fromSub, to, toSub, 
         </div>
         <div className="min-w-0 mt-2">
           <div className="text-[11px] text-slate-400 font-bold leading-tight">کہاں تک</div>
-          <div className={`font-extrabold text-[#0B2A5B] leading-snug truncate ${compact ? 'text-sm' : 'text-base'}`}>
+          <div className={`font-extrabold text-[#111111] leading-snug truncate ${compact ? 'text-sm' : 'text-base'}`}>
             {to}
           </div>
           {toSub && (

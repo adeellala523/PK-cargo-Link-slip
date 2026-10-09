@@ -62,7 +62,7 @@ export const RideSearchCard: React.FC<RideSearchCardProps> = ({
       {/* Greeting header */}
       <div className="px-1 pb-3 flex items-end justify-between">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0B2A5B] leading-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#111111] leading-tight">
             السلام علیکم! 👋
           </h1>
           <p className="text-sm text-slate-500 font-bold mt-0.5">
@@ -80,7 +80,7 @@ export const RideSearchCard: React.FC<RideSearchCardProps> = ({
         <div className="p-4 sm:p-5">
           <div className="relative">
             {/* FROM row */}
-            <div className="flex items-center gap-3 bg-[#F4F7FB] rounded-2xl px-4 py-3 border border-transparent focus-within:border-[#19A974]/60 focus-within:bg-white transition">
+            <div className="flex items-center gap-3 bg-[#FFFFFF] rounded-2xl px-4 py-3 border border-transparent focus-within:border-[#19A974]/60 focus-within:bg-white transition">
               <span className="w-3 h-3 rounded-full bg-[#19A974] ring-4 ring-emerald-100 shrink-0" aria-hidden="true" />
               <div className="flex-1 min-w-0">
                 <label className="block text-[11px] font-bold text-slate-400 leading-tight">کہاں سے</label>
@@ -89,7 +89,7 @@ export const RideSearchCard: React.FC<RideSearchCardProps> = ({
                   value={from}
                   onChange={(e) => setFrom(e.target.value)}
                   placeholder="لوڈنگ شہر — مثال: لاہور"
-                  className="w-full bg-transparent text-base font-bold text-[#0B2A5B] placeholder:text-slate-400 placeholder:font-normal outline-none min-h-[28px]"
+                  className="w-full bg-transparent text-base font-bold text-[#111111] placeholder:text-slate-400 placeholder:font-normal outline-none min-h-[28px]"
                 />
               </div>
               <MapPin className="w-4 h-4 text-slate-300 shrink-0" />
@@ -102,14 +102,14 @@ export const RideSearchCard: React.FC<RideSearchCardProps> = ({
                 type="button"
                 onClick={swap}
                 title="شہر تبدیل کریں"
-                className="absolute left-3 -top-3 w-9 h-9 rounded-full bg-white border border-slate-200 shadow-md flex items-center justify-center text-[#123A6D] hover:bg-slate-50 active:scale-90 transition z-10"
+                className="absolute left-3 -top-3 w-9 h-9 rounded-full bg-white border border-slate-200 shadow-md flex items-center justify-center text-[#1E1E1E] hover:bg-slate-50 active:scale-90 transition z-10"
               >
                 <ArrowUpDown className="w-4 h-4" />
               </button>
             </div>
 
             {/* TO row */}
-            <div className="flex items-center gap-3 bg-[#F4F7FB] rounded-2xl px-4 py-3 border border-transparent focus-within:border-[#E5484D]/50 focus-within:bg-white transition">
+            <div className="flex items-center gap-3 bg-[#FFFFFF] rounded-2xl px-4 py-3 border border-transparent focus-within:border-[#E5484D]/50 focus-within:bg-white transition">
               <span className="w-3 h-3 rounded-full bg-[#E5484D] ring-4 ring-red-100 shrink-0" aria-hidden="true" />
               <div className="flex-1 min-w-0">
                 <label className="block text-[11px] font-bold text-slate-400 leading-tight">کہاں تک</label>
@@ -118,7 +118,7 @@ export const RideSearchCard: React.FC<RideSearchCardProps> = ({
                   value={to}
                   onChange={(e) => setTo(e.target.value)}
                   placeholder="منزل شہر — مثال: کراچی"
-                  className="w-full bg-transparent text-base font-bold text-[#0B2A5B] placeholder:text-slate-400 placeholder:font-normal outline-none min-h-[28px]"
+                  className="w-full bg-transparent text-base font-bold text-[#111111] placeholder:text-slate-400 placeholder:font-normal outline-none min-h-[28px]"
                 />
               </div>
               <Navigation className="w-4 h-4 text-slate-300 shrink-0" />
@@ -147,13 +147,13 @@ export const RideSearchCard: React.FC<RideSearchCardProps> = ({
                   value={saveLabel}
                   onChange={(e) => setSaveLabel(e.target.value)}
                   placeholder="نام — مثال: میرا اڈا"
-                  className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold outline-none focus:border-[#F5A301] min-h-[40px]"
+                  className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold outline-none focus:border-[#B5E61D] min-h-[40px]"
                 />
                 <button
                   type="button"
                   onClick={handleSaveCurrent}
                   disabled={!from.trim() && !to.trim()}
-                  className="px-4 rounded-xl bg-[#0B2A5B] text-white text-xs font-extrabold min-h-[40px] disabled:opacity-40"
+                  className="px-4 rounded-xl bg-[#111111] text-white text-xs font-extrabold min-h-[40px] disabled:opacity-40"
                 >
                   محفوظ کریں
                 </button>
@@ -200,7 +200,7 @@ export const RideSearchCard: React.FC<RideSearchCardProps> = ({
                   onClick={() => setVehicle(v)}
                   className={`shrink-0 text-xs font-bold px-3 py-2 rounded-xl border transition active:scale-95 min-h-[36px] ${
                     vehicle === v
-                      ? 'bg-[#123A6D] text-white border-[#123A6D] shadow-sm'
+                      ? 'bg-[#1E1E1E] text-white border-[#1E1E1E] shadow-sm'
                       : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
                   } ${v !== 'تمام گاڑیاں' ? 'ltr-content' : ''}`}
                 >
@@ -214,8 +214,8 @@ export const RideSearchCard: React.FC<RideSearchCardProps> = ({
           <button
             type="button"
             onClick={submit}
-            className="mt-3 w-full inline-flex items-center justify-center gap-2 text-[#0B2A5B] font-extrabold text-lg py-4 rounded-2xl transition active:scale-[0.98] min-h-[56px] shadow-[0_8px_24px_rgba(245,163,1,0.35)]"
-            style={{ background: 'linear-gradient(135deg, #FFC531 0%, #F5A301 60%, #E8930C 100%)' }}
+            className="mt-3 w-full inline-flex items-center justify-center gap-2 text-[#111111] font-extrabold text-lg py-4 rounded-2xl transition active:scale-[0.98] min-h-[56px] shadow-[0_8px_24px_rgba(245,163,1,0.35)]"
+            style={{ background: 'linear-gradient(135deg, #CDF463 0%, #B5E61D 60%, #E8930C 100%)' }}
           >
             <Search className="w-5 h-5 stroke-[2.5]" />
             <span>لوڈ تلاش کریں</span>
@@ -225,9 +225,9 @@ export const RideSearchCard: React.FC<RideSearchCardProps> = ({
           <button
             type="button"
             onClick={onOpenCreate}
-            className="mt-2.5 w-full inline-flex items-center justify-center gap-2 bg-[#0B2A5B] hover:bg-[#123A6D] text-white font-extrabold text-base py-4 rounded-2xl transition active:scale-[0.98] min-h-[56px] shadow-[0_8px_24px_rgba(11,42,91,0.30)]"
+            className="mt-2.5 w-full inline-flex items-center justify-center gap-2 bg-[#111111] hover:bg-[#1E1E1E] text-white font-extrabold text-base py-4 rounded-2xl transition active:scale-[0.98] min-h-[56px] shadow-[0_8px_24px_rgba(11,42,91,0.30)]"
           >
-            <FileText className="w-5 h-5 text-[#F5A301]" />
+            <FileText className="w-5 h-5 text-[#B5E61D]" />
             <span>لوڈ پوسٹ کریں</span>
           </button>
         </div>
@@ -261,7 +261,7 @@ export const RideSearchCard: React.FC<RideSearchCardProps> = ({
           className="flex flex-col items-center gap-1.5 bg-white rounded-2xl border border-slate-100 shadow-sm py-3.5 px-1 active:scale-95 transition"
         >
           <span className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center">
-            <UserCheck className="w-5 h-5 text-[#123A6D]" />
+            <UserCheck className="w-5 h-5 text-[#1E1E1E]" />
           </span>
           <span className="text-[11px] font-bold text-slate-700 leading-tight text-center">ڈرائیور</span>
         </button>

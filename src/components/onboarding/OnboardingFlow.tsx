@@ -244,7 +244,7 @@ export function OnboardingFlow({ onDone }: { onDone: () => void }) {
       <div className="fixed inset-0 z-[100] bg-white flex flex-col items-center justify-center gap-4">
         <div
           className="w-12 h-12 rounded-full border-4 border-neutral-200 animate-spin"
-          style={{ borderTopColor: '#F5A301' }}
+          style={{ borderTopColor: '#B5E61D' }}
         />
         <p className="font-bold text-neutral-700">آپ کا اکاؤنٹ بنایا جا رہا ہے…</p>
         {createError && (

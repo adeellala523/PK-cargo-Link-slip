@@ -174,6 +174,13 @@ export interface LoadSlip {
   /** inDrive Freight-style trip kind: city (intracity) | freight | intercity */
   tripKind?: 'city' | 'freight' | 'intercity';
 
+  /** inDrive Freight form fields */
+  pickupTime?: '10-20 min' | 'Up to 1 hour' | 'Scheduled';
+  slipPayment?: 'Cash' | 'Easypaisa' | 'JazzCash';
+  loaders?: 0 | 1 | 2;
+  closedBody?: boolean;
+  cargoPhotoUrl?: string;
+
   // Lifecycle (Yango-style history)
   completedAt?: string;
   cancelledAt?: string;

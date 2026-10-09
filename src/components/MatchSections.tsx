@@ -23,7 +23,7 @@ function MatchRowButtons({ phone, waText }: { phone: string; waText: string }) {
     <div className="flex items-center gap-1.5">
       <a
         href={`tel:${sanitizePhoneForCall(phone)}`}
-        className="inline-flex items-center gap-1 text-[11px] font-bold text-[#123A6D] bg-blue-50 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg border border-blue-200 transition"
+        className="inline-flex items-center gap-1 text-[11px] font-bold text-[#1E1E1E] bg-blue-50 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg border border-blue-200 transition"
       >
         <Phone className="w-3 h-3" />
         <span className="font-mono" dir="ltr">{phone}</span>

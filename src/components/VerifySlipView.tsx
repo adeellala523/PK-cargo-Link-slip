@@ -59,11 +59,11 @@ export const VerifySlipView: React.FC<VerifySlipViewProps> = ({
       {/* Header (Section 17) */}
       <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-sm border border-slate-200 space-y-4">
         <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
-          <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#123A6D] flex items-center justify-center flex-shrink-0">
-            <ShieldCheck className="w-6 h-6 text-[#123A6D]" />
+          <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#1E1E1E] flex items-center justify-center flex-shrink-0">
+            <ShieldCheck className="w-6 h-6 text-[#1E1E1E]" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#08284F]">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#111111]">
               سلپ ویریفائی کریں
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
@@ -83,7 +83,7 @@ export const VerifySlipView: React.FC<VerifySlipViewProps> = ({
               value={slipIdInput}
               onChange={(e) => setSlipIdInput(e.target.value)}
               placeholder="مثال: PKCL-8F42K1"
-              className="flex-1 bg-[#F4F7FB] border border-slate-300 rounded-xl px-4 py-3 text-base text-slate-900 focus:bg-white focus:border-[#19A974] outline-none font-mono ltr-content min-h-[48px]"
+              className="flex-1 bg-[#FFFFFF] border border-slate-300 rounded-xl px-4 py-3 text-base text-slate-900 focus:bg-white focus:border-[#19A974] outline-none font-mono ltr-content min-h-[48px]"
               required
             />
             <button
@@ -102,7 +102,7 @@ export const VerifySlipView: React.FC<VerifySlipViewProps> = ({
             <button
               type="button"
               onClick={handleQrScanTrigger}
-              className="inline-flex items-center gap-1.5 text-[#123A6D] hover:underline font-bold"
+              className="inline-flex items-center gap-1.5 text-[#1E1E1E] hover:underline font-bold"
             >
               <QrCode className="w-4 h-4" />
               <span>QR Code اسکین کریں</span>
@@ -112,7 +112,7 @@ export const VerifySlipView: React.FC<VerifySlipViewProps> = ({
 
         {isScanning && (
           <div className="p-4 bg-blue-50 border border-blue-200 rounded-2xl text-center space-y-2">
-            <QrCode className="w-8 h-8 text-[#123A6D] mx-auto animate-pulse" />
+            <QrCode className="w-8 h-8 text-[#1E1E1E] mx-auto animate-pulse" />
             <p className="text-xs text-blue-900 font-bold">
               اپنے موبائل کیمرے سے کسی بھی پرنٹ شدہ یا موبائل لوڈ سلپ کا QR کوڈ اسکین کریں۔
             </p>
@@ -143,14 +143,14 @@ export const VerifySlipView: React.FC<VerifySlipViewProps> = ({
               {/* Public Slip Summary Card (Section 17) */}
               <div className="bg-white rounded-2xl p-4 sm:p-5 border border-emerald-200 text-slate-800 space-y-3">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-slate-100 pb-2.5 text-xs">
-                  <span className="font-mono font-bold text-[#123A6D]">سلپ نمبر: {result.slip.id}</span>
+                  <span className="font-mono font-bold text-[#1E1E1E]">سلپ نمبر: {result.slip.id}</span>
                   <span className="text-slate-500">تاریخ اجرا: {formatUrduDateTime(result.slip.createdAt)}</span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 py-1">
                   <div>
                     <span className="text-xs text-slate-400 block">پک اپ:</span>
-                    <strong className="text-base text-[#08284F]">{result.slip.loadingCity}</strong>
+                    <strong className="text-base text-[#111111]">{result.slip.loadingCity}</strong>
                     <span className="text-xs text-slate-600 block">{result.slip.loadingLocation}</span>
                   </div>
 
@@ -161,7 +161,7 @@ export const VerifySlipView: React.FC<VerifySlipViewProps> = ({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs bg-[#F4F7FB] p-3 rounded-xl border border-slate-200">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs bg-[#FFFFFF] p-3 rounded-xl border border-slate-200">
                   <div>
                     <span className="text-slate-400">سامان: </span>
                     <strong>{result.slip.goods}</strong>
@@ -185,7 +185,7 @@ export const VerifySlipView: React.FC<VerifySlipViewProps> = ({
                   <button
                     type="button"
                     onClick={() => onViewSlip(result.slip!)}
-                    className="inline-flex items-center justify-center gap-1.5 bg-[#123A6D] hover:bg-[#0D2D57] text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-xs transition active:scale-95 min-h-[44px]"
+                    className="inline-flex items-center justify-center gap-1.5 bg-[#1E1E1E] hover:bg-[#0D2D57] text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-xs transition active:scale-95 min-h-[44px]"
                   >
                     <span>مکمل سلپ دیکھیں</span>
                     <ArrowLeft className="w-3.5 h-3.5" />

@@ -242,7 +242,7 @@ export const WhatsAppImportView: React.FC = () => {
     <div className="space-y-4">
       {/* Header */}
       <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm">
-        <h3 className="font-extrabold text-lg text-[#08284F] flex items-center gap-2">
+        <h3 className="font-extrabold text-lg text-[#111111] flex items-center gap-2">
           <FileText className="w-5 h-5 text-emerald-600" />
           واٹس ایپ چیٹ امپورٹ
         </h3>
@@ -364,7 +364,7 @@ export const WhatsAppImportView: React.FC = () => {
               type="button"
               onClick={handleImport}
               disabled={phase === 'importing' || (parsed.loads.length === 0 && parsed.vehicles.length === 0)}
-              className="w-full inline-flex items-center justify-center gap-2 bg-[#0B2545] hover:bg-[#123A6D] disabled:opacity-50 text-white font-bold text-sm rounded-2xl px-4 py-3.5 transition min-h-[52px] cursor-pointer"
+              className="w-full inline-flex items-center justify-center gap-2 bg-[#0B2545] hover:bg-[#1E1E1E] disabled:opacity-50 text-white font-bold text-sm rounded-2xl px-4 py-3.5 transition min-h-[52px] cursor-pointer"
             >
               {phase === 'importing' ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
               <span>

@@ -93,10 +93,10 @@ export const SubscriptionPlansView: React.FC = () => {
     <div className="max-w-3xl mx-auto space-y-5 font-nafees">
       {/* Header */}
       <div className="text-center space-y-1.5 pt-1">
-        <div className="w-14 h-14 mx-auto rounded-3xl bg-gradient-to-br from-[#123A6D] to-[#08284F] flex items-center justify-center shadow-lg">
+        <div className="w-14 h-14 mx-auto rounded-3xl bg-gradient-to-br from-[#1E1E1E] to-[#111111] flex items-center justify-center shadow-lg">
           <Truck className="w-7 h-7 text-amber-300" />
         </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0B2A5B]">سبسکرپشن پلانز</h1>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-[#111111]">سبسکرپشن پلانز</h1>
         <p className="text-sm text-slate-500 font-bold">
           پہلا مہینہ مفت آزمائیں — پھر ہفتہ وار یا ماہانہ پلان منتخب کریں
         </p>
@@ -119,26 +119,26 @@ export const SubscriptionPlansView: React.FC = () => {
           <div
             key={plan.id}
             className={`relative bg-white rounded-3xl border-2 p-5 flex flex-col shadow-[0_6px_24px_rgba(11,42,91,0.07)] ${
-              plan.highlight ? 'border-[#F5A301] sm:-mt-2 sm:mb-[-8px]' : 'border-slate-100'
+              plan.highlight ? 'border-[#B5E61D] sm:-mt-2 sm:mb-[-8px]' : 'border-slate-100'
             }`}
           >
             {plan.badge && (
               <span className={`absolute -top-3 right-4 text-[11px] font-extrabold px-3 py-1 rounded-full shadow ${
-                plan.id === 'trial' ? 'bg-[#19A974] text-white' : 'bg-[#F5A301] text-[#0B2A5B]'
+                plan.id === 'trial' ? 'bg-[#19A974] text-white' : 'bg-[#B5E61D] text-[#111111]'
               }`}>
                 {plan.badge}
               </span>
             )}
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-3 ${
               plan.id === 'trial' ? 'bg-gradient-to-br from-[#19A974] to-emerald-800'
-              : plan.highlight ? 'bg-gradient-to-br from-[#FFC531] to-[#E8930C]'
-              : 'bg-gradient-to-br from-[#123A6D] to-[#08284F]'
+              : plan.highlight ? 'bg-gradient-to-br from-[#CDF463] to-[#E8930C]'
+              : 'bg-gradient-to-br from-[#1E1E1E] to-[#111111]'
             }`}>
               {plan.icon}
             </div>
-            <h3 className="text-lg font-extrabold text-[#0B2A5B]">{plan.name}</h3>
+            <h3 className="text-lg font-extrabold text-[#111111]">{plan.name}</h3>
             <div className="py-2">
-              <div className="text-xl font-extrabold text-[#0B2A5B] leading-tight">{plan.price}</div>
+              <div className="text-xl font-extrabold text-[#111111] leading-tight">{plan.price}</div>
               <div className="text-[11px] text-slate-400 font-bold">{plan.period}</div>
             </div>
             <ul className="space-y-1.5 py-2 flex-1">
@@ -157,11 +157,11 @@ export const SubscriptionPlansView: React.FC = () => {
                 plan.id === 'trial' && trialActive
                   ? 'bg-emerald-100 text-emerald-800 cursor-default'
                   : plan.highlight
-                  ? 'text-[#0B2A5B] shadow-[0_8px_24px_rgba(245,163,1,0.35)]'
-                  : 'bg-[#123A6D] text-white hover:bg-[#0D2D57]'
+                  ? 'text-[#111111] shadow-[0_8px_24px_rgba(245,163,1,0.35)]'
+                  : 'bg-[#1E1E1E] text-white hover:bg-[#0D2D57]'
               }`}
               style={plan.highlight && !(plan.id === 'trial' && trialActive)
-                ? { background: 'linear-gradient(135deg, #FFC531 0%, #F5A301 60%, #E8930C 100%)' }
+                ? { background: 'linear-gradient(135deg, #CDF463 0%, #B5E61D 60%, #E8930C 100%)' }
                 : undefined}
             >
               {plan.cta}
@@ -172,7 +172,7 @@ export const SubscriptionPlansView: React.FC = () => {
 
       {/* How it works */}
       <div className="bg-white rounded-3xl border border-slate-100 p-5 shadow-sm">
-        <h3 className="font-extrabold text-[#0B2A5B] pb-3 flex items-center gap-2">
+        <h3 className="font-extrabold text-[#111111] pb-3 flex items-center gap-2">
           <CalendarRange className="w-5 h-5 text-[#B97A0A]" />
           کیسے کام کرتا ہے؟
         </h3>
@@ -183,9 +183,9 @@ export const SubscriptionPlansView: React.FC = () => {
             { n: '3', t: 'ادائیگی جلد آرہی ہے', d: 'JazzCash / Easypay / کارڈ سے ادائیگی کا نظام جلد فعال ہوگا۔' },
           ].map((s) => (
             <div key={s.n} className="flex gap-3 items-start">
-              <span className="w-7 h-7 shrink-0 rounded-full bg-[#123A6D] text-white text-xs font-extrabold flex items-center justify-center num-badge">{s.n}</span>
+              <span className="w-7 h-7 shrink-0 rounded-full bg-[#1E1E1E] text-white text-xs font-extrabold flex items-center justify-center num-badge">{s.n}</span>
               <div>
-                <div className="font-extrabold text-sm text-[#0B2A5B]">{s.t}</div>
+                <div className="font-extrabold text-sm text-[#111111]">{s.t}</div>
                 <div className="text-xs text-slate-500 font-bold">{s.d}</div>
               </div>
             </div>

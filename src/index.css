@@ -28,8 +28,8 @@
 body {
   margin: 0;
   font-family: "Nafees Web Naskh", "Noto Naskh Arabic", "Urdu Typesetting", serif;
-  background-color: #F4F7FB;
-  color: #08284F;
+  background-color: #FFFFFF;
+  color: #111111;
   line-height: 1.8;
   word-spacing: 0.05em;
   letter-spacing: 0;
@@ -77,14 +77,15 @@ input, textarea, select, button {
   }
 }
 
-/* Ride-hailing UI theme tokens (PK Cargo Link — navy + amber, own scheme) */
+/* inDrive-style theme tokens (PK Cargo Link — lime green + black + white) */
 :root {
-  --pkcl-navy: #0B2A5B;
-  --pkcl-navy-deep: #123A6D;
-  --pkcl-amber: #F5A301;
-  --pkcl-amber-light: #FFC531;
+  --pkcl-black: #111111;
+  --pkcl-black-deep: #1E1E1E;
+  --pkcl-lime: #B5E61D;
+  --pkcl-lime-light: #CDF463;
   --pkcl-green: #19A974;
-  --pkcl-bg: #F2F5FA;
+  --pkcl-bg: #FFFFFF;
+  --pkcl-field: #F5F5F5;
 }
 
 /* Hide scrollbars for horizontal chip rails */

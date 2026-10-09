@@ -250,11 +250,11 @@ export const VoiceLoadCreatorModal: React.FC<VoiceLoadCreatorModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#123A6D] to-[#19A974] text-white flex items-center justify-center shadow-xs">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#1E1E1E] to-[#19A974] text-white flex items-center justify-center shadow-xs">
               <Mic className="w-5 h-5 text-amber-300" />
             </div>
             <div>
-              <h3 className="text-lg sm:text-xl font-extrabold text-[#08284F] flex items-center gap-1.5">
+              <h3 className="text-lg sm:text-xl font-extrabold text-[#111111] flex items-center gap-1.5">
                 <span>🎙️ وائس سے لوڈ بنائیں</span>
                 <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-sans font-bold">
                   Multi-Load AI
@@ -333,7 +333,7 @@ export const VoiceLoadCreatorModal: React.FC<VoiceLoadCreatorModalProps> = ({
                 className={`relative w-20 h-20 rounded-full flex items-center justify-center shadow-xl transition-all transform active:scale-95 cursor-pointer border-4 ${
                   isListening
                     ? 'bg-red-600 border-red-300 text-white animate-pulse shadow-red-500/50'
-                    : 'bg-gradient-to-tr from-[#123A6D] to-[#19A974] border-emerald-300 text-white hover:scale-105'
+                    : 'bg-gradient-to-tr from-[#1E1E1E] to-[#19A974] border-emerald-300 text-white hover:scale-105'
                 }`}
               >
                 {isListening ? (
@@ -357,7 +357,7 @@ export const VoiceLoadCreatorModal: React.FC<VoiceLoadCreatorModalProps> = ({
                 onChange={(e) => setVoiceTranscript(e.target.value)}
                 rows={3}
                 placeholder="مثال: بہاولپور سے کراچی مکئی کا لوڈ ہے اور دوسرا کبیروالا سے کراچی گندم"
-                className="w-full bg-[#F4F7FB] border border-slate-300 rounded-2xl p-3 text-sm text-slate-900 focus:bg-white focus:border-[#123A6D] outline-none leading-relaxed"
+                className="w-full bg-[#FFFFFF] border border-slate-300 rounded-2xl p-3 text-sm text-slate-900 focus:bg-white focus:border-[#1E1E1E] outline-none leading-relaxed"
               />
             </div>
 
@@ -366,7 +366,7 @@ export const VoiceLoadCreatorModal: React.FC<VoiceLoadCreatorModalProps> = ({
               type="button"
               disabled={isProcessing || !voiceTranscript.trim()}
               onClick={() => handleProcessVoice()}
-              className="w-full bg-[#123A6D] hover:bg-[#0D2D57] disabled:opacity-50 text-white py-3.5 px-4 rounded-xl font-bold text-sm shadow-md transition active:scale-95 flex items-center justify-center gap-2"
+              className="w-full bg-[#1E1E1E] hover:bg-[#0D2D57] disabled:opacity-50 text-white py-3.5 px-4 rounded-xl font-bold text-sm shadow-md transition active:scale-95 flex items-center justify-center gap-2"
             >
               {isProcessing ? (
                 <>
@@ -414,7 +414,7 @@ export const VoiceLoadCreatorModal: React.FC<VoiceLoadCreatorModalProps> = ({
                     className="bg-slate-50 p-4 rounded-2xl border-2 border-slate-200 space-y-3 shadow-2xs"
                   >
                     <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                      <span className="font-extrabold text-xs text-white bg-[#08284F] px-3 py-0.5 rounded-full">
+                      <span className="font-extrabold text-xs text-white bg-[#111111] px-3 py-0.5 rounded-full">
                         🟢 LOAD {idx + 1}
                       </span>
                       <button
@@ -450,7 +450,7 @@ export const VoiceLoadCreatorModal: React.FC<VoiceLoadCreatorModalProps> = ({
                           value={load.goods}
                           onChange={(e) => handleUpdateLoadField(idx, 'goods', e.target.value)}
                           placeholder="مثال: مکئی / گندم"
-                          className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-[#123A6D]"
+                          className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-[#1E1E1E]"
                         />
                       </div>
 
@@ -463,7 +463,7 @@ export const VoiceLoadCreatorModal: React.FC<VoiceLoadCreatorModalProps> = ({
                           value={load.loadingCity}
                           onChange={(e) => handleUpdateLoadField(idx, 'loadingCity', e.target.value)}
                           placeholder="مثال: بہاولپور"
-                          className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-[#123A6D]"
+                          className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-[#1E1E1E]"
                         />
                       </div>
 
@@ -476,7 +476,7 @@ export const VoiceLoadCreatorModal: React.FC<VoiceLoadCreatorModalProps> = ({
                           value={load.destinationCity}
                           onChange={(e) => handleUpdateLoadField(idx, 'destinationCity', e.target.value)}
                           placeholder="مثال: کراچی"
-                          className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-[#123A6D]"
+                          className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-[#1E1E1E]"
                         />
                       </div>
                     </div>

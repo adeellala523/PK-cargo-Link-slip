@@ -44,14 +44,14 @@ export const RateDriverModal: React.FC<RateDriverModalProps> = ({ slip, onClose,
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <h3 className="font-extrabold text-lg text-[#0B2A5B]">ڈرائیور کو ریٹ کریں ⭐</h3>
+          <h3 className="font-extrabold text-lg text-[#111111]">ڈرائیور کو ریٹ کریں ⭐</h3>
           <button type="button" onClick={onClose} className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center">
             <X className="w-4 h-4 text-slate-500" />
           </button>
         </div>
 
         <p className="text-sm font-bold text-slate-600 text-center">
-          <span className="text-[#0B2A5B] font-extrabold">{name}</span> نے آپ کا لوڈ مکمل کیا
+          <span className="text-[#111111] font-extrabold">{name}</span> نے آپ کا لوڈ مکمل کیا
           <br />
           <span className="text-xs text-slate-400">{slip.loadingCity} تا {slip.destinationCity}</span>
         </p>
@@ -76,7 +76,7 @@ export const RateDriverModal: React.FC<RateDriverModalProps> = ({ slip, onClose,
             </button>
           ))}
         </div>
-        <p className="text-center text-sm font-extrabold text-[#0B2A5B]">
+        <p className="text-center text-sm font-extrabold text-[#111111]">
           {stars === 5 ? 'بہترین! 🌟' : stars === 4 ? 'اچھا 👍' : stars === 3 ? 'درمیانہ 😐' : stars === 2 ? 'کمزور 👎' : 'بہت خراب 😞'}
         </p>
 
@@ -85,14 +85,14 @@ export const RateDriverModal: React.FC<RateDriverModalProps> = ({ slip, onClose,
           onChange={(e) => setFeedback(e.target.value)}
           placeholder="تبصرہ (اختیاری) — وقت پر پہنچا؟ رویہ کیسا تھا؟"
           rows={2}
-          className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold outline-none focus:border-[#F5A301] min-h-[64px]"
+          className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold outline-none focus:border-[#B5E61D] min-h-[64px]"
         />
 
         <button
           type="button"
           onClick={submit}
-          className="w-full py-4 rounded-2xl font-extrabold text-[#0B2A5B] min-h-[56px] active:scale-[0.98] flex items-center justify-center gap-2"
-          style={{ background: 'linear-gradient(135deg, #FFC531 0%, #F5A301 60%, #E8930C 100%)' }}
+          className="w-full py-4 rounded-2xl font-extrabold text-[#111111] min-h-[56px] active:scale-[0.98] flex items-center justify-center gap-2"
+          style={{ background: 'linear-gradient(135deg, #CDF463 0%, #B5E61D 60%, #E8930C 100%)' }}
         >
           <CheckCircle2 className="w-5 h-5" />
           ریٹنگ جمع کریں

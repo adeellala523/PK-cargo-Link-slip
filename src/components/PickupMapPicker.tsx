@@ -105,7 +105,7 @@ export const PickupMapPicker: React.FC<PickupMapPickerProps> = ({ lat, lng, onCh
   return (
     <div className="space-y-2 font-nafees" dir="rtl">
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <span className="text-xs font-extrabold text-[#08284F] flex items-center gap-1.5">
+        <span className="text-xs font-extrabold text-[#111111] flex items-center gap-1.5">
           <MapPin className="w-4 h-4 text-[#19A974]" />
           نقشے پر پک اپ کی صحیح جگہ منتخب کریں (پن لگائیں)
         </span>
@@ -114,7 +114,7 @@ export const PickupMapPicker: React.FC<PickupMapPickerProps> = ({ lat, lng, onCh
             type="button"
             onClick={useMyLocation}
             disabled={locating}
-            className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0B2A5B] bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2.5 py-1.5 rounded-xl min-h-[36px] disabled:opacity-60"
+            className="inline-flex items-center gap-1 text-[11px] font-bold text-[#111111] bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2.5 py-1.5 rounded-xl min-h-[36px] disabled:opacity-60"
           >
             <Crosshair className="w-3.5 h-3.5" />
             {locating ? '…' : 'میری لوکیشن'}

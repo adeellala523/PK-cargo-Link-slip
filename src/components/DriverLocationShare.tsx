@@ -141,11 +141,11 @@ export const DriverLocationShare: React.FC<DriverLocationShareProps> = ({ slip, 
         <div className="rounded-3xl border border-slate-200 bg-white p-4">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
-              <span className="w-10 h-10 rounded-2xl bg-[#F4F7FB] flex items-center justify-center">
-                <MapPin className="w-5 h-5 text-[#0B2A5B]" />
+              <span className="w-10 h-10 rounded-2xl bg-[#FFFFFF] flex items-center justify-center">
+                <MapPin className="w-5 h-5 text-[#111111]" />
               </span>
               <div>
-                <p className="font-extrabold text-[#0B2A5B] text-sm">لوکیشن شیئر کریں</p>
+                <p className="font-extrabold text-[#111111] text-sm">لوکیشن شیئر کریں</p>
                 <p className="text-[11px] text-slate-500 font-bold mt-0.5">
                   {isActive
                     ? 'آن کریں — اڈا مینیجر لائیو ٹریک کرے گا'
@@ -159,10 +159,10 @@ export const DriverLocationShare: React.FC<DriverLocationShareProps> = ({ slip, 
               disabled={!isActive}
               className={`shrink-0 px-5 py-3 rounded-2xl font-extrabold text-sm min-h-[48px] transition active:scale-95 ${
                 isActive
-                  ? 'text-[#0B2A5B] shadow-[0_8px_24px_rgba(245,163,1,0.35)]'
+                  ? 'text-[#111111] shadow-[0_8px_24px_rgba(245,163,1,0.35)]'
                   : 'bg-slate-200 text-slate-400 cursor-not-allowed'
               }`}
-              style={isActive ? { background: 'linear-gradient(135deg, #FFC531 0%, #F5A301 60%, #E8930C 100%)' } : undefined}
+              style={isActive ? { background: 'linear-gradient(135deg, #CDF463 0%, #B5E61D 60%, #E8930C 100%)' } : undefined}
             >
               آن کریں
             </button>

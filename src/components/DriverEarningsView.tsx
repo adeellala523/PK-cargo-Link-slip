@@ -63,9 +63,9 @@ export const DriverEarningsView: React.FC<DriverEarningsViewProps> = ({ slips, a
 
   return (
     <div className="font-nafees space-y-4" dir="rtl">
-      <div className="bg-gradient-to-br from-[#0B2A5B] to-[#123A6D] rounded-3xl p-6 text-white">
+      <div className="bg-gradient-to-br from-[#111111] to-[#1E1E1E] rounded-3xl p-6 text-white">
         <p className="text-xs font-bold text-slate-300">کل کمائی ({count} لوڈز)</p>
-        <p className="text-4xl font-extrabold text-[#F5A301] mt-1 num-badge">{fmt(total)}</p>
+        <p className="text-4xl font-extrabold text-[#B5E61D] mt-1 num-badge">{fmt(total)}</p>
         <p className="text-[11px] text-slate-400 font-bold mt-2">کرایہ کی رقم سلپ کے کرایہ آفر سے حسابی ہے</p>
       </div>
 
@@ -77,8 +77,8 @@ export const DriverEarningsView: React.FC<DriverEarningsViewProps> = ({ slips, a
               key={c.label}
               className={`rounded-3xl border p-4 text-center ${c.hot ? 'bg-amber-50 border-amber-200' : 'bg-white border-slate-100'}`}
             >
-              <Icon className={`w-5 h-5 mx-auto mb-1.5 ${c.hot ? 'text-[#B97A0A]' : 'text-[#0B2A5B]'}`} />
-              <p className="text-sm font-extrabold text-[#0B2A5B] num-badge">{fmt(c.value)}</p>
+              <Icon className={`w-5 h-5 mx-auto mb-1.5 ${c.hot ? 'text-[#B97A0A]' : 'text-[#111111]'}`} />
+              <p className="text-sm font-extrabold text-[#111111] num-badge">{fmt(c.value)}</p>
               <p className="text-[10px] font-bold text-slate-500 mt-0.5">{c.label}</p>
             </div>
           );
@@ -86,7 +86,7 @@ export const DriverEarningsView: React.FC<DriverEarningsViewProps> = ({ slips, a
       </div>
 
       <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden">
-        <h3 className="font-extrabold text-[#0B2A5B] text-sm px-4 pt-4 pb-2">قبول شدہ لوڈز</h3>
+        <h3 className="font-extrabold text-[#111111] text-sm px-4 pt-4 pb-2">قبول شدہ لوڈز</h3>
         {mine.length === 0 ? (
           <div className="p-8 text-center">
             <Truck className="w-10 h-10 text-slate-300 mx-auto mb-2" />
@@ -102,7 +102,7 @@ export const DriverEarningsView: React.FC<DriverEarningsViewProps> = ({ slips, a
                 className="w-full flex items-center justify-between px-4 py-3.5 active:bg-slate-50 text-right"
               >
                 <div>
-                  <p className="text-sm font-extrabold text-[#0B2A5B]">
+                  <p className="text-sm font-extrabold text-[#111111]">
                     {s.loadingCity} تا {s.destinationCity}
                   </p>
                   <p className="text-[11px] text-slate-500 font-bold mt-0.5">
@@ -110,7 +110,7 @@ export const DriverEarningsView: React.FC<DriverEarningsViewProps> = ({ slips, a
                     {s.driverOffer && <span className="text-amber-700"> • آپ کی آفر</span>}
                   </p>
                 </div>
-                <span className="text-sm font-extrabold text-[#0B2A5B] num-badge shrink-0">
+                <span className="text-sm font-extrabold text-[#111111] num-badge shrink-0">
                   {fmt(parseFare(s.driverOffer || s.fareOffer))}
                 </span>
               </button>

@@ -303,7 +303,7 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
             <span className="inline-block bg-amber-100 text-amber-900 text-xs font-bold px-3 py-1 rounded-full border border-amber-300">
               🔒 بکڈ (Booked)
             </span>
-            <h2 className="text-xl sm:text-2xl font-black text-[#08284F]">
+            <h2 className="text-xl sm:text-2xl font-black text-[#111111]">
               یہ گاڑی / لوڈ بک ہو چکا ہے
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-sm mx-auto">
@@ -411,7 +411,7 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-extrabold text-base sm:text-lg text-[#08284F]">
+                <h3 className="font-extrabold text-base sm:text-lg text-[#111111]">
                   لائیو ٹرپ ٹریکنگ و اسٹیٹس
                 </h3>
                 <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2 py-0.5 rounded-full border border-emerald-300">
@@ -434,7 +434,7 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
                 if (!driverPhone) setDriverPhone(currentDriver.phone);
                 setIsStatusModalOpen(true);
               }}
-              className="self-start sm:self-auto inline-flex items-center gap-2 bg-[#123A6D] hover:bg-[#0D2D57] text-white px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm active:scale-95 transition min-h-[44px]"
+              className="self-start sm:self-auto inline-flex items-center gap-2 bg-[#1E1E1E] hover:bg-[#0D2D57] text-white px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm active:scale-95 transition min-h-[44px]"
             >
               <Truck className="w-4 h-4 text-emerald-300" />
               <span>اسٹیٹس اپ ڈیٹ کریں ({currentDriver.driverName})</span>
@@ -461,12 +461,12 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
         </div>
 
         {/* Current Active Status Banner */}
-        <div className="bg-[#F4F7FB] rounded-2xl p-4 border border-slate-200 space-y-3">
+        <div className="bg-[#FFFFFF] rounded-2xl p-4 border border-slate-200 space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div className="space-y-0.5">
               <span className="text-[11px] font-bold text-slate-400 block">موجودہ مرحلہ / اسٹیٹس</span>
               <div className="flex items-center gap-2">
-                <span className="font-extrabold text-base sm:text-lg text-[#08284F]">
+                <span className="font-extrabold text-base sm:text-lg text-[#111111]">
                   {getStatusLabel(currentSlip.driverTripStatus)}
                 </span>
                 {currentSlip.driverTripStatus === 'delivered' && (
@@ -572,7 +572,7 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
                   <div key={upd.id} className="bg-white p-2.5 rounded-xl border border-slate-200 flex items-start justify-between gap-2">
                     <div className="space-y-0.5">
                       <div className="flex items-center gap-1.5">
-                        <span className="font-bold text-[#08284F]">{upd.statusUrdu}</span>
+                        <span className="font-bold text-[#111111]">{upd.statusUrdu}</span>
                         {upd.currentCity && (
                           <span className="text-slate-500 text-[11px] bg-slate-100 px-1.5 py-0.5 rounded">
                             📍 {upd.currentCity}
@@ -682,7 +682,7 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
       {/* ============================================================== */}
       <div 
         ref={slipRef}
-        className="slip-container bg-white rounded-3xl shadow-xl border-2 border-[#123A6D] relative overflow-hidden font-nafees text-slate-900"
+        className="slip-container bg-white rounded-3xl shadow-xl border-2 border-[#1E1E1E] relative overflow-hidden font-nafees text-slate-900"
       >
         {/* PROMINENT BISMILLAH BANNER AT TOP OF GENERATED DIGITAL SLIP */}
         <div className="bg-gradient-to-r from-[#071B33] via-[#0D2D57] to-[#071B33] border-b-2 border-emerald-500/30 px-6 py-3.5 sm:py-4 text-center select-none shadow-xs">
@@ -696,7 +696,7 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
         </div>
 
         {/* SLIP TOP HEADER (Section 11) */}
-        <div className="bg-[#123A6D] text-white p-5 sm:p-6 border-b-4 border-[#19A974]">
+        <div className="bg-[#1E1E1E] text-white p-5 sm:p-6 border-b-4 border-[#19A974]">
           <div className="flex items-center justify-between gap-3 border-b border-white/15 pb-3.5">
             
             {/* Small PK Cargo Link monogram */}
@@ -755,7 +755,7 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
         <div className="p-5 sm:p-6 space-y-4">
           
           {/* Route Section (From -> To) */}
-          <div className="bg-[#F4F7FB] p-4 sm:p-5 rounded-2xl border border-slate-200 space-y-3">
+          <div className="bg-[#FFFFFF] p-4 sm:p-5 rounded-2xl border border-slate-200 space-y-3">
             <div className="flex items-center justify-between text-xs font-bold text-slate-500 border-b border-slate-200 pb-2">
               <span>روٹ کی تفصیلات</span>
               <span className="font-mono text-slate-400">
@@ -767,7 +767,7 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
               {/* روانگی / Loading */}
               <div className="bg-white p-3.5 rounded-xl border border-slate-200">
                 <span className="text-xs text-emerald-700 font-bold block mb-1">📍 روانگی کا مقام (Loading)</span>
-                <h3 className="text-lg sm:text-xl font-extrabold text-[#08284F]">
+                <h3 className="text-lg sm:text-xl font-extrabold text-[#111111]">
                   {currentSlip.loadingCity}
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">{currentSlip.loadingLocation}</p>
@@ -775,8 +775,8 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
 
               {/* منزل / Destination */}
               <div className="bg-white p-3.5 rounded-xl border border-slate-200">
-                <span className="text-xs text-[#123A6D] font-bold block mb-1">🏁 منزل کا مقام (Destination)</span>
-                <h3 className="text-lg sm:text-xl font-extrabold text-[#08284F]">
+                <span className="text-xs text-[#1E1E1E] font-bold block mb-1">🏁 منزل کا مقام (Destination)</span>
+                <h3 className="text-lg sm:text-xl font-extrabold text-[#111111]">
                   {currentSlip.destinationCity}
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">{currentSlip.destinationLocation}</p>
@@ -863,10 +863,10 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
                   <div key={idx} className="bg-white p-3.5 rounded-xl border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-2xs">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-extrabold text-xs text-white bg-[#123A6D] px-2.5 py-0.5 rounded-md">
+                        <span className="font-extrabold text-xs text-white bg-[#1E1E1E] px-2.5 py-0.5 rounded-md">
                           لوڈ {idx + 2}
                         </span>
-                        <span className="font-extrabold text-sm text-[#08284F]">
+                        <span className="font-extrabold text-sm text-[#111111]">
                           {al.loadingCity} تا {al.destinationCity}
                         </span>
                       </div>
@@ -938,7 +938,7 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
               {/* 2. BIG PHONE CALL BUTTON */}
               <a
                 href={`tel:${sanitizePhoneForCall(currentSlip.primaryPhone)}`}
-                className="group flex items-center justify-between gap-3 bg-gradient-to-r from-[#123A6D] to-[#0A2540] hover:from-[#0D2D57] hover:to-[#071B2F] active:scale-[0.98] text-white p-4 sm:p-5 rounded-2xl shadow-md hover:shadow-lg transition-all border border-blue-400/40"
+                className="group flex items-center justify-between gap-3 bg-gradient-to-r from-[#1E1E1E] to-[#0A2540] hover:from-[#0D2D57] hover:to-[#071B2F] active:scale-[0.98] text-white p-4 sm:p-5 rounded-2xl shadow-md hover:shadow-lg transition-all border border-blue-400/40"
               >
                 <div className="flex items-center gap-3.5">
                   <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-inner">
@@ -1038,7 +1038,7 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
       {/* ============================================================== */}
       <div className="no-print bg-white p-5 sm:p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
         
-        <h3 className="text-base font-bold text-[#08284F] border-b border-slate-100 pb-2">
+        <h3 className="text-base font-bold text-[#111111] border-b border-slate-100 pb-2">
           شیئرنگ کے اختیارات
         </h3>
 
@@ -1049,7 +1049,7 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
             type="button"
             onClick={handleDownloadImage}
             disabled={isGeneratingImage}
-            className="flex items-center justify-center gap-2 bg-[#123A6D] hover:bg-[#0D2D57] text-white py-3.5 px-4 rounded-2xl font-bold text-sm sm:text-base shadow-sm active:scale-95 transition min-h-[48px] disabled:opacity-50"
+            className="flex items-center justify-center gap-2 bg-[#1E1E1E] hover:bg-[#0D2D57] text-white py-3.5 px-4 rounded-2xl font-bold text-sm sm:text-base shadow-sm active:scale-95 transition min-h-[48px] disabled:opacity-50"
           >
             <Download className="w-5 h-5 text-emerald-300" />
             <span>{isGeneratingImage ? 'تصویر تیار ہو رہی ہے...' : 'PNG/JPG شیئر کریں'}</span>
@@ -1069,7 +1069,7 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
           <button
             type="button"
             onClick={handleCopyLink}
-            className="flex items-center justify-center gap-2 bg-[#F4F7FB] hover:bg-slate-200 text-slate-800 py-3.5 px-4 rounded-2xl font-bold text-sm sm:text-base border border-slate-200 active:scale-95 transition min-h-[48px]"
+            className="flex items-center justify-center gap-2 bg-[#FFFFFF] hover:bg-slate-200 text-slate-800 py-3.5 px-4 rounded-2xl font-bold text-sm sm:text-base border border-slate-200 active:scale-95 transition min-h-[48px]"
           >
             {copiedLink ? <Check className="w-5 h-5 text-[#19A974]" /> : <Copy className="w-5 h-5 text-slate-600" />}
             <span>{copiedLink ? 'لنک کاپی ہوگیا!' : 'سلپ لنک کاپی کریں'}</span>
@@ -1120,7 +1120,7 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
             <button
               type="button"
               onClick={onEditOrReuse}
-              className="inline-flex items-center gap-1.5 text-[#123A6D] hover:underline font-bold"
+              className="inline-flex items-center gap-1.5 text-[#1E1E1E] hover:underline font-bold"
             >
               <Copy className="w-4 h-4" />
               <span>پچھلی سلپ دوبارہ بنائیں</span>
@@ -1274,7 +1274,7 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
                   value={currentCheckpoint}
                   onChange={(e) => setCurrentCheckpoint(e.target.value)}
                   placeholder="مثال: ساہیوال بائی پاس یا اوکاڑہ ٹول پلازہ"
-                  className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
+                  className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
                 />
               </div>
 
@@ -1289,7 +1289,7 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
                     value={driverName}
                     onChange={(e) => setDriverName(e.target.value)}
                     placeholder="مثال: استاد فیاض"
-                    className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
+                    className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
                   />
                 </div>
 
@@ -1302,7 +1302,7 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
                     value={driverPhone}
                     onChange={(e) => setDriverPhone(e.target.value)}
                     placeholder="03001234567"
-                    className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px] font-mono ltr-content"
+                    className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px] font-mono ltr-content"
                   />
                 </div>
               </div>
@@ -1317,7 +1317,7 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
                   value={statusNotes}
                   onChange={(e) => setStatusNotes(e.target.value)}
                   placeholder="مثال: گاڑی شام 6 بجے روانہ ہو گئی ہے، صبح 9 بجے منزل پہنچیں گے"
-                  className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none resize-none"
+                  className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none resize-none"
                 />
               </div>
 
@@ -1374,7 +1374,7 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
             </div>
 
             <div className="space-y-1">
-              <p className="font-extrabold text-[#08284F] text-base flex items-center gap-2 flex-wrap">
+              <p className="font-extrabold text-[#111111] text-base flex items-center gap-2 flex-wrap">
                 {currentSlip.addaName}
                 {(() => {
                   const cp = (currentSlip.primaryPhone || '').replace(/[^0-9]/g, '');
@@ -1395,7 +1395,7 @@ ${currentSlip.driverTripUpdates?.[0]?.notes ? `📝 نوٹس: ${currentSlip.driv
               <button
                 type="button"
                 onClick={() => setIsQrModalOpen(false)}
-                className="w-full bg-[#123A6D] hover:bg-[#0D2D57] text-white py-2.5 rounded-xl font-bold text-xs"
+                className="w-full bg-[#1E1E1E] hover:bg-[#0D2D57] text-white py-2.5 rounded-xl font-bold text-xs"
               >
                 بند کریں
               </button>

@@ -168,7 +168,7 @@ export const PaymentSettings: React.FC<PaymentSettingsProps> = ({
     <div className="min-h-screen bg-slate-100 font-nafees pb-16">
       
       {/* Top Sticky Header */}
-      <div className="bg-gradient-to-r from-[#071B33] via-[#123A6D] to-[#071B33] text-white py-5 px-4 shadow-xl border-b-4 border-emerald-500">
+      <div className="bg-gradient-to-r from-[#071B33] via-[#1E1E1E] to-[#071B33] text-white py-5 px-4 shadow-xl border-b-4 border-emerald-500">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 flex items-center justify-center shadow-inner">
@@ -223,8 +223,8 @@ export const PaymentSettings: React.FC<PaymentSettingsProps> = ({
         {/* ============================================================= */}
         {/* SECTION 1: SUBSCRIPTION STATUS TRACKER CARD */}
         {/* ============================================================= */}
-        <div className="bg-white rounded-3xl shadow-xl border-2 border-[#123A6D]/20 overflow-hidden">
-          <div className="bg-[#08284F] text-white p-4 sm:p-5 flex items-center justify-between border-b border-emerald-500/30">
+        <div className="bg-white rounded-3xl shadow-xl border-2 border-[#1E1E1E]/20 overflow-hidden">
+          <div className="bg-[#111111] text-white p-4 sm:p-5 flex items-center justify-between border-b border-emerald-500/30">
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-6 h-6 text-emerald-400" />
               <h2 className="font-extrabold text-base sm:text-lg">
@@ -259,7 +259,7 @@ export const PaymentSettings: React.FC<PaymentSettingsProps> = ({
             {/* Metric 1 */}
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-1">
               <span className="text-xs font-bold text-slate-500 block">پلان کا نام و فیس</span>
-              <strong className="text-lg font-black text-[#08284F] block">
+              <strong className="text-lg font-black text-[#111111] block">
                 AI Voice Support (500 PKR / Month)
               </strong>
               <span className="text-[11px] text-emerald-700 font-bold block">
@@ -294,7 +294,7 @@ export const PaymentSettings: React.FC<PaymentSettingsProps> = ({
           {subscription.status === 'none' && (
             <div className="mx-5 mb-5 bg-gradient-to-r from-amber-500/15 via-emerald-500/15 to-blue-500/15 border-2 border-dashed border-amber-400 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-right">
               <div className="space-y-0.5">
-                <span className="font-extrabold text-sm text-[#08284F] flex items-center gap-1.5">
+                <span className="font-extrabold text-sm text-[#111111] flex items-center gap-1.5">
                   <Zap className="w-4 h-4 text-amber-600" />
                   <span>نیا ڈرائیور ٹرائل: 1 دن بالکل مفت آزمائیں!</span>
                 </span>
@@ -448,7 +448,7 @@ export const PaymentSettings: React.FC<PaymentSettingsProps> = ({
                       />
                     </div>
                     <div>
-                      <span className="font-extrabold text-sm text-[#08284F] block">
+                      <span className="font-extrabold text-sm text-[#111111] block">
                         {paymentConfig.jazzcashTitle || 'PK Cargo Link Business'}
                       </span>
                       <span className="text-xs text-amber-800 font-mono font-bold block">
@@ -534,7 +534,7 @@ export const PaymentSettings: React.FC<PaymentSettingsProps> = ({
             {(selectedMethod === 'jazzcash' || selectedMethod === 'easypaisa') && (
               <form onSubmit={handleInitiateWalletPayment} className="space-y-4 text-right bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200">
                 <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                  <span className="font-extrabold text-sm text-[#08284F]">
+                  <span className="font-extrabold text-sm text-[#111111]">
                     {selectedMethod === 'jazzcash' ? 'JazzCash Mobile Wallet' : 'EasyPaisa Mobile Wallet'} انسٹنٹ فیچنگ
                   </span>
                   <span className="text-xs font-black text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-lg">
@@ -553,7 +553,7 @@ export const PaymentSettings: React.FC<PaymentSettingsProps> = ({
                       value={accountNumber}
                       onChange={(e) => setAccountNumber(e.target.value)}
                       placeholder="03001234567"
-                      className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm font-mono text-slate-900 focus:border-[#123A6D] outline-none ltr-content"
+                      className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-sm font-mono text-slate-900 focus:border-[#1E1E1E] outline-none ltr-content"
                     />
                     <Smartphone className="w-5 h-5 text-slate-400 absolute left-3 top-3.5" />
                   </div>
@@ -565,7 +565,7 @@ export const PaymentSettings: React.FC<PaymentSettingsProps> = ({
                 <button
                   type="submit"
                   disabled={isProcessing}
-                  className="w-full bg-[#123A6D] hover:bg-[#0D2D57] text-white py-3.5 px-4 rounded-xl font-bold text-sm shadow-md transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full bg-[#1E1E1E] hover:bg-[#0D2D57] text-white py-3.5 px-4 rounded-xl font-bold text-sm shadow-md transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Lock className="w-4 h-4 text-emerald-400" />
                   <span>500 روپے ادا کریں ({selectedMethod === 'jazzcash' ? 'JazzCash' : 'EasyPaisa'})</span>
@@ -577,7 +577,7 @@ export const PaymentSettings: React.FC<PaymentSettingsProps> = ({
             {selectedMethod === 'card' && (
               <form onSubmit={handleInitiateWalletPayment} className="space-y-4 text-right bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200">
                 <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                  <span className="font-extrabold text-sm text-[#08284F]">آن لائن ڈیبٹ / کریڈٹ کارڈ پیمنٹ</span>
+                  <span className="font-extrabold text-sm text-[#111111]">آن لائن ڈیبٹ / کریڈٹ کارڈ پیمنٹ</span>
                   <span className="text-xs font-black text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-lg">500 PKR</span>
                 </div>
 
@@ -615,7 +615,7 @@ export const PaymentSettings: React.FC<PaymentSettingsProps> = ({
             {selectedMethod === 'manual' && (
               <form onSubmit={handleManualTidSubmit} className="space-y-4 text-right bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200">
                 <div className="border-b border-slate-200 pb-2">
-                  <span className="font-extrabold text-sm text-[#08284F] block">
+                  <span className="font-extrabold text-sm text-[#111111] block">
                     مینوئل ٹرانزیکشن ID (TID) کی تصدیق
                   </span>
                   <span className="text-xs text-slate-600 block">
@@ -669,7 +669,7 @@ export const PaymentSettings: React.FC<PaymentSettingsProps> = ({
                 <button
                   type="submit"
                   disabled={isProcessing || !manualTid.trim()}
-                  className="w-full bg-[#123A6D] hover:bg-[#0D2D57] disabled:opacity-50 text-white py-3 px-4 rounded-xl font-bold text-xs shadow-md transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="w-full bg-[#1E1E1E] hover:bg-[#0D2D57] disabled:opacity-50 text-white py-3 px-4 rounded-xl font-bold text-xs shadow-md transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <Receipt className="w-4 h-4" />
                   <span>TID کی فوری تصدیق و ایکٹیویشن</span>
@@ -685,7 +685,7 @@ export const PaymentSettings: React.FC<PaymentSettingsProps> = ({
         {/* ============================================================= */}
         <div className="bg-white rounded-3xl shadow-xl border-2 border-slate-200 p-5 sm:p-6 text-right space-y-4">
           <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-            <h3 className="font-extrabold text-base text-[#08284F] flex items-center gap-2">
+            <h3 className="font-extrabold text-base text-[#111111] flex items-center gap-2">
               <History className="w-5 h-5 text-emerald-600" />
               <span>پیمنٹ ہسٹری و رسیدیں (Transaction Ledger)</span>
             </h3>
@@ -1030,7 +1030,7 @@ export const PaymentSettings: React.FC<PaymentSettingsProps> = ({
                 <span className="text-slate-500">تاریخ:</span>
                 <span className="font-mono text-slate-800">{successReceipt.date}</span>
               </div>
-              <div className="flex justify-between font-bold text-sm pt-1 text-[#08284F]">
+              <div className="flex justify-between font-bold text-sm pt-1 text-[#111111]">
                 <span>کل ادا شدہ رقم:</span>
                 <strong className="text-emerald-700">{successReceipt.amount} PKR</strong>
               </div>
@@ -1039,7 +1039,7 @@ export const PaymentSettings: React.FC<PaymentSettingsProps> = ({
             <button
               type="button"
               onClick={() => setSuccessReceipt(null)}
-              className="w-full bg-[#123A6D] hover:bg-[#0D2D57] text-white py-3 rounded-2xl font-bold text-sm shadow-md transition active:scale-95"
+              className="w-full bg-[#1E1E1E] hover:bg-[#0D2D57] text-white py-3 rounded-2xl font-bold text-sm shadow-md transition active:scale-95"
             >
               ٹھیک ہے (شروع کریں)
             </button>

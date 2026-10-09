@@ -1,45 +1,82 @@
-import React from 'react';
-import { OnboardingShell, BrandMark, OnboardingButton } from './OnboardingUI';
+import React, { useState } from 'react';
+import { OnboardingShell } from './OnboardingUI';
 
 /**
- * WelcomeScreen — Yango-style welcome, adapted for cargo.
- * White bg, brand mark top, big "TRUSTED AND AFFORDABLE CARGO" heading,
- * truck illustration, amber pill CTA.
+ * WelcomeScreen — inDrive-style onboarding.
+ * White bg, handshake illustration, "Your app for fair deals" headline,
+ * BLACK "Continue with Google" button, GREY "Continue with phone" button.
  */
 export function WelcomeScreen({ onNext }: { onNext: () => void }) {
+  const [googleNote, setGoogleNote] = useState(false);
+
   return (
     <OnboardingShell>
-      <div className="pt-6">
-        <BrandMark />
-      </div>
-
-      <div className="flex-1 flex flex-col items-center justify-center text-center py-10">
-        <h1
-          className="font-black text-neutral-900 uppercase"
-          style={{
-            fontSize: 'clamp(2.6rem, 11vw, 4rem)',
-            lineHeight: 1.02,
-            letterSpacing: '-0.02em',
-            fontWeight: 900,
-            fontStretch: 'condensed',
-          }}
-          dir="ltr"
-        >
-          TRUSTED AND
-          <br />
-          AFFORDABLE{' '}
-          <span style={{ color: '#F5A301' }}>CARGO</span>
-        </h1>
-        <div className="text-[6rem] leading-none mt-8 select-none" aria-hidden>
-          🚛
+      <div dir="ltr" className="flex-1 flex flex-col">
+        {/* Logo */}
+        <div className="pt-8 flex items-center justify-center gap-2">
+          <span
+            className="inline-flex items-center justify-center rounded-lg font-black italic text-black"
+            style={{ backgroundColor: '#B5E61D', width: 36, height: 36, fontSize: '1.3rem' }}
+          >
+            P
+          </span>
+          <span className="text-black font-extrabold text-lg tracking-tight">
+            PK Cargo Link
+          </span>
         </div>
-        <p className="text-neutral-500 mt-6 text-base leading-7 px-4">
-          پاکستان کا آسان ڈیجیٹل کارگو پلیٹ فارم — لوڈ پوسٹ کریں، گاڑی تلاش کریں
-        </p>
-      </div>
 
-      <div className="pb-4">
-        <OnboardingButton onClick={onNext}>فون نمبر سے جاری رکھیں</OnboardingButton>
+        {/* Illustration */}
+        <div className="flex-1 flex flex-col items-center justify-center text-center py-6">
+          <div
+            className="rounded-3xl flex items-center justify-center select-none"
+            style={{ backgroundColor: '#B5E61D', width: 220, height: 220 }}
+            aria-hidden
+          >
+            <span style={{ fontSize: '6rem' }}>🤝</span>
+          </div>
+          <h1 className="text-black font-extrabold mt-8" style={{ fontSize: '1.9rem', lineHeight: 1.2 }}>
+            Your app for fair deals
+          </h1>
+          <p className="text-neutral-500 mt-3 text-base px-6">
+            Choose loads that are right for you
+          </p>
+        </div>
+
+        {/* Buttons */}
+        <div className="pb-6 space-y-3">
+          <button
+            onClick={() => {
+              setGoogleNote(true);
+              setTimeout(() => setGoogleNote(false), 2500);
+            }}
+            className="w-full rounded-2xl py-4 text-lg font-bold text-white bg-black transition active:scale-[0.98] flex items-center justify-center gap-3"
+          >
+            <span
+              className="inline-flex items-center justify-center rounded-full bg-white font-black"
+              style={{ width: 28, height: 28, color: '#4285F4', fontSize: '1.1rem' }}
+            >
+              G
+            </span>
+            Continue with Google
+          </button>
+          {googleNote && (
+            <p className="text-center text-sm text-neutral-500">
+              Google sign-in coming soon — please continue with phone
+            </p>
+          )}
+          <button
+            onClick={onNext}
+            className="w-full rounded-2xl py-4 text-lg font-bold text-black transition active:scale-[0.98]"
+            style={{ backgroundColor: '#F0F0F0' }}
+          >
+            Continue with phone
+          </button>
+          <p className="text-center text-xs text-neutral-500 pt-2 px-4 leading-5">
+            Joining our app means you agree with our{' '}
+            <span className="underline">Terms of Use</span> and{' '}
+            <span className="underline">Privacy Policy</span>
+          </p>
+        </div>
       </div>
     </OnboardingShell>
   );

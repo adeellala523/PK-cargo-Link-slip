@@ -34,7 +34,7 @@ export const LiveTrackingMap: React.FC<LiveTrackingMapProps> = ({ slipId, driver
   return (
     <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden font-nafees" dir="rtl">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-l from-[#0B2A5B] to-[#123A6D] text-white">
+      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-l from-[#111111] to-[#1E1E1E] text-white">
         <span className="inline-flex items-center gap-2 font-extrabold text-sm">
           <span className="relative flex w-3 h-3">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
@@ -76,8 +76,8 @@ export const LiveTrackingMap: React.FC<LiveTrackingMapProps> = ({ slipId, driver
               loading="lazy"
             />
             <div className="absolute top-2 right-2 bg-white/95 backdrop-blur rounded-2xl px-3 py-2 shadow-lg flex items-center gap-2">
-              <Truck className="w-4 h-4 text-[#0B2A5B]" />
-              <span className="text-[11px] font-extrabold text-[#0B2A5B]">
+              <Truck className="w-4 h-4 text-[#111111]" />
+              <span className="text-[11px] font-extrabold text-[#111111]">
                 {point.driverName || driverName || 'ڈرائیور'}
               </span>
             </div>
@@ -92,7 +92,7 @@ export const LiveTrackingMap: React.FC<LiveTrackingMapProps> = ({ slipId, driver
               href={`https://www.google.com/maps?q=${point.lat},${point.lng}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-[11px] font-extrabold text-[#0B2A5B] hover:underline"
+              className="inline-flex items-center gap-1 text-[11px] font-extrabold text-[#111111] hover:underline"
             >
               <Navigation className="w-3.5 h-3.5" />
               گوگل میپس میں کھولیں

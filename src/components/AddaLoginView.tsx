@@ -255,7 +255,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
         onClick={onNavigateToHome}
         className="inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-slate-900 bg-white px-3.5 py-2 rounded-xl border border-slate-200 shadow-2xs font-bold transition min-h-[40px]"
       >
-        <ArrowRight className="w-4 h-4 text-[#123A6D]" />
+        <ArrowRight className="w-4 h-4 text-[#1E1E1E]" />
         <span>واپس ہوم پیج</span>
       </button>
 
@@ -271,7 +271,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
       <div className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
         
         {/* Top Header */}
-        <div className="bg-[#123A6D] text-white p-6 text-center space-y-2 border-b-4 border-[#19A974]">
+        <div className="bg-[#1E1E1E] text-white p-6 text-center space-y-2 border-b-4 border-[#19A974]">
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white">
             PK Cargo Link پورٹل
           </h1>
@@ -292,7 +292,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
               }}
               className={`flex items-center justify-center gap-2 py-3 px-3 rounded-xl font-bold text-xs sm:text-sm transition ${
                 activeRole === 'adda_manager'
-                  ? 'bg-[#123A6D] text-white shadow-md'
+                  ? 'bg-[#1E1E1E] text-white shadow-md'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -331,7 +331,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
               }}
               className={`flex-1 py-3 text-center text-sm font-bold border-b-2 transition ${
                 activeMode === 'login'
-                  ? 'border-[#123A6D] text-[#123A6D]'
+                  ? 'border-[#1E1E1E] text-[#1E1E1E]'
                   : 'border-transparent text-slate-500 hover:text-slate-800'
               }`}
             >
@@ -400,7 +400,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
                     value={loginPhone}
                     onChange={(e) => setLoginPhone(e.target.value)}
                     placeholder="03001234567"
-                    className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 focus:bg-white focus:border-[#123A6D] outline-none min-h-[48px] font-mono text-left"
+                    className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 focus:bg-white focus:border-[#1E1E1E] outline-none min-h-[48px] font-mono text-left"
                     style={{ direction: 'ltr', textAlign: 'left' }}
                   />
                 </div>
@@ -419,7 +419,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
                     )}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-[11px] text-[#123A6D] hover:underline font-bold"
+                    className="text-[11px] text-[#1E1E1E] hover:underline font-bold"
                   >
                     پاس ورڈ بھول گئے؟
                   </a>
@@ -432,7 +432,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
                     placeholder="پاس ورڈ درج کریں"
-                    className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl pr-10 pl-10 py-3 text-sm text-slate-900 focus:bg-white focus:border-[#123A6D] outline-none min-h-[48px]"
+                    className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl pr-10 pl-10 py-3 text-sm text-slate-900 focus:bg-white focus:border-[#1E1E1E] outline-none min-h-[48px]"
                   />
                   <button
                     type="button"
@@ -447,7 +447,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
               <button
                 type="submit"
                 className={`w-full text-white py-3.5 px-4 rounded-xl font-bold text-sm shadow-md active:scale-95 transition min-h-[48px] flex items-center justify-center gap-2 ${
-                  activeRole === 'driver' ? 'bg-[#19A974] hover:bg-[#169163]' : 'bg-[#123A6D] hover:bg-[#0D2D57]'
+                  activeRole === 'driver' ? 'bg-[#19A974] hover:bg-[#169163]' : 'bg-[#1E1E1E] hover:bg-[#0D2D57]'
                 }`}
               >
                 <Lock className="w-4 h-4 text-emerald-300" />
@@ -485,7 +485,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
                   value={managerName}
                   onChange={(e) => setManagerName(e.target.value)}
                   placeholder="مثال: ملک محمد اسلم"
-                  className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#123A6D] outline-none min-h-[44px]"
+                  className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#1E1E1E] outline-none min-h-[44px]"
                 />
               </div>
 
@@ -500,7 +500,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
                   value={addaName}
                   onChange={(e) => setAddaName(e.target.value)}
                   placeholder="مثال: بسم اللہ گڈز ٹرانسپورٹ کمپنی"
-                  className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#123A6D] outline-none min-h-[44px]"
+                  className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#1E1E1E] outline-none min-h-[44px]"
                 />
               </div>
 
@@ -515,7 +515,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
                   value={addaCity}
                   onChange={(e) => setAddaCity(e.target.value)}
                   placeholder="مثال: لاہور، کراچی، ملتان، ساہیوال، وغیرہ"
-                  className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#123A6D] outline-none min-h-[44px]"
+                  className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#1E1E1E] outline-none min-h-[44px]"
                 />
               </div>
 
@@ -529,7 +529,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
                   value={addaAddress}
                   onChange={(e) => setAddaAddress(e.target.value)}
                   placeholder="مثال: نزد پرانا غلہ منڈی، شیر شاہ روڈ"
-                  className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#123A6D] outline-none min-h-[44px]"
+                  className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#1E1E1E] outline-none min-h-[44px]"
                 />
               </div>
 
@@ -545,7 +545,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
                     value={addaPhone}
                     onChange={(e) => setAddaPhone(e.target.value)}
                     placeholder="03001234567"
-                    className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#123A6D] outline-none min-h-[44px] font-mono ltr-content"
+                    className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#1E1E1E] outline-none min-h-[44px] font-mono ltr-content"
                   />
                 </div>
 
@@ -559,7 +559,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
                     value={addaPassword}
                     onChange={(e) => setAddaPassword(e.target.value)}
                     placeholder="کم از کم 4 ہندسے یا حروف"
-                    className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#123A6D] outline-none min-h-[44px]"
+                    className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#1E1E1E] outline-none min-h-[44px]"
                   />
                 </div>
               </div>
@@ -574,14 +574,14 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
                   value={addaWhatsapp}
                   onChange={(e) => setAddaWhatsapp(e.target.value)}
                   placeholder="03001234567"
-                  className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#123A6D] outline-none min-h-[44px] font-mono ltr-content"
+                  className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#1E1E1E] outline-none min-h-[44px] font-mono ltr-content"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-[#123A6D] hover:bg-[#0D2D57] text-white py-3.5 px-4 rounded-xl font-bold text-sm shadow-md active:scale-95 transition min-h-[48px] disabled:opacity-50"
+                className="w-full bg-[#1E1E1E] hover:bg-[#0D2D57] text-white py-3.5 px-4 rounded-xl font-bold text-sm shadow-md active:scale-95 transition min-h-[48px] disabled:opacity-50"
               >
                 {isLoading ? 'اکاؤنٹ بن رہا ہے...' : 'اڈا منیجر اکاؤنٹ رجسٹر کریں'}
               </button>
@@ -616,7 +616,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
                   value={driverName}
                   onChange={(e) => setDriverName(e.target.value)}
                   placeholder="مثال: استاد فیاض بلوچ"
-                  className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
+                  className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
                 />
               </div>
 
@@ -632,7 +632,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
                     value={driverPhone}
                     onChange={(e) => setDriverPhone(e.target.value)}
                     placeholder="03001234567"
-                    className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px] font-mono ltr-content"
+                    className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px] font-mono ltr-content"
                   />
                 </div>
 
@@ -646,7 +646,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
                     value={driverPassword}
                     onChange={(e) => setDriverPassword(e.target.value)}
                     placeholder="کم از کم 4 ہندسے یا حروف"
-                    className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
+                    className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
                   />
                 </div>
               </div>
@@ -661,7 +661,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
                   value={driverVehicleType}
                   onChange={(e) => setDriverVehicleType(e.target.value)}
                   placeholder="مثال: 22 وہیلر، 10 وہیلر، شہزور، مزدہ 16 فٹ، وغیرہ"
-                  className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
+                  className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
                 />
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {['22 Wheeler', '10 Wheeler', 'Shahzor', 'Mazda', '40 Foot Container'].map((v) => (
@@ -688,7 +688,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
                     value={driverVehicleNumber}
                     onChange={(e) => setDriverVehicleNumber(e.target.value)}
                     placeholder="TL-9821"
-                    className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px] font-mono"
+                    className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px] font-mono"
                   />
                 </div>
 
@@ -702,7 +702,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
                     value={driverCity}
                     onChange={(e) => setDriverCity(e.target.value)}
                     placeholder="مثال: لاہور، کراچی، ملتان"
-                    className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
+                    className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
                   />
                 </div>
               </div>
@@ -717,7 +717,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
                   value={driverPreferredRoute}
                   onChange={(e) => setDriverPreferredRoute(e.target.value)}
                   placeholder="مثال: لاہور تا کراچی / ملتان تا پشاور"
-                  className="w-full bg-[#F4F7FB] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
+                  className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
                 />
               </div>
 

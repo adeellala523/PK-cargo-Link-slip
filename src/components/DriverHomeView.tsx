@@ -155,8 +155,8 @@ export const DriverHomeView: React.FC<DriverHomeViewProps> = ({
     // Public visitors see the welcome + login prompt instead — NO loads list.
     return (
       <div className="font-nafees space-y-4" dir="rtl">
-        <div className="bg-gradient-to-br from-[#0B2A5B] to-[#123A6D] rounded-3xl p-6 text-white text-center shadow-lg">
-          <Truck className="w-12 h-12 mx-auto mb-3 text-[#F5A301]" />
+        <div className="bg-gradient-to-br from-[#111111] to-[#1E1E1E] rounded-3xl p-6 text-white text-center shadow-lg">
+          <Truck className="w-12 h-12 mx-auto mb-3 text-[#B5E61D]" />
           <h2 className="text-xl font-extrabold mb-2">ڈرائیور ایپ میں خوش آمدید 🚛</h2>
           <p className="text-sm text-slate-300 leading-relaxed mb-4">
             لوڈز دیکھنے اور قبول کرنے کے لیے پہلے لاگ ان کریں
@@ -164,8 +164,8 @@ export const DriverHomeView: React.FC<DriverHomeViewProps> = ({
           <button
             type="button"
             onClick={onNavigateToLogin}
-            className="w-full py-3.5 rounded-2xl font-extrabold text-[#0B2A5B] min-h-[52px] active:scale-[0.98] transition"
-            style={{ background: 'linear-gradient(135deg, #FFC531 0%, #F5A301 60%, #E8930C 100%)' }}
+            className="w-full py-3.5 rounded-2xl font-extrabold text-[#111111] min-h-[52px] active:scale-[0.98] transition"
+            style={{ background: 'linear-gradient(135deg, #CDF463 0%, #B5E61D 60%, #E8930C 100%)' }}
           >
             لاگ ان / رجسٹر کریں
           </button>
@@ -184,7 +184,7 @@ export const DriverHomeView: React.FC<DriverHomeViewProps> = ({
               <Truck className={`w-6 h-6 ${online ? 'text-emerald-600' : 'text-slate-400'}`} />
             </span>
             <div>
-              <p className="font-extrabold text-[#0B2A5B] text-sm">{driver.driverName || 'ڈرائیور'}</p>
+              <p className="font-extrabold text-[#111111] text-sm">{driver.driverName || 'ڈرائیور'}</p>
               <p className="text-[11px] text-slate-500 font-bold flex items-center gap-1">
                 <MapPin className="w-3 h-3" />
                 {driver.currentCity || '—'} • <span className="ltr-content">{driver.vehicleType || ''}</span>
@@ -222,7 +222,7 @@ export const DriverHomeView: React.FC<DriverHomeViewProps> = ({
           /* Location gate (Adeel): nearby loads need the driver's GPS location. */
           <div className="bg-amber-50 border-2 border-dashed border-amber-300 rounded-3xl p-6 text-center space-y-3">
             <MapPin className="w-10 h-10 text-amber-500 mx-auto" />
-            <p className="font-extrabold text-[#0B2A5B]">
+            <p className="font-extrabold text-[#111111]">
               قریبی لوڈز دیکھنے کے لیے لوکیشن آن کریں
             </p>
             <p className="text-xs text-slate-500 font-bold leading-5">
@@ -237,8 +237,8 @@ export const DriverHomeView: React.FC<DriverHomeViewProps> = ({
               type="button"
               onClick={requestGeo}
               disabled={geoStatus === 'requesting'}
-              className="w-full py-3.5 rounded-2xl font-extrabold text-[#0B2A5B] min-h-[52px] active:scale-[0.98] transition disabled:opacity-60"
-              style={{ background: 'linear-gradient(135deg, #FFC531 0%, #F5A301 60%, #E8930C 100%)' }}
+              className="w-full py-3.5 rounded-2xl font-extrabold text-[#111111] min-h-[52px] active:scale-[0.98] transition disabled:opacity-60"
+              style={{ background: 'linear-gradient(135deg, #CDF463 0%, #B5E61D 60%, #E8930C 100%)' }}
             >
               {geoStatus === 'requesting' ? 'لوکیشن لی جا رہی ہے…' : '📍 لوکیشن آن کریں'}
             </button>
@@ -312,8 +312,8 @@ const IncomingRequestBanner: React.FC<{
   const fare = (slip.fareOffer || '').trim();
 
   return (
-    <div className="rounded-3xl overflow-hidden border-2 border-[#F5A301] shadow-[0_10px_36px_rgba(245,163,1,0.25)] bg-white">
-      <div className="bg-gradient-to-l from-[#0B2A5B] to-[#123A6D] px-4 py-2.5 flex items-center justify-between text-white">
+    <div className="rounded-3xl overflow-hidden border-2 border-[#B5E61D] shadow-[0_10px_36px_rgba(245,163,1,0.25)] bg-white">
+      <div className="bg-gradient-to-l from-[#111111] to-[#1E1E1E] px-4 py-2.5 flex items-center justify-between text-white">
         <span className="font-extrabold text-sm flex items-center gap-2">
           <span className="relative flex w-3 h-3">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
@@ -331,7 +331,7 @@ const IncomingRequestBanner: React.FC<{
         <RouteLine from={slip.loadingCity} fromSub={slip.loadingLocation} to={slip.destinationCity} toSub={slip.destinationLocation} compact />
         <div className="mt-2.5 flex items-center justify-between bg-amber-50/70 border border-amber-100 rounded-2xl px-3.5 py-2">
           <span className="text-xs font-bold text-slate-500">کرایہ آفر</span>
-          <span className="text-sm font-extrabold text-[#0B2A5B]">{fare ? <span className="num-badge">{fare}</span> : 'بات چیت پر'}</span>
+          <span className="text-sm font-extrabold text-[#111111]">{fare ? <span className="num-badge">{fare}</span> : 'بات چیت پر'}</span>
         </div>
 
         {/* InDrive-style counter offer */}
@@ -341,7 +341,7 @@ const IncomingRequestBanner: React.FC<{
               value={offer}
               onChange={(e) => setOffer(e.target.value)}
               placeholder="آپ کی آفر — مثال: Rs 28,000"
-              className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold outline-none focus:border-[#F5A301] min-h-[48px]"
+              className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold outline-none focus:border-[#B5E61D] min-h-[48px]"
             />
             <button
               type="button"
@@ -376,9 +376,9 @@ const IncomingRequestBanner: React.FC<{
             onClick={() => (showOffer && offer.trim() ? onCounter(offer.trim()) : onAccept())}
             disabled={!canAccept}
             className={`flex-1 inline-flex items-center justify-center gap-2 font-extrabold text-base rounded-2xl min-h-[52px] transition active:scale-[0.98] ${
-              canAccept ? 'text-[#0B2A5B] shadow-[0_8px_24px_rgba(245,163,1,0.35)]' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+              canAccept ? 'text-[#111111] shadow-[0_8px_24px_rgba(245,163,1,0.35)]' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
             }`}
-            style={canAccept ? { background: 'linear-gradient(135deg, #FFC531 0%, #F5A301 60%, #E8930C 100%)' } : undefined}
+            style={canAccept ? { background: 'linear-gradient(135deg, #CDF463 0%, #B5E61D 60%, #E8930C 100%)' } : undefined}
           >
             <CheckCircle2 className="w-5 h-5" />
             {showOffer && offer.trim() ? 'جوابی آفر بھیجیں' : 'قبول کریں'}
@@ -386,7 +386,7 @@ const IncomingRequestBanner: React.FC<{
           <button
             type="button"
             onClick={onView}
-            className="w-14 shrink-0 inline-flex items-center justify-center bg-[#F4F7FB] text-[#123A6D] rounded-2xl border border-slate-200 active:scale-95 min-h-[52px]"
+            className="w-14 shrink-0 inline-flex items-center justify-center bg-[#FFFFFF] text-[#1E1E1E] rounded-2xl border border-slate-200 active:scale-95 min-h-[52px]"
             aria-label="تفصیل دیکھیں"
           >
             <Eye className="w-5 h-5" />
@@ -425,7 +425,7 @@ const ActiveLoadPanel: React.FC<{
           <a
             href={mapsUrl(`${slip.loadingLocation || ''} ${slip.loadingCity}`.trim())}
             target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-1.5 bg-[#0B2A5B] text-white text-xs font-extrabold py-3 rounded-2xl min-h-[48px] active:scale-[0.98]"
+            className="inline-flex items-center justify-center gap-1.5 bg-[#111111] text-white text-xs font-extrabold py-3 rounded-2xl min-h-[48px] active:scale-[0.98]"
           >
             <Navigation className="w-4 h-4" />
             لوڈنگ پوائنٹ
@@ -466,7 +466,7 @@ const LoadList: React.FC<LoadListProps> = ({
 }) => (
   <section className="space-y-3">
     <div className="flex items-center justify-between px-1">
-      <h2 className="text-base font-extrabold text-[#0B2A5B]">دستیاب لوڈز ({items.length})</h2>
+      <h2 className="text-base font-extrabold text-[#111111]">دستیاب لوڈز ({items.length})</h2>
     </div>
 
     <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1">
@@ -477,7 +477,7 @@ const LoadList: React.FC<LoadListProps> = ({
           onClick={() => onCityFilter(c)}
           className={`shrink-0 px-4 py-2 rounded-full text-xs font-bold border transition min-h-[38px] ${
             cityFilter === c
-              ? 'bg-[#0B2A5B] text-white border-[#0B2A5B]'
+              ? 'bg-[#111111] text-white border-[#111111]'
               : 'bg-white text-slate-600 border-slate-200'
           }`}
         >
@@ -557,7 +557,7 @@ const DriverLoadCard: React.FC<{
 
       <div className="mx-4 mt-2 flex items-center justify-between bg-amber-50/70 border border-amber-100 rounded-2xl px-3.5 py-2">
         <span className="text-xs font-bold text-slate-500">کرایہ</span>
-        <span className="text-sm font-extrabold text-[#0B2A5B]">
+        <span className="text-sm font-extrabold text-[#111111]">
           {fare ? <span className="num-badge">{fare}</span> : 'بات چیت پر'}
           {slip.driverOffer && <span className="block text-[10px] text-amber-700 font-bold">آپ کی آفر: <span className="num-badge">{slip.driverOffer}</span></span>}
         </span>
@@ -569,7 +569,7 @@ const DriverLoadCard: React.FC<{
             value={offer}
             onChange={(e) => setOffer(e.target.value)}
             placeholder="آپ کی آفر — مثال: Rs 28,000"
-            className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-sm font-bold outline-none focus:border-[#F5A301] min-h-[44px]"
+            className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-sm font-bold outline-none focus:border-[#B5E61D] min-h-[44px]"
           />
           <button type="button" onClick={() => setShowOffer(false)} className="px-3 rounded-2xl bg-slate-100 text-slate-500" aria-label="بند کریں">
             <X className="w-4 h-4" />
@@ -582,7 +582,7 @@ const DriverLoadCard: React.FC<{
           <div className="flex-1 flex items-center gap-2">
             <a
               href={`tel:${sanitizePhoneForCall(slip.primaryPhone)}`}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 bg-[#123A6D] text-white font-extrabold text-sm py-3 rounded-2xl min-h-[48px] active:scale-[0.98]"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 bg-[#1E1E1E] text-white font-extrabold text-sm py-3 rounded-2xl min-h-[48px] active:scale-[0.98]"
             >
               <Phone className="w-4 h-4" /> کال کریں
             </a>
@@ -614,9 +614,9 @@ const DriverLoadCard: React.FC<{
               className={`flex-1 inline-flex items-center justify-center gap-1.5 font-extrabold text-sm py-3 rounded-2xl min-h-[52px] transition active:scale-[0.98] ${
                 locked || !canAccept
                   ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                  : 'text-[#0B2A5B] shadow-[0_8px_24px_rgba(245,163,1,0.35)]'
+                  : 'text-[#111111] shadow-[0_8px_24px_rgba(245,163,1,0.35)]'
               }`}
-              style={locked || !canAccept ? undefined : { background: 'linear-gradient(135deg, #FFC531 0%, #F5A301 60%, #E8930C 100%)' }}
+              style={locked || !canAccept ? undefined : { background: 'linear-gradient(135deg, #CDF463 0%, #B5E61D 60%, #E8930C 100%)' }}
             >
               <CheckCircle2 className="w-5 h-5" />
               {showOffer && offer.trim() ? 'جوابی آفر بھیجیں' : 'قبول کریں'}
@@ -636,7 +636,7 @@ const DriverLoadCard: React.FC<{
           type="button"
           onClick={onView}
           title="مکمل سلپ دیکھیں"
-          className="w-12 h-12 shrink-0 inline-flex items-center justify-center bg-[#F4F7FB] text-[#123A6D] rounded-2xl border border-slate-200 active:scale-95"
+          className="w-12 h-12 shrink-0 inline-flex items-center justify-center bg-[#FFFFFF] text-[#1E1E1E] rounded-2xl border border-slate-200 active:scale-95"
         >
           <Eye className="w-5 h-5" />
         </button>
