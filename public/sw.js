@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pk-cargo-link-v4';
+const CACHE_NAME = 'pk-cargo-link-v5';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
