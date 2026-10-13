@@ -531,7 +531,7 @@ const DriverLoadCard: React.FC<{
   const ago = timeAgo(slip.createdAt);
   const fare = (slip.fareOffer || '').trim();
   return (
-    <div className="bg-white rounded-3xl border border-slate-100 shadow-[0_6px_24px_rgba(11,42,91,0.07)] overflow-hidden">
+    <div className="bg-white rounded-[1.75rem] border border-white/60 shadow-[0_10px_32px_rgba(0,0,0,0.08)] overflow-hidden active:scale-[0.99] transition-transform">
       <div className="flex items-center justify-between px-4 pt-3.5 pb-1">
         <span className={`inline-flex items-center gap-1.5 text-[11px] font-extrabold px-2.5 py-1 rounded-full border ${
           accepted ? 'bg-blue-50 text-blue-700 border-blue-200'
