@@ -54,27 +54,17 @@ import { NotificationService } from './services/notificationService';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
 
 function AppInner() {
-  // ── Yango-style split: driver subdomain gets the driver-only app ──
-  // Same codebase + same backend; detection is hostname-based OR role-based.
-  // Role-based check fixes the case where a driver registers on the main site
-  // (via the onboarding role selector) — they get the DriverApp, not the old site.
+  // ── Strict role separation ──
+  // pkcargolink.com = ADDA MANAGER ONLY (never show DriverApp here)
+  // driver.pkcargolink.com = DRIVER ONLY
+  // Same codebase + same backend; detection is hostname-based ONLY.
   // Restore any login session lost during an app update BEFORE routing.
   try { StorageService.restoreSession(); } catch { /* ignore */ }
   if (isDriverSubdomain()) {
     return <DriverApp />;
   }
-  try {
-    const cu = StorageService.getCurrentUser();
-    if (cu && cu.role === 'driver') {
-      return <DriverApp />;
-    }
-    // Driver login via login page uses separate driver session
-    if (StorageService.isDriverLoggedIn()) {
-      return <DriverApp />;
-    }
-  } catch {
-    /* fall through to main site */
-  }
+  // Main site: always show adda manager app, regardless of any stored driver session.
+  // (Driver sessions belong to driver.pkcargolink.com only.)
 
   const [currentTab, setCurrentTab] = useState<string>('home');
   const [profile, setProfile] = useState<AddaProfile>(StorageService.getAddaProfile());
