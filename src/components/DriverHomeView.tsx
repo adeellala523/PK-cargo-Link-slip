@@ -86,7 +86,7 @@ export const DriverHomeView: React.FC<DriverHomeViewProps> = ({
     );
   };
 
-  const activeSlips = useMemo(() => slips.filter((s) => s.status === 'active'), [slips]);
+  const activeSlips = useMemo(() => slips.filter((s) => s.status === 'active' || !s.status), [slips]);
   const acceptedSet = useMemo(() => new Set(acceptedIds), [acceptedIds]);
   const declinedSet = useMemo(() => new Set(declinedIds), [declinedIds]);
 
