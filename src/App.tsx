@@ -675,7 +675,8 @@ function AppInner() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-100/70 text-slate-900 font-nafees selection:bg-emerald-600 selection:text-white">
+    <div className="min-h-screen flex flex-col text-slate-900 font-nafees selection:bg-amber-500 selection:text-white"
+      style={{ background: 'linear-gradient(180deg, #fef9ef 0%, #fdf3e1 40%, #faf6ee 100%)' }}>
       
       {/* Top Navigation */}
       <Navbar
