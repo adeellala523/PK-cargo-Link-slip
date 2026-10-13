@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Truck, User, Phone, LogOut, ShieldCheck, PackageCheck, MapPin, ChevronLeft, ExternalLink, Banknote, Bell } from 'lucide-react';
+import { Truck, User, Phone, LogOut, ShieldCheck, PackageCheck, MapPin, ChevronLeft, Banknote, Bell } from 'lucide-react';
 import { LoadSlip, DriverAccount, UserAccount } from '../types';
 import { DriverHomeView } from './DriverHomeView';
 import { DriverBottomNav } from './DriverBottomNav';
@@ -19,7 +19,7 @@ import { NotificationService } from '../services/notificationService';
 import { NotificationCenterModal } from './NotificationCenterModal';
 import type { VerificationStatus } from '../utils/verification';
 import { getVerificationStatus, resolveVerificationUser, saveVerificationUser } from '../utils/verification';
-import { getOtherSideUrl } from '../utils/subdomain';
+// (subdomain utils not needed — DriverApp only runs on driver subdomain)
 import { stopSharing } from '../utils/tracking';
 import { StorageService } from '../services/storage';
 
@@ -400,7 +400,7 @@ export const DriverApp: React.FC = () => {
             onNavigateToHome={() => navigate('d-loads')}
             currentProfile={null as never}
             initialMode={loginMode}
-            initialRole="driver"
+            lockedRole="driver"
             noticeMessage="ڈرائیور ایپ میں خوش آمدید — لاگ ان کریں یا نیا اکاؤنٹ بنائیں"
           />
         )}
@@ -433,17 +433,6 @@ export const DriverApp: React.FC = () => {
           })()
         )}
       </main>
-
-      {/* Cross-link to adda side */}
-      <div className="no-print max-w-5xl w-full mx-auto px-4 pb-24 md:pb-8">
-        <a
-          href={getOtherSideUrl()}
-          className="flex items-center justify-center gap-2 text-xs font-bold text-slate-500 hover:text-[#111111] py-3"
-        >
-          <ExternalLink className="w-3.5 h-3.5" />
-          اڈا مینیجر ہیں؟ pkcargolink.com کھولیں
-        </a>
-      </div>
 
       <DriverBottomNav
         currentTab={tab}
@@ -565,14 +554,6 @@ const DriverProfilePanel: React.FC<{
 
       {/* Load history */}
       <DriverHistorySection slips={slips} acceptedIds={acceptedIds} onViewSlip={onViewSlip} />
-
-      <a
-        href={getOtherSideUrl()}
-        className="flex items-center justify-center gap-2 text-xs font-bold text-slate-500 py-2"
-      >
-        <ExternalLink className="w-3.5 h-3.5" />
-        اڈا مینیجر سائٹ کھولیں
-      </a>
     </div>
   );
 };
