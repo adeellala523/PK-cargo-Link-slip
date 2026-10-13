@@ -813,6 +813,7 @@ function AppInner() {
               onNavigateToHome={() => navigateTo('home')}
               currentProfile={profile}
               initialMode="register"
+              lockedRole="adda_manager"
               noticeMessage="نئی لوڈ سلپ بنانے کے لیے پہلے اپنا اڈا اکاؤنٹ رجسٹر یا لاگ ان کریں۔"
             />
           )
@@ -1012,7 +1013,7 @@ function AppInner() {
             onNavigateToHome={() => navigateTo('home')}
             currentProfile={profile}
             initialMode={loginInitialMode}
-            initialRole={loginInitialRole}
+            lockedRole="adda_manager"
             noticeMessage={loginNoticeMessage}
           />
         )}
