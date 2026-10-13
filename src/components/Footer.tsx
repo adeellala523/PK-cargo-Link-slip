@@ -7,14 +7,14 @@ interface FooterProps {
 
 export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
   return (
-    <footer className="no-print bg-[#07192F] text-slate-300 border-t border-slate-800 pt-10 pb-24 md:pb-8 mt-16 font-nafees">
+    <footer className="no-print text-slate-300 pt-10 pb-24 md:pb-8 mt-16 font-nafees" style={{ background: 'linear-gradient(180deg, #0B2545 0%, #071A33 100%)' }}>
       <div className="max-w-5xl mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pb-8 border-b border-slate-800">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pb-8 border-b border-white/10">
           
           {/* Brand info */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-lg bg-emerald-600 flex items-center justify-center text-white">
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#FFC531] to-[#E8930C] flex items-center justify-center text-white">
                 <Truck className="w-5 h-5" />
               </div>
               <span className="text-xl font-bold text-white tracking-wide">
@@ -24,7 +24,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             <p className="text-sm text-slate-400 leading-relaxed">
               پاکستان کے تمام گڈز ٹرانسپورٹ اڈا منیجرز اور ٹرک ڈرائیورز کے لیے تیز ترین اور محفوظ ڈیجیٹل لوڈ سلپ پلیٹ فارم۔
             </p>
-            <div className="text-xs text-emerald-400">
+            <div className="text-xs text-amber-400">
               ویب سائٹ: <a href="https://pkcargolink.com" className="underline font-sans">pkcargolink.com</a>
             </div>
           </div>
@@ -37,7 +37,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 <li>
                   <button 
                     onClick={() => onNavigate('home')} 
-                    className="hover:text-emerald-400 transition cursor-pointer"
+                    className="hover:text-amber-400 transition cursor-pointer"
                   >
                     ہوم پیج
                   </button>
@@ -45,7 +45,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 <li>
                   <button 
                     onClick={() => onNavigate('trucks')} 
-                    className="hover:text-emerald-400 transition text-amber-300 font-bold cursor-pointer"
+                    className="hover:text-amber-400 transition text-amber-300 font-bold cursor-pointer"
                   >
                     🚚 دستیاب گاڑیاں
                   </button>
@@ -53,7 +53,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 <li>
                   <button 
                     onClick={() => onNavigate('driver')} 
-                    className="hover:text-emerald-400 transition text-emerald-300 font-bold cursor-pointer"
+                    className="hover:text-amber-400 transition text-amber-300 font-bold cursor-pointer"
                   >
                     🚛 ڈرائیور پورٹل
                   </button>
@@ -61,7 +61,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 <li>
                   <button 
                     onClick={() => onNavigate('verify')} 
-                    className="hover:text-emerald-400 transition cursor-pointer"
+                    className="hover:text-amber-400 transition cursor-pointer"
                   >
                     سلپ کی تصدیق کریں
                   </button>
@@ -69,7 +69,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 <li>
                   <button 
                     onClick={() => onNavigate('dashboard')} 
-                    className="hover:text-emerald-400 transition cursor-pointer"
+                    className="hover:text-amber-400 transition cursor-pointer"
                   >
                     اڈا منیجر پورٹل
                   </button>
@@ -80,7 +80,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 <li>
                   <button 
                     onClick={() => onNavigate('about')} 
-                    className="hover:text-emerald-400 transition cursor-pointer"
+                    className="hover:text-amber-400 transition cursor-pointer"
                   >
                     ہمارے بارے میں
                   </button>
@@ -88,7 +88,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 <li>
                   <button 
                     onClick={() => onNavigate('contact')} 
-                    className="hover:text-emerald-400 transition cursor-pointer"
+                    className="hover:text-amber-400 transition cursor-pointer"
                   >
                     ہم سے رابطہ کریں
                   </button>
@@ -96,7 +96,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 <li>
                   <button 
                     onClick={() => onNavigate('privacy')} 
-                    className="hover:text-emerald-400 transition cursor-pointer"
+                    className="hover:text-amber-400 transition cursor-pointer"
                   >
                     پرائیویسی پالیسی
                   </button>
