@@ -102,16 +102,18 @@ export function SideDrawer({
           )}
         </div>
 
-        {/* Driver mode button */}
-        <div className="px-5 pb-3">
-          <button
-            onClick={() => { onDriverMode(); onClose(); }}
-            className="w-full py-4 rounded-2xl font-bold text-black text-[18px] active:scale-[0.98]"
-            style={{ backgroundColor: LIME }}
-          >
-            {role === 'driver' ? 'Adda mode' : 'Driver mode'}
-          </button>
-        </div>
+        {/* Driver mode button — only for drivers (role separation: adda site has no driver mode) */}
+        {role === 'driver' && (
+          <div className="px-5 pb-3">
+            <button
+              onClick={() => { onDriverMode(); onClose(); }}
+              className="w-full py-4 rounded-2xl font-bold text-black text-[18px] active:scale-[0.98]"
+              style={{ backgroundColor: LIME }}
+            >
+              Adda mode
+            </button>
+          </div>
+        )}
 
         {/* Social */}
         <div className="flex items-center justify-center gap-6 pb-8">
