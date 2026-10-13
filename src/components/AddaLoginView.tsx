@@ -250,38 +250,66 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
     }
   };
 
+  // Premium theme colors based on role
+  const isDriver = activeRole === 'driver';
+  const theme = {
+    gradient: isDriver
+      ? 'linear-gradient(135deg, #111111 0%, #1a1a1a 50%, #0d2818 100%)'
+      : 'linear-gradient(135deg, #0B2545 0%, #123a6d 50%, #1e3a5f 100%)',
+    accent: isDriver ? '#B5E61D' : '#F5A301',
+    accentDark: isDriver ? '#9BC53D' : '#E8930C',
+    bgGradient: isDriver
+      ? 'linear-gradient(180deg, #f0f4ec 0%, #e8f0e4 50%, #f5f7f2 100%)'
+      : 'linear-gradient(180deg, #fef9ef 0%, #fdf3e3 50%, #f8f4ec 100%)',
+  };
+
   return (
-    <div className="max-w-xl mx-auto space-y-6 font-nafees py-4">
+    <div className="min-h-screen font-nafees py-6 px-4" style={{ background: theme.bgGradient }}>
+    <div className="max-w-md mx-auto space-y-5">
       
-      {/* Back to Home Button */}
+      {/* Back to Home Button - premium pill */}
       <button
         type="button"
         onClick={onNavigateToHome}
-        className="inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-slate-900 bg-white px-3.5 py-2 rounded-xl border border-slate-200 shadow-2xs font-bold transition min-h-[40px]"
+        className="inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-slate-900 bg-white/80 backdrop-blur px-4 py-2.5 rounded-full border border-white shadow-lg font-bold transition active:scale-95"
       >
-        <ArrowRight className="w-4 h-4 text-[#1E1E1E]" />
+        <ArrowRight className="w-4 h-4" />
         <span>واپس ہوم پیج</span>
       </button>
 
-      {/* Notice Message if any */}
+      {/* Notice Message if any - premium */}
       {noticeMessage && (
-        <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 text-amber-900 flex items-center gap-3 shadow-xs">
-          <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+        <div className="bg-white/90 backdrop-blur border border-amber-200 rounded-3xl p-4 text-amber-900 flex items-center gap-3 shadow-xl">
+          <span className="w-10 h-10 rounded-2xl bg-amber-100 flex items-center justify-center shrink-0">
+            <AlertCircle className="w-5 h-5 text-amber-600" />
+          </span>
           <p className="text-xs sm:text-sm font-bold">{noticeMessage}</p>
         </div>
       )}
 
-      {/* Main Auth Card */}
-      <div className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
+      {/* Main Auth Card - luxury premium */}
+      <div className="bg-white rounded-[2rem] shadow-2xl border border-white overflow-hidden">
         
-        {/* Top Header */}
-        <div className="bg-[#1E1E1E] text-white p-6 text-center space-y-2 border-b-4 border-[#19A974]">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white">
-            PK Cargo Link پورٹل
-          </h1>
-          <p className="text-xs sm:text-sm text-emerald-200">
-            پاکستان ڈیجیٹل گڈز ٹرانسپورٹ نیٹ ورک میں خوش آمدید
-          </p>
+        {/* Top Header - premium gradient */}
+        <div className="p-8 text-center space-y-3 relative overflow-hidden" style={{ background: theme.gradient }}>
+          {/* Decorative circles */}
+          <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-10" style={{ background: theme.accent }} />
+          <div className="absolute -bottom-16 -left-10 w-52 h-52 rounded-full opacity-10" style={{ background: theme.accent }} />
+          <div className="relative">
+            <div className="w-16 h-16 mx-auto rounded-3xl flex items-center justify-center shadow-xl mb-3"
+              style={{ background: `linear-gradient(135deg, ${theme.accent} 0%, ${theme.accentDark} 100%)` }}>
+              {isDriver
+                ? <Truck className="w-8 h-8 text-[#111111]" />
+                : <Building2 className="w-8 h-8 text-white" />
+              }
+            </div>
+            <h1 className="text-2xl font-extrabold text-white">
+              {isDriver ? 'ڈرائیور پورٹل' : 'اڈا مینیجر پورٹل'}
+            </h1>
+            <p className="text-xs text-white/70 font-bold mt-1">
+              PK Cargo Link میں خوش آمدید
+            </p>
+          </div>
         </div>
 
         {/* 1. ROLE TABS: hidden when role is locked (clean separation: main site = adda only, driver app = driver only) */}
@@ -325,9 +353,9 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
         </div>
         )}
 
-        {/* 2. MODE TABS: لاگ ان VS نیا اکاؤنٹ بنائیں */}
-        <div className="p-5 pt-3 pb-0">
-          <div className="flex border-b border-slate-200">
+        {/* 2. MODE TABS: premium pill switcher */}
+        <div className="px-6 pt-6">
+          <div className="grid grid-cols-2 gap-1 bg-slate-100 p-1.5 rounded-full">
             <button
               type="button"
               onClick={() => {
@@ -335,15 +363,15 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
                 setLoginError('');
                 setRegError('');
               }}
-              className={`flex-1 py-3 text-center text-sm font-bold border-b-2 transition ${
+              className={`py-3 px-4 rounded-full font-extrabold text-sm transition active:scale-95 ${
                 activeMode === 'login'
-                  ? 'border-[#1E1E1E] text-[#1E1E1E]'
-                  : 'border-transparent text-slate-500 hover:text-slate-800'
+                  ? 'text-white shadow-lg'
+                  : 'text-slate-500 hover:text-slate-800'
               }`}
+              style={activeMode === 'login' ? { background: theme.gradient } : {}}
             >
-              لاگ ان کریں (موبائل نمبر و پاس ورڈ)
+              لاگ ان
             </button>
-
             <button
               type="button"
               onClick={() => {
@@ -351,13 +379,14 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
                 setLoginError('');
                 setRegError('');
               }}
-              className={`flex-1 py-3 text-center text-sm font-bold border-b-2 transition ${
+              className={`py-3 px-4 rounded-full font-extrabold text-sm transition active:scale-95 ${
                 activeMode === 'register'
-                  ? 'border-[#19A974] text-[#19A974]'
-                  : 'border-transparent text-slate-500 hover:text-slate-800'
+                  ? 'text-white shadow-lg'
+                  : 'text-slate-500 hover:text-slate-800'
               }`}
+              style={activeMode === 'register' ? { background: theme.gradient } : {}}
             >
-              نیا اکاؤنٹ بنائیں
+              نیا اکاؤنٹ
             </button>
           </div>
         </div>
@@ -406,7 +435,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
                     value={loginPhone}
                     onChange={(e) => setLoginPhone(e.target.value)}
                     placeholder="03001234567"
-                    className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 focus:bg-white focus:border-[#1E1E1E] outline-none min-h-[48px] font-mono text-left"
+                    className="w-full bg-slate-100 border-2 border-transparent rounded-2xl pl-10 pr-4 py-3.5 text-sm text-slate-900 focus:bg-white focus:border-[#F5A301] focus:ring-4 focus:ring-amber-100 outline-none min-h-[52px] font-mono text-left transition shadow-inner"
                     style={{ direction: 'ltr', textAlign: 'left' }}
                   />
                 </div>
@@ -438,7 +467,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
                     placeholder="پاس ورڈ درج کریں"
-                    className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl pr-10 pl-10 py-3 text-sm text-slate-900 focus:bg-white focus:border-[#1E1E1E] outline-none min-h-[48px]"
+                    className="w-full bg-slate-100 border-2 border-transparent rounded-2xl pr-10 pl-10 py-3.5 text-sm text-slate-900 focus:bg-white focus:border-[#F5A301] focus:ring-4 focus:ring-amber-100 outline-none min-h-[52px] transition shadow-inner"
                   />
                   <button
                     type="button"
@@ -452,7 +481,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
 
               <button
                 type="submit"
-                className={`w-full text-white py-3.5 px-4 rounded-xl font-bold text-sm shadow-md active:scale-95 transition min-h-[48px] flex items-center justify-center gap-2 ${
+                className={`w-full text-white py-4 px-4 rounded-full font-extrabold text-sm shadow-xl active:scale-95 transition min-h-[52px] flex items-center justify-center gap-2 ${
                   activeRole === 'driver' ? 'bg-[#19A974] hover:bg-[#169163]' : 'bg-[#1E1E1E] hover:bg-[#0D2D57]'
                 }`}
               >
@@ -491,7 +520,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
                   value={managerName}
                   onChange={(e) => setManagerName(e.target.value)}
                   placeholder="مثال: ملک محمد اسلم"
-                  className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#1E1E1E] outline-none min-h-[44px]"
+                  className="px-3.5 py-3 text-sm text-slate-900 w-full focus:border-[#F5A301] focus:ring-4 focus:ring-amber-100 outline-none min-h-[48px] rounded-2xl bg-slate-100 border-2 border-transparent focus:bg-white transition shadow-inner"
                 />
               </div>
 
@@ -506,7 +535,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
                   value={addaName}
                   onChange={(e) => setAddaName(e.target.value)}
                   placeholder="مثال: بسم اللہ گڈز ٹرانسپورٹ کمپنی"
-                  className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#1E1E1E] outline-none min-h-[44px]"
+                  className="px-3.5 py-3 text-sm text-slate-900 w-full focus:border-[#F5A301] focus:ring-4 focus:ring-amber-100 outline-none min-h-[48px] rounded-2xl bg-slate-100 border-2 border-transparent focus:bg-white transition shadow-inner"
                 />
               </div>
 
@@ -521,7 +550,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
                   value={addaCity}
                   onChange={(e) => setAddaCity(e.target.value)}
                   placeholder="مثال: لاہور، کراچی، ملتان، ساہیوال، وغیرہ"
-                  className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#1E1E1E] outline-none min-h-[44px]"
+                  className="px-3.5 py-3 text-sm text-slate-900 w-full focus:border-[#F5A301] focus:ring-4 focus:ring-amber-100 outline-none min-h-[48px] rounded-2xl bg-slate-100 border-2 border-transparent focus:bg-white transition shadow-inner"
                 />
               </div>
 
@@ -535,7 +564,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
                   value={addaAddress}
                   onChange={(e) => setAddaAddress(e.target.value)}
                   placeholder="مثال: نزد پرانا غلہ منڈی، شیر شاہ روڈ"
-                  className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#1E1E1E] outline-none min-h-[44px]"
+                  className="px-3.5 py-3 text-sm text-slate-900 w-full focus:border-[#F5A301] focus:ring-4 focus:ring-amber-100 outline-none min-h-[48px] rounded-2xl bg-slate-100 border-2 border-transparent focus:bg-white transition shadow-inner"
                 />
               </div>
 
@@ -565,7 +594,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
                     value={addaPassword}
                     onChange={(e) => setAddaPassword(e.target.value)}
                     placeholder="کم از کم 4 ہندسے یا حروف"
-                    className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#1E1E1E] outline-none min-h-[44px]"
+                    className="px-3.5 py-3 text-sm text-slate-900 w-full focus:border-[#F5A301] focus:ring-4 focus:ring-amber-100 outline-none min-h-[48px] rounded-2xl bg-slate-100 border-2 border-transparent focus:bg-white transition shadow-inner"
                   />
                 </div>
               </div>
@@ -587,7 +616,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-[#1E1E1E] hover:bg-[#0D2D57] text-white py-3.5 px-4 rounded-xl font-bold text-sm shadow-md active:scale-95 transition min-h-[48px] disabled:opacity-50"
+                className="w-full text-white py-4 px-4 rounded-full font-extrabold text-sm shadow-xl active:scale-95 transition min-h-[52px] disabled:opacity-50" style={{ background: theme.gradient }}
               >
                 {isLoading ? 'اکاؤنٹ بن رہا ہے...' : 'اڈا منیجر اکاؤنٹ رجسٹر کریں'}
               </button>
@@ -622,7 +651,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
                   value={driverName}
                   onChange={(e) => setDriverName(e.target.value)}
                   placeholder="مثال: استاد فیاض بلوچ"
-                  className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
+                  className="px-3.5 py-3 text-sm text-slate-900 w-full focus:border-[#B5E61D] focus:ring-4 focus:ring-lime-100 outline-none min-h-[48px] rounded-2xl bg-slate-100 border-2 border-transparent focus:bg-white transition shadow-inner"
                 />
               </div>
 
@@ -652,7 +681,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
                     value={driverPassword}
                     onChange={(e) => setDriverPassword(e.target.value)}
                     placeholder="کم از کم 4 ہندسے یا حروف"
-                    className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
+                    className="px-3.5 py-3 text-sm text-slate-900 w-full focus:border-[#B5E61D] focus:ring-4 focus:ring-lime-100 outline-none min-h-[48px] rounded-2xl bg-slate-100 border-2 border-transparent focus:bg-white transition shadow-inner"
                   />
                 </div>
               </div>
@@ -667,7 +696,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
                   value={driverVehicleType}
                   onChange={(e) => setDriverVehicleType(e.target.value)}
                   placeholder="مثال: 22 وہیلر، 10 وہیلر، شہزور، مزدہ 16 فٹ، وغیرہ"
-                  className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
+                  className="px-3.5 py-3 text-sm text-slate-900 w-full focus:border-[#B5E61D] focus:ring-4 focus:ring-lime-100 outline-none min-h-[48px] rounded-2xl bg-slate-100 border-2 border-transparent focus:bg-white transition shadow-inner"
                 />
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {['22 Wheeler', '10 Wheeler', 'Shahzor', 'Mazda', '40 Foot Container'].map((v) => (
@@ -708,7 +737,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
                     value={driverCity}
                     onChange={(e) => setDriverCity(e.target.value)}
                     placeholder="مثال: لاہور، کراچی، ملتان"
-                    className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
+                    className="px-3.5 py-3 text-sm text-slate-900 w-full focus:border-[#B5E61D] focus:ring-4 focus:ring-lime-100 outline-none min-h-[48px] rounded-2xl bg-slate-100 border-2 border-transparent focus:bg-white transition shadow-inner"
                   />
                 </div>
               </div>
@@ -723,14 +752,14 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
                   value={driverPreferredRoute}
                   onChange={(e) => setDriverPreferredRoute(e.target.value)}
                   placeholder="مثال: لاہور تا کراچی / ملتان تا پشاور"
-                  className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
+                  className="px-3.5 py-3 text-sm text-slate-900 w-full focus:border-[#B5E61D] focus:ring-4 focus:ring-lime-100 outline-none min-h-[48px] rounded-2xl bg-slate-100 border-2 border-transparent focus:bg-white transition shadow-inner"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-[#19A974] hover:bg-[#169163] text-white py-3.5 px-4 rounded-xl font-bold text-sm shadow-md active:scale-95 transition min-h-[48px] disabled:opacity-50"
+                className="w-full text-white py-4 px-4 rounded-full font-extrabold text-sm shadow-xl active:scale-95 transition min-h-[52px] disabled:opacity-50" style={{ background: theme.gradient }}
               >
                 {isLoading ? 'اکاؤنٹ بن رہا ہے...' : 'ڈرائیور اکاؤنٹ رجسٹر کریں'}
               </button>
@@ -741,6 +770,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
 
       </div>
 
+    </div>
     </div>
   );
 };
