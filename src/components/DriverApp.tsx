@@ -34,6 +34,8 @@ const DECLINED_KEY = 'pkcl_driver_declined';
  * Tabs: لوڈز | میری گاڑی | پروفائل
  */
 export const DriverApp: React.FC = () => {
+  // Restore driver login if it was lost during an app update
+  try { StorageService.restoreSession(); } catch { /* ignore */ }
   const [tab, setTab] = useState<DriverTab>('d-loads');
   const [slips, setSlips] = useState<LoadSlip[]>(() => StorageService.getAllSlips());
   const [activeSlip, setActiveSlip] = useState<LoadSlip | null>(null);
