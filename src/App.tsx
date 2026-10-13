@@ -27,7 +27,7 @@ import { LoadsLoginPrompt } from './components/LoadsLoginPrompt';
 import { AiVoiceSupportWidget } from './components/AiVoiceSupportWidget';
 import { AiChatbotWidget } from './components/AiChatbotWidget';
 import { LocationPrompt } from './components/LocationPrompt';
-import { StrikeBanner } from './components/StrikeBanner';
+
 import { getStoredCity, isDismissed } from './utils/location';
 import { notifyForNewSlip } from './utils/matchNotify';
 // Old GeminiLiveVoiceWidget hidden per user request - replaced by AI chatbot
@@ -1161,6 +1161,11 @@ function AppInner() {
  * so existing auth/chatbot/verification flows are untouched.
  */
 export default function App() {
+  // Driver subdomain skips the main-site onboarding entirely (no role selection).
+  // DriverApp has its own driver login/register flow.
+  if (isDriverSubdomain()) {
+    return <DriverApp />;
+  }
   return (
     <OnboardingGate>
       <AppInner />
