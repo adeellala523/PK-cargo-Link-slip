@@ -1633,15 +1633,28 @@ export const StorageService = {
     const index = slips.findIndex((s) => s.id === slip.id);
     if (index !== -1) {
       slips[index] = slip;
-      localStorage.setItem(STORAGE_KEYS.SLIPS, JSON.stringify(slips));
+    } else {
+      slips.unshift(slip);
+    }
+    localStorage.setItem(STORAGE_KEYS.SLIPS, JSON.stringify(slips));
 
-      if (typeof fetch !== 'undefined') {
-        fetch('/api/slips', {
+    if (typeof fetch !== 'undefined') {
+      const payload = JSON.stringify(slip);
+      // Relative URL (same subdomain)
+      fetch('/api/slips.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload,
+      }).catch(() => {});
+      // Absolute URL (cross-subdomain: driver.pkcargolink.com → pkcargolink.com)
+      // Ensures the adda manager sees driver accept/book updates immediately.
+      try {
+        fetch('https://pkcargolink.com/api/slips.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(slip),
+          body: payload,
         }).catch(() => {});
-      }
+      } catch {}
     }
   },
 
