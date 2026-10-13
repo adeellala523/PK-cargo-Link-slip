@@ -13,6 +13,7 @@ import { DriverSearchView } from './components/DriverSearchView';
 import { VerifySlipView } from './components/VerifySlipView';
 import { WhatsAppGroupsView } from './components/WhatsAppGroupsView';
 import { AdminPanelView } from './components/AdminPanelView';
+import { AdminApp } from './components/AdminApp';
 import { AddaLoginView } from './components/AddaLoginView';
 import { DriverPortalView } from './components/DriverPortalView';
 import { AvailableTrucksView } from './components/AvailableTrucksView';
@@ -39,7 +40,7 @@ import { VerificationBadge } from './components/VerificationBadge';
 import { VerificationNudgeBanner } from './components/VerificationNudgeBanner';
 // Yango-style two-app split: driver.pkcargolink.com renders the driver-only app
 import { DriverApp } from './components/DriverApp';
-import { isDriverSubdomain } from './utils/subdomain';
+import { isDriverSubdomain, isAdminSubdomain } from './utils/subdomain';
 // Yango-style one-time onboarding (new users only; logged-in users skip)
 import { OnboardingGate } from './components/onboarding/OnboardingFlow';
 import {
@@ -1161,6 +1162,11 @@ function AppInner() {
  * so existing auth/chatbot/verification flows are untouched.
  */
 export default function App() {
+  // Admin subdomain: secure admin-only access (server-side auth, brute-force protected).
+  // Bypasses all main-site onboarding and navigation.
+  if (isAdminSubdomain()) {
+    return <AdminApp />;
+  }
   // Driver subdomain skips the main-site onboarding entirely (no role selection).
   // DriverApp has its own driver login/register flow.
   if (isDriverSubdomain()) {
