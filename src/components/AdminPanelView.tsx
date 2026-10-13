@@ -149,15 +149,47 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
   const [adConfig, setAdConfig] = useState<AdConfig>(AdService.getAdConfig());
   const [adSavedSuccess, setAdSavedSuccess] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (pinInput === 'pkadmin786' || pinInput === 'adil786' || pinInput === '7860') {
-      setIsAuthenticated(true);
-      setPinError(false);
-    } else {
+    setPinError(false);
+    try {
+      const res = await fetch('/api/admin-auth.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: pinInput }),
+      });
+      const data = await res.json();
+      if (data.success && data.token) {
+        // Store token securely in sessionStorage (cleared on tab close)
+        sessionStorage.setItem('pkcl_admin_token', data.token);
+        sessionStorage.setItem('pkcl_admin_expiry', String(Date.now() + data.expiresIn * 1000));
+        setIsAuthenticated(true);
+        setPinError(false);
+        setPinInput('');
+      } else {
+        setPinError(true);
+        if (data.blocked) {
+          alert('بہت سی غلط کوششیں! 15 منٹ بعد دوبارہ کوشش کریں۔');
+        }
+      }
+    } catch {
       setPinError(true);
     }
   };
+
+  // Check for valid existing session on mount
+  useEffect(() => {
+    try {
+      const token = sessionStorage.getItem('pkcl_admin_token');
+      const expiry = Number(sessionStorage.getItem('pkcl_admin_expiry') || '0');
+      if (token && expiry > Date.now()) {
+        setIsAuthenticated(true);
+      } else {
+        sessionStorage.removeItem('pkcl_admin_token');
+        sessionStorage.removeItem('pkcl_admin_expiry');
+      }
+    } catch { /* ignore */ }
+  }, []);
 
   const handleCreateTruckByAdmin = (e: React.FormEvent) => {
     e.preventDefault();
