@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 // Admin PIN - stored server-side only, never exposed to frontend
 // TODO: Change this PIN and store as environment variable in production
-define('ADMIN_PIN', 'pkadmin786');
+define('ADMIN_PIN', 'wuW7J**Qu3N4k');
 
 function getAttemptsFile() {
     return __DIR__ . '/admin_attempts.json';
