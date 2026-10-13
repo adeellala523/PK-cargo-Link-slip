@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Search, Truck, Bot, User } from 'lucide-react';
+import { Home, Search, Truck, Bot, User, Plus } from 'lucide-react';
 import { StorageService } from '../services/storage';
 
 interface MobileBottomNavProps {
@@ -10,9 +10,9 @@ interface MobileBottomNavProps {
 }
 
 /**
- * MobileBottomNav — ride-hailing style bottom navigation, always visible on mobile.
- * 5 tabs: ہوم | لوڈز | گاڑیاں | AI چیٹ | پروفائل
- * The chatbot tab opens the AI assistant via a custom event (widget listens for it).
+ * MobileBottomNav — premium floating navigation (Pinterest luxury style).
+ * 5 tabs: ہوم | لوڈز | (+) | گاڑیاں | پروفائل
+ * The center button opens load posting. AI chat accessible via chatbot widget.
  */
 export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   currentTab,
@@ -20,9 +20,6 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   onOpenCreate,
   isLoggedIn,
 }) => {
-  // Keep for API compatibility; create action lives on the home search card + navbar.
-  void onOpenCreate;
-
   const isDriverLoggedIn = (() => {
     try { return StorageService.isDriverLoggedIn(); } catch { return false; }
   })();
@@ -33,50 +30,59 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     else onNavigate('login');
   };
 
-  const openChatbot = () => {
-    try {
-      window.dispatchEvent(new CustomEvent('pkcl:open-chatbot'));
-    } catch { /* ignore */ }
-  };
-
   const profileActive = ['dashboard', 'profile', 'my-slips', 'login', 'register', 'driver'].includes(currentTab);
 
-  const tabs = [
+  const leftTabs = [
     { key: 'home', label: 'ہوم', icon: Home, active: currentTab === 'home', action: () => onNavigate('home') },
     { key: 'search', label: 'لوڈز', icon: Search, active: currentTab === 'search', action: () => onNavigate('search') },
+  ];
+  const rightTabs = [
     { key: 'trucks', label: 'گاڑیاں', icon: Truck, active: currentTab === 'trucks' || currentTab === 'available-trucks', action: () => onNavigate('trucks') },
-    { key: 'chatbot', label: 'AI چیٹ', icon: Bot, active: false, action: openChatbot },
     { key: 'profile', label: 'پروفائل', icon: User, active: profileActive, action: goProfile },
   ];
+
+  const renderTab = (t: { key: string; label: string; icon: React.ElementType; active: boolean; action: () => void }) => {
+    const Icon = t.icon;
+    return (
+      <button
+        key={t.key}
+        type="button"
+        onClick={t.action}
+        className="relative flex flex-col items-center justify-center gap-1 flex-1 py-2 rounded-2xl transition active:scale-90 min-h-[52px]"
+      >
+        <span className={`w-11 h-8 rounded-full flex items-center justify-center transition-all ${
+          t.active ? 'bg-[#0B2545] shadow-lg' : 'bg-transparent'
+        }`}>
+          <Icon className={`w-5 h-5 ${t.active ? 'text-[#F5A301]' : 'text-slate-400'}`} strokeWidth={t.active ? 2.4 : 2} />
+        </span>
+        <span className={`text-[11px] leading-tight ${t.active ? 'font-extrabold text-[#0B2545]' : 'font-bold text-slate-400'}`}>
+          {t.label}
+        </span>
+      </button>
+    );
+  };
 
   return (
     <nav
       aria-label="Mobile Bottom Navigation"
-      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-[0_-6px_24px_rgba(11,42,91,0.10)] font-nafees no-print"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      className="md:hidden fixed bottom-0 left-0 right-0 z-40 font-nafees no-print pointer-events-none"
+      style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 12px)' }}
     >
-      <div className="flex items-stretch justify-around max-w-lg mx-auto px-1 pt-1.5 pb-1.5">
-        {tabs.map((t) => {
-          const Icon = t.icon;
-          return (
-            <button
-              key={t.key}
-              type="button"
-              onClick={t.action}
-              className="relative flex flex-col items-center justify-center gap-0.5 flex-1 py-1.5 rounded-2xl transition active:scale-95 min-h-[52px]"
-            >
-              {t.active && (
-                <span className="absolute top-0.5 w-8 h-1 rounded-full bg-[#B5E61D]" aria-hidden="true" />
-              )}
-              <Icon
-                className={`w-[22px] h-[22px] ${t.active ? 'text-[#111111] stroke-[2.4]' : 'text-slate-400'}`}
-              />
-              <span className={`text-[11px] leading-tight ${t.active ? 'font-extrabold text-[#111111]' : 'font-bold text-slate-400'}`}>
-                {t.label}
-              </span>
-            </button>
-          );
-        })}
+      <div className="mx-4 pointer-events-auto">
+        <div className="flex items-center justify-around bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-[0_12px_40px_rgba(0,0,0,0.15)] border border-white/60 px-2 py-2">
+          {leftTabs.map(renderTab)}
+          {/* Center elevated post-load button */}
+          <button
+            type="button"
+            onClick={onOpenCreate}
+            aria-label="لوڈ پوسٹ کریں"
+            className="relative flex items-center justify-center w-16 h-16 -mt-8 rounded-[1.4rem] shadow-[0_12px_28px_rgba(245,163,1,0.45)] active:scale-90 transition-all border-4 border-white"
+            style={{ background: 'linear-gradient(135deg, #F5A301 0%, #E8930C 100%)' }}
+          >
+            <Plus className="w-8 h-8 text-white" strokeWidth={2.6} />
+          </button>
+          {rightTabs.map(renderTab)}
+        </div>
       </div>
     </nav>
   );
