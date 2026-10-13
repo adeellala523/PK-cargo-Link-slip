@@ -58,6 +58,8 @@ function AppInner() {
   // Same codebase + same backend; detection is hostname-based OR role-based.
   // Role-based check fixes the case where a driver registers on the main site
   // (via the onboarding role selector) — they get the DriverApp, not the old site.
+  // Restore any login session lost during an app update BEFORE routing.
+  try { StorageService.restoreSession(); } catch { /* ignore */ }
   if (isDriverSubdomain()) {
     return <DriverApp />;
   }
