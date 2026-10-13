@@ -218,7 +218,7 @@ export const DriverApp: React.FC = () => {
   };
 
   const pendingCount = useMemo(
-    () => slips.filter((s) => s.status === 'active').length,
+    () => slips.filter((s) => s.status === 'active' || !s.status).length,
     [slips]
   );
 
@@ -460,7 +460,7 @@ export const DriverApp: React.FC = () => {
           if (target) { viewSlip(target); }
           setNotifOpen(false);
         }}
-        myActiveSlips={slips.filter((s) => acceptedIds.includes(s.id) && s.status === 'active')}
+        myActiveSlips={slips.filter((s) => acceptedIds.includes(s.id) && (s.status === 'active' || !s.status))}
       />
 
       {/* Driver chat assistant */}
@@ -612,7 +612,7 @@ const DriverHistorySection: React.FC<{
   }, [slips, acceptedIds]);
 
   const shown = useMemo(() => {
-    if (filter === 'active') return mine.filter((s) => s.status === 'active' && !s.completedAt);
+    if (filter === 'active') return mine.filter((s) => (s.status === 'active' || !s.status) && !s.completedAt);
     if (filter === 'done') return mine.filter((s) => s.completedAt || s.status !== 'active');
     return mine;
   }, [mine, filter]);
@@ -656,7 +656,7 @@ const DriverHistorySection: React.FC<{
               <div>
                 <p className="text-sm font-extrabold text-[#111111]">{s.loadingCity} تا {s.destinationCity}</p>
                 <p className="text-[11px] text-slate-500 font-bold mt-0.5">
-                  {s.completedAt ? '✅ مکمل' : s.status === 'active' ? '🟢 جاری' : '📌 بک'}
+                  {s.completedAt ? '✅ مکمل' : (s.status === 'active' || !s.status) ? '🟢 جاری' : '📌 بک'}
                 </p>
               </div>
               <ChevronLeft className="w-4 h-4 text-slate-300 rotate-180" />
