@@ -111,8 +111,8 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
           <div className="flex items-center gap-3.5">
             {/* Small PK Cargo Link monogram */}
-            <div className="w-12 h-12 rounded-2xl bg-[#1E1E1E] text-white flex items-center justify-center flex-shrink-0 shadow-sm border border-emerald-400/30">
-              <Truck className="w-6 h-6 text-emerald-300" />
+            <div className="w-12 h-12 rounded-2xl text-white flex items-center justify-center flex-shrink-0 shadow-lg" style={{ background: 'linear-gradient(135deg, #0B2545 0%, #123a6d 100%)' }}>
+              <Truck className="w-6 h-6 text-amber-300" />
             </div>
             <div>
               <span className="text-[11px] text-slate-400 font-bold block uppercase tracking-wider">
@@ -147,10 +147,10 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
                 <div key={idx} className="inline-flex items-center gap-1.5 bg-[#FFFFFF] border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-800">
                   <a
                     href={`tel:${sanitizePhoneForCall(c.number)}`}
-                    className="inline-flex items-center gap-1 hover:text-[#19A974] font-bold"
+                    className="inline-flex items-center gap-1 hover:text-[#E8930C] font-bold"
                     title="کال کریں"
                   >
-                    <Phone className="w-3.5 h-3.5 text-[#19A974]" />
+                    <Phone className="w-3.5 h-3.5 text-[#E8930C]" />
                     {c.name && <span className="text-slate-700">{c.name}:</span>}
                     <span className="font-mono ltr-content">{c.number}</span>
                   </a>
@@ -172,10 +172,10 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
                 <div key={idx} className="inline-flex items-center gap-1.5 bg-[#FFFFFF] border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-800">
                   <a
                     href={`tel:${sanitizePhoneForCall(phone)}`}
-                    className="inline-flex items-center gap-1 hover:text-[#19A974] font-mono ltr-content font-bold"
+                    className="inline-flex items-center gap-1 hover:text-[#E8930C] font-mono ltr-content font-bold"
                     title="کال کریں"
                   >
-                    <Phone className="w-3.5 h-3.5 text-[#19A974]" />
+                    <Phone className="w-3.5 h-3.5 text-[#E8930C]" />
                     <span>{phone}</span>
                   </a>
                   <a
@@ -208,7 +208,7 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
         {/* فعال لوڈ */}
         <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-sm border border-slate-200">
           <span className="text-xs text-slate-500 font-bold block">فعال لوڈ</span>
-          <span className="text-2xl sm:text-3xl font-extrabold text-[#19A974] font-mono mt-1 block">
+          <span className="text-2xl sm:text-3xl font-extrabold text-[#E8930C] font-mono mt-1 block">
             {activeSlips.length}
           </span>
         </div>
@@ -230,7 +230,7 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
           <button
             type="button"
             onClick={onOpenVoiceModal}
-            className="w-full bg-gradient-to-r from-[#1E1E1E] via-[#0E335C] to-[#19A974] hover:from-[#0d2a4f] hover:to-[#168a5f] text-white p-4 rounded-2xl sm:rounded-3xl shadow-md border-2 border-emerald-400/40 flex items-center justify-between transition active:scale-98 text-right cursor-pointer"
+            className="w-full bg-gradient-to-r from-[#1E1E1E] via-[#0E335C] to-[#19A974] hover:from-[#0d2a4f] hover:to-[#168a5f] text-white p-4 rounded-2xl sm:rounded-3xl shadow-md border-2 border-amber-400/40 flex items-center justify-between transition active:scale-98 text-right cursor-pointer"
           >
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-2xl bg-white/20 text-amber-300 flex items-center justify-center flex-shrink-0">
@@ -241,7 +241,7 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
                   <span>🎙️ وائس سے لوڈ بنائیں (Voice to Multi-Load)</span>
                   <span className="text-[10px] bg-amber-400/30 text-amber-200 px-2 py-0.5 rounded-full font-bold">نیا</span>
                 </h4>
-                <p className="text-xs text-emerald-100">
+                <p className="text-xs text-amber-100">
                   بولیں: "بہاولپور سے کراچی مکئی، کبیروالا سے کراچی گندم" اور فوری تصدیق کر کے سلپ بنائیں
                 </p>
               </div>
@@ -262,7 +262,7 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
           <button
             type="button"
             onClick={onOpenCreateSlip}
-            className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-[#19A974] hover:bg-[#169163] text-white shadow-md active:scale-95 transition min-h-[88px] text-center"
+            className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-[#F5A301] hover:bg-[#169163] text-white shadow-md active:scale-95 transition min-h-[88px] text-center"
           >
             <PlusCircle className="w-7 h-7 sm:w-8 sm:h-8 mb-1" />
             <span className="font-extrabold text-base sm:text-lg">نئی لوڈ سلپ</span>
@@ -340,7 +340,7 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
           <button
             type="button"
             onClick={onNavigateToMySlips}
-            className="text-xs font-bold text-[#19A974] hover:underline"
+            className="text-xs font-bold text-[#E8930C] hover:underline"
           >
             تمام دیکھیں ({slips.length})
           </button>
@@ -353,7 +353,7 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
             <button
               type="button"
               onClick={onOpenCreateSlip}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-[#19A974] hover:bg-[#169163] px-4 py-2 rounded-xl"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-[#F5A301] hover:bg-[#169163] px-4 py-2 rounded-xl"
             >
               <PlusCircle className="w-4 h-4" />
               <span>پہلی سلپ بنائیں</span>
@@ -382,15 +382,15 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
                           animatingId === slip.id ? 'scale-110 ring-2 ring-emerald-500/50' : 'hover:scale-105 active:scale-95'
                         } ${
                           slip.status === 'active'
-                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300/80 hover:bg-emerald-100 hover:border-emerald-400 ring-1 ring-emerald-500/20'
+                            ? 'bg-amber-50 text-amber-800 border-amber-300/80 hover:bg-amber-100 hover:border-amber-400 ring-1 ring-emerald-500/20'
                             : 'bg-amber-50 text-amber-800 border-amber-300/80 hover:bg-amber-100 hover:border-amber-400 ring-1 ring-amber-500/20'
                         }`}
                       >
                         {slip.status === 'active' ? (
                           <>
                             <span className="relative flex h-2 w-2">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600"></span>
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-600"></span>
                             </span>
                             <span className="transition-all duration-300">🟢 دستیاب</span>
                           </>
@@ -407,14 +407,14 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
                     ) : (
                       <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-0.5 rounded-full border transition-all duration-300 ease-in-out shadow-2xs ${
                         slip.status === 'active'
-                          ? 'bg-emerald-50 text-emerald-800 border-emerald-300/80 ring-1 ring-emerald-500/20'
+                          ? 'bg-amber-50 text-amber-800 border-amber-300/80 ring-1 ring-emerald-500/20'
                           : 'bg-amber-50 text-amber-800 border-amber-300/80 ring-1 ring-amber-500/20'
                       }`}>
                         {slip.status === 'active' ? (
                           <>
                             <span className="relative flex h-2 w-2">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600"></span>
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-600"></span>
                             </span>
                             <span>🟢 دستیاب</span>
                           </>
@@ -462,7 +462,7 @@ export const AddaDashboardView: React.FC<AddaDashboardViewProps> = ({
                     <button
                       type="button"
                       onClick={() => onShareSlip(slip)}
-                      className="inline-flex items-center gap-1 text-xs font-bold text-white bg-[#19A974] hover:bg-[#169163] px-3 py-1.5 rounded-lg transition min-h-[36px]"
+                      className="inline-flex items-center gap-1 text-xs font-bold text-white bg-[#F5A301] hover:bg-[#169163] px-3 py-1.5 rounded-lg transition min-h-[36px]"
                     >
                       <Share2 className="w-3.5 h-3.5" />
                       <span>شیئر کریں</span>
