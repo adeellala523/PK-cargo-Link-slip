@@ -25,6 +25,8 @@ interface AddaLoginViewProps {
   initialMode?: 'login' | 'register';
   initialRole?: 'adda_manager' | 'driver';
   noticeMessage?: string;
+  /** When set, locks the role — hides the role switcher tabs entirely */
+  lockedRole?: 'adda_manager' | 'driver';
 }
 
 export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
@@ -33,15 +35,17 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
   initialMode = 'login',
   initialRole = 'adda_manager',
   noticeMessage,
+  lockedRole,
 }) => {
-  const [activeRole, setActiveRole] = useState<'adda_manager' | 'driver'>(initialRole);
+  const effectiveRole = lockedRole || initialRole;
+  const [activeRole, setActiveRole] = useState<'adda_manager' | 'driver'>(effectiveRole);
   const [activeMode, setActiveMode] = useState<'login' | 'register'>(initialMode);
 
-  // Sync mode if props change
+  // Sync mode if props change (locked role always wins)
   React.useEffect(() => {
     if (initialMode) setActiveMode(initialMode);
-    if (initialRole) setActiveRole(initialRole);
-  }, [initialMode, initialRole]);
+    setActiveRole(lockedRole || initialRole);
+  }, [initialMode, initialRole, lockedRole]);
 
   // Login Form States (Password-based - NO OTP)
   const [loginPhone, setLoginPhone] = useState('');
@@ -280,7 +284,8 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
           </p>
         </div>
 
-        {/* 1. ROLE TABS: اڈا منیجر VS ڈرائیور */}
+        {/* 1. ROLE TABS: hidden when role is locked (clean separation: main site = adda only, driver app = driver only) */}
+        {!lockedRole && (
         <div className="p-5 pb-0">
           <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
             <button
@@ -318,6 +323,7 @@ export const AddaLoginView: React.FC<AddaLoginViewProps> = ({
             </button>
           </div>
         </div>
+        )}
 
         {/* 2. MODE TABS: لاگ ان VS نیا اکاؤنٹ بنائیں */}
         <div className="p-5 pt-3 pb-0">
