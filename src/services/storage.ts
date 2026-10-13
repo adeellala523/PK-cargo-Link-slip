@@ -1,5 +1,34 @@
 import { AddaProfile, LoadSlip, WhatsAppGroup, AdminStats, UserAccount, PaymentSettings, AvailableTruck, DriverAccount, DriverRating, NamedContact } from '../types';
 
+/**
+ * Server sync helper — POSTs to both relative and absolute API URLs.
+ * This ensures cross-subdomain sync works (driver.pkcargolink.com ↔ pkcargolink.com ↔ admin.pkcargolink.com).
+ */
+function syncToServer(endpoint: string, method: string = 'POST', body?: any): void {
+  if (typeof fetch === 'undefined') return;
+  const init: RequestInit = {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+  };
+  if (body !== undefined) {
+    init.body = typeof body === 'string' ? body : JSON.stringify(body);
+  }
+  // Relative URL (same subdomain)
+  try { fetch(endpoint, init).catch(() => {}); } catch {}
+  // Absolute URL (main domain — ensures all subdomains share the same server data)
+  try {
+    const absolute = endpoint.startsWith('http')
+      ? endpoint
+      : `https://pkcargolink.com${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
+    // Only send absolute if we're not already on the main domain (avoid duplicate)
+    if (typeof window !== 'undefined' && !window.location.hostname.startsWith('pkcargolink.com')) {
+      fetch(absolute, init).catch(() => {});
+    } else if (typeof window === 'undefined') {
+      fetch(absolute, init).catch(() => {});
+    }
+  } catch {}
+}
+
 const STORAGE_KEYS = {
   ADDA_PROFILE: 'pkcargolink_adda_profile_v3',
   SLIPS: 'pkcargolink_slips_v3',
@@ -2071,12 +2100,8 @@ export const StorageService = {
       localStorage.setItem(STORAGE_KEYS.AVAILABLE_TRUCKS, JSON.stringify(filtered));
     } catch {}
 
-    // Async push to server
-    fetch('/api/trucks', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(truck),
-    }).catch(() => {});
+    // Sync to server (both relative + absolute for cross-subdomain)
+    syncToServer('/api/trucks.php', 'POST', truck);
   },
 
   deleteAvailableTruck(id: string): void {
@@ -2086,10 +2111,8 @@ export const StorageService = {
       localStorage.setItem(STORAGE_KEYS.AVAILABLE_TRUCKS, JSON.stringify(filtered));
     } catch {}
 
-    // Async delete from server
-    fetch(`/api/trucks/${encodeURIComponent(id)}`, {
-      method: 'DELETE',
-    }).catch(() => {});
+    // Sync delete to server
+    syncToServer(`/api/trucks.php?id=${encodeURIComponent(id)}`, 'DELETE');
   },
 
   updateTruckStatus(id: string, status: 'available' | 'booked'): void {
@@ -2100,11 +2123,7 @@ export const StorageService = {
       try {
         localStorage.setItem(STORAGE_KEYS.AVAILABLE_TRUCKS, JSON.stringify(list));
       } catch {}
-      fetch(`/api/trucks/${encodeURIComponent(id)}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status }),
-      }).catch(() => {});
+      syncToServer(`/api/trucks.php?id=${encodeURIComponent(id)}`, 'PATCH', { status });
     }
   },
 
