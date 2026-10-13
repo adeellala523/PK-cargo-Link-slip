@@ -8,7 +8,7 @@
  * Detection is purely hostname-based so the same build works on both domains.
  */
 
-export type AppMode = 'adda' | 'driver';
+export type AppMode = 'adda' | 'driver' | 'admin';
 
 /** True when running on driver.pkcargolink.com (or any *.driver.* / localhost driver preview) */
 export function isDriverSubdomain(): boolean {
@@ -25,7 +25,22 @@ export function isDriverSubdomain(): boolean {
   }
 }
 
+/** True when running on admin.pkcargolink.com — secure admin-only access */
+export function isAdminSubdomain(): boolean {
+  try {
+    const host = (window.location.hostname || '').toLowerCase();
+    if (host.startsWith('admin.')) return true;
+    // Local dev preview: ?app=admin
+    const q = new URLSearchParams(window.location.search);
+    if (q.get('app') === 'admin') return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 export function getAppMode(): AppMode {
+  if (isAdminSubdomain()) return 'admin';
   return isDriverSubdomain() ? 'driver' : 'adda';
 }
 
