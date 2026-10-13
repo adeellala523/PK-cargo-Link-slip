@@ -1142,10 +1142,12 @@ function AppInner() {
       {/* AI Chatbot Assistant */}
       <AiChatbotWidget />
 
-      {/* General Site Footer */}
-      <Footer
-        onNavigate={(tab) => navigateTo(tab)}
-      />
+      {/* General Site Footer — desktop only (app-style mobile uses bottom nav) */}
+      <div className="hidden md:block">
+        <Footer
+          onNavigate={(tab) => navigateTo(tab)}
+        />
+      </div>
 
       {/* Global Mobile Bottom Navigation for Logged-In Adda Manager (Section 5) */}
       <MobileBottomNav
