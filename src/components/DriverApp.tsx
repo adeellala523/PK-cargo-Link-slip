@@ -224,20 +224,16 @@ export const DriverApp: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-100/70 text-slate-900 font-nafees" dir="rtl">
-      {/* Driver app header */}
+      {/* Driver app header — logo left, actions right (web preview, URL hidden) */}
       <header className="sticky top-0 z-40 bg-[#111111] text-white shadow-lg no-print">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <span className="w-10 h-10 rounded-2xl flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, #CDF463 0%, #B5E61D 100%)' }}>
-              <Truck className="w-5 h-5 text-[#111111]" />
-            </span>
-            <div>
-              <h1 className="font-extrabold text-base leading-tight">PK Cargo <span className="text-[#B5E61D]">Driver</span></h1>
-              <p className="text-[10px] text-slate-300 font-bold">ڈرائیور ایپ • driver.pkcargolink.com</p>
-            </div>
-          </div>
           <div className="flex items-center gap-2">
+            {driver && (
+              <span className={`inline-flex items-center gap-1.5 text-[11px] font-extrabold px-3 py-1.5 rounded-full ${online ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40' : 'bg-white/10 text-slate-300 border border-white/20'}`}>
+                <span className={`w-2 h-2 rounded-full ${online ? 'bg-emerald-400 animate-pulse' : 'bg-slate-400'}`} />
+                {online ? 'آن لائن' : 'آف لائن'}
+              </span>
+            )}
             <button
               type="button"
               onClick={() => setNotifOpen(true)}
@@ -251,12 +247,15 @@ export const DriverApp: React.FC = () => {
                 </span>
               )}
             </button>
-            {driver && (
-              <span className={`inline-flex items-center gap-1.5 text-[11px] font-extrabold px-3 py-1.5 rounded-full ${online ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40' : 'bg-white/10 text-slate-300 border border-white/20'}`}>
-                <span className={`w-2 h-2 rounded-full ${online ? 'bg-emerald-400 animate-pulse' : 'bg-slate-400'}`} />
-                {online ? 'آن لائن' : 'آف لائن'}
-              </span>
-            )}
+          </div>
+          <div className="flex items-center gap-2.5">
+            <div className="text-left">
+              <h1 className="font-extrabold text-base leading-tight">PK Cargo <span className="text-[#B5E61D]">Driver</span></h1>
+            </div>
+            <span className="w-10 h-10 rounded-2xl flex items-center justify-center"
+              style={{ background: 'linear-gradient(135deg, #CDF463 0%, #B5E61D 100%)' }}>
+              <Truck className="w-5 h-5 text-[#111111]" />
+            </span>
           </div>
         </div>
       </header>
