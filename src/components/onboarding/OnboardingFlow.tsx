@@ -97,8 +97,14 @@ export function OnboardingFlow({ onDone }: { onDone: () => void }) {
 
   const handleNameNext = useCallback((n: string) => {
     setName(n);
-    // New users pick their role next; drivers then pick their vehicle ONCE.
-    setStep('role');
+    // Main site = adda_manager only (no role selection). Driver subdomain handles drivers.
+    // Skip 'role' step on main site — go straight to location.
+    if (isDriverSubdomain()) {
+      setStep('role');
+    } else {
+      setRole('adda_manager');
+      setStep('location');
+    }
   }, []);
 
   const handleRoleNext = useCallback((r: UserRole) => {
