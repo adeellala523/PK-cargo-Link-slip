@@ -107,15 +107,39 @@
       if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js').then((reg) => {
-            // Auto-reload when a new version is available — no manual cache clear needed
+            // Gentle update: don't force-reload (that can drop login state mid-write).
+            // Show a small "new version" banner; reload only when user taps it or page is hidden.
+            let updateReady = false;
+            const showUpdateBanner = () => {
+              if (document.getElementById('pkcl-update-banner')) return;
+              const b = document.createElement('div');
+              b.id = 'pkcl-update-banner';
+              b.dir = 'rtl';
+              b.innerHTML = '<span>✨ نیا ورژن دستیاب ہے</span><button id="pkcl-update-btn" style="background:#B5E61D;color:#111;font-weight:800;border:none;border-radius:999px;padding:8px 18px;margin-right:10px;cursor:pointer;font-family:inherit;">اپڈیٹ کریں</button>';
+              b.style.cssText = 'position:fixed;bottom:90px;left:16px;right:16px;z-index:9999;background:#111;color:#fff;border-radius:18px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;font-family:inherit;font-size:14px;font-weight:700;box-shadow:0 12px 32px rgba(0,0,0,.3);';
+              document.body.appendChild(b);
+              document.getElementById('pkcl-update-btn').addEventListener('click', () => window.location.reload());
+            };
             reg.addEventListener('updatefound', () => {
               const newWorker = reg.installing;
               if (newWorker) {
                 newWorker.addEventListener('statechange', () => {
                   if (newWorker.state === 'activated' && navigator.serviceWorker.controller) {
-                    window.location.reload();
+                    updateReady = true;
+                    // Reload silently only if the page is hidden (user not actively using it)
+                    if (document.visibilityState === 'hidden') {
+                      window.location.reload();
+                    } else {
+                      showUpdateBanner();
+                    }
                   }
                 });
+              }
+            });
+            // If user switches away with a pending update, apply it then
+            document.addEventListener('visibilitychange', () => {
+              if (updateReady && document.visibilityState === 'hidden') {
+                window.location.reload();
               }
             });
             // Check for updates on every page load
