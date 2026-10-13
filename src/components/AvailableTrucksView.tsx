@@ -334,7 +334,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
         <button
           type="button"
           onClick={() => setIsAddingTruck(true)}
-          className="inline-flex items-center justify-center gap-2 bg-[#19A974] hover:bg-[#169163] text-white px-5 py-3 rounded-2xl font-extrabold text-sm shadow-md active:scale-95 transition min-h-[48px] self-start sm:self-auto"
+          className="inline-flex items-center justify-center gap-2 bg-[#F5A301] hover:bg-[#E8930C] text-white px-5 py-3 rounded-2xl font-extrabold text-sm shadow-md active:scale-95 transition min-h-[48px] self-start sm:self-auto"
         >
           <PlusCircle className="w-5 h-5 text-white" />
           <span>اپنی خالی گاڑی لسٹ کریں</span>
@@ -374,9 +374,9 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                 key={c}
                 type="button"
                 onClick={() => setSelectedCityBadge(c)}
-                className={`text-xs px-3 py-1.5 rounded-xl font-bold border transition ${
+                className={`text-xs px-3 py-1.5 rounded-full font-bold border transition ${
                   selectedCityBadge === c
-                    ? 'bg-[#1E1E1E] text-white border-[#1E1E1E] shadow-xs'
+                    ? 'bg-[#0B2545] text-white border-[#0B2545] shadow-md'
                     : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
                 }`}
               >
@@ -397,7 +397,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                 onClick={() => setSelectedVehicleBadge(v)}
                 className={`text-xs px-3 py-1.5 rounded-xl font-bold border transition ${
                   selectedVehicleBadge === v
-                    ? 'bg-[#19A974] text-white border-[#19A974] shadow-xs'
+                    ? 'bg-[#F5A301] text-white border-[#F5A301] shadow-xs'
                     : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
                 }`}
               >
@@ -436,7 +436,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
             <button
               type="button"
               onClick={() => setIsAddingTruck(true)}
-              className="inline-flex items-center gap-1.5 bg-[#19A974] text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm mt-2"
+              className="inline-flex items-center gap-1.5 bg-[#F5A301] text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm mt-2"
             >
               <PlusCircle className="w-4 h-4" />
               <span>اپنی گاڑی لسٹ کریں</span>
@@ -486,7 +486,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                       })()}
                     </div>
                     <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                      <MapPin className="w-3.5 h-3.5 text-[#19A974]" />
+                      <MapPin className="w-3.5 h-3.5 text-[#E8930C]" />
                       <span>{truck.currentCity}</span>
                       {truck.locationDetails && (
                         <span className="text-slate-400">• {truck.locationDetails}</span>
@@ -628,7 +628,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                   setIsAddingTruck(false);
                   if (onNavigateToDriverPortal) onNavigateToDriverPortal();
                 }}
-                className="w-full bg-[#19A974] hover:bg-[#169163] text-white py-3 px-4 rounded-xl font-bold text-sm shadow-md transition active:scale-95 flex items-center justify-center gap-2"
+                className="w-full bg-[#F5A301] hover:bg-[#E8930C] text-white py-3 px-4 rounded-xl font-bold text-sm shadow-md transition active:scale-95 flex items-center justify-center gap-2"
               >
                 <Truck className="w-4 h-4" />
                 <span>🚚 رجسٹرڈ ڈرائیور کے طور پر لاگ ان کریں</span>
@@ -640,7 +640,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                   setIsAddingTruck(false);
                   if (onNavigateToAddaLogin) onNavigateToAddaLogin();
                 }}
-                className="w-full bg-[#1E1E1E] hover:bg-[#0D2D57] text-white py-3 px-4 rounded-xl font-bold text-sm shadow-md transition active:scale-95 flex items-center justify-center gap-2"
+                className="w-full text-white py-3 px-4 rounded-full font-bold text-sm shadow-lg transition active:scale-95 flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, #0B2545 0%, #123a6d 100%)' }}
               >
                 <User className="w-4 h-4" />
                 <span>🏢 گڈز اڈا منیجر کے طور پر لاگ ان کریں</span>
@@ -758,14 +758,14 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                   value={ratingFeedback}
                   onChange={(e) => setRatingFeedback(e.target.value)}
                   placeholder="ڈرائیور کے وقت کی پابندی، محفوظ ڈلیوری اور اخلاق کے بارے میں ریمارکس درج کریں..."
-                  className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl p-3 text-xs sm:text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none"
+                  className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl p-3 text-xs sm:text-sm text-slate-900 focus:bg-white focus:border-[#F5A301] outline-none"
                 />
               </div>
 
               <div className="flex items-center justify-between gap-3 pt-2">
                 <button
                   type="submit"
-                  className="flex-1 bg-[#19A974] hover:bg-[#169163] text-white py-3 rounded-xl font-bold text-sm shadow-md transition active:scale-95"
+                  className="flex-1 bg-[#F5A301] hover:bg-[#E8930C] text-white py-3 rounded-xl font-bold text-sm shadow-md transition active:scale-95"
                 >
                   ریٹنگ محفوظ کریں
                 </button>
@@ -861,7 +861,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                     value={ownerName}
                     onChange={(e) => setOwnerName(e.target.value)}
                     placeholder="مثال: ملک یوسف خان"
-                    className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
+                    className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#F5A301] outline-none min-h-[44px]"
                   />
                 </div>
 
@@ -875,7 +875,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                     value={ownerPhone}
                     onChange={(e) => setOwnerPhone(e.target.value)}
                     placeholder="03001234567"
-                    className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px] font-mono ltr-content"
+                    className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#F5A301] outline-none min-h-[44px] font-mono ltr-content"
                   />
                 </div>
               </div>
@@ -892,7 +892,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                     value={truckCity}
                     onChange={(e) => setTruckCity(e.target.value)}
                     placeholder="مثال: لاہور، کراچی، ملتان"
-                    className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
+                    className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#F5A301] outline-none min-h-[44px]"
                   />
                 </div>
 
@@ -905,7 +905,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                     value={truckLocation}
                     onChange={(e) => setTruckLocation(e.target.value)}
                     placeholder="ٹھوکر نیاز بیگ بائی پاس"
-                    className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
+                    className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#F5A301] outline-none min-h-[44px]"
                   />
                 </div>
               </div>
@@ -920,7 +920,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                   value={truckVehicleType}
                   onChange={(e) => setTruckVehicleType(e.target.value)}
                   placeholder="مثال: 22 Wheeler، Shahzor، مزدہ 16 فٹ"
-                  className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
+                  className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#F5A301] outline-none min-h-[44px]"
                 />
                 <div className="flex flex-wrap gap-1 mt-1.5">
                   {PAKISTAN_VEHICLE_VALUES.slice(0, 12).map((v) => (
@@ -969,7 +969,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                     value={truckNumber}
                     onChange={(e) => setTruckNumber(e.target.value)}
                     placeholder="TL-9821"
-                    className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px] font-mono"
+                    className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#F5A301] outline-none min-h-[44px] font-mono"
                   />
                 </div>
               </div>
@@ -984,7 +984,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
                   value={preferredRoute}
                   onChange={(e) => setPreferredRoute(e.target.value)}
                   placeholder="مثال: لاہور تا کراچی / پنجاب تا کے پی کے"
-                  className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#19A974] outline-none min-h-[44px]"
+                  className="w-full bg-[#FFFFFF] border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:border-[#F5A301] outline-none min-h-[44px]"
                 />
               </div>
 
@@ -992,7 +992,7 @@ export const AvailableTrucksView: React.FC<AvailableTrucksViewProps> = ({
               <div className="pt-2 flex items-center justify-between gap-3">
                 <button
                   type="submit"
-                  className="flex-1 bg-[#19A974] hover:bg-[#169163] text-white py-3.5 rounded-xl font-bold text-sm shadow-md transition active:scale-95 flex items-center justify-center gap-2"
+                  className="flex-1 bg-[#F5A301] hover:bg-[#E8930C] text-white py-3.5 rounded-xl font-bold text-sm shadow-md transition active:scale-95 flex items-center justify-center gap-2"
                 >
                   <PlusCircle className="w-4 h-4" />
                   <span>
