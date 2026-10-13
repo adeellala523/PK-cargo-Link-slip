@@ -37,7 +37,7 @@ export const LoadRequestCard: React.FC<LoadRequestCardProps> = ({ slip, onViewSl
   const fare = (slip.fareOffer || '').trim();
 
   return (
-    <div className="bg-white rounded-3xl border border-slate-100 shadow-[0_6px_24px_rgba(11,42,91,0.07)] overflow-hidden font-nafees">
+    <div className="bg-white rounded-[1.75rem] border border-white/60 shadow-[0_10px_32px_rgba(0,0,0,0.08)] shadow-[0_6px_24px_rgba(11,42,91,0.07)] overflow-hidden font-nafees">
       {/* Header: status + id + time */}
       <div className="flex items-center justify-between px-4 pt-3.5 pb-2">
         <span
@@ -108,7 +108,7 @@ export const LoadRequestCard: React.FC<LoadRequestCardProps> = ({ slip, onViewSl
         <a
           href={`tel:${sanitizePhoneForCall(slip.primaryPhone)}`}
           onClick={(e) => e.stopPropagation()}
-          className="flex-1 inline-flex items-center justify-center gap-1.5 bg-[#1E1E1E] hover:bg-[#0D2D57] text-white font-extrabold text-sm py-3 rounded-2xl transition active:scale-[0.98] min-h-[48px]"
+          className="flex-1 inline-flex items-center justify-center gap-1.5 text-white font-extrabold text-sm py-3 rounded-full transition active:scale-[0.98] min-h-[48px] shadow-lg" style={{ background: 'linear-gradient(135deg, #0B2545 0%, #123a6d 100%)' }}
         >
           <Phone className="w-4 h-4" />
           <span>کال کریں</span>
