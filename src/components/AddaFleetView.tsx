@@ -55,7 +55,7 @@ export const AddaFleetView: React.FC<AddaFleetViewProps> = ({ profile, onNavigat
 
   if (!cleanProfilePhone) {
     return (
-      <div className="bg-white rounded-3xl border border-slate-100 p-8 text-center font-nafees" dir="rtl">
+      <div className="bg-white rounded-[1.75rem] border border-white/60 shadow-[0_10px_32px_rgba(0,0,0,0.08)] p-8 text-center font-nafees" dir="rtl">
         <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-3" />
         <h2 className="font-extrabold text-[#111111] text-lg mb-2">میری گاڑیاں</h2>
         <p className="text-sm text-slate-500 font-bold mb-5">اپنی گاڑیاں دیکھنے کے لیے پہلے لاگ ان کریں</p>
@@ -157,7 +157,7 @@ export const AddaFleetView: React.FC<AddaFleetViewProps> = ({ profile, onNavigat
   return (
     <div className="max-w-3xl mx-auto space-y-4 font-nafees" dir="rtl">
       {/* Header */}
-      <div className="bg-white rounded-3xl border border-slate-200 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="bg-white rounded-[1.75rem] border border-white/60 shadow-[0_10px_32px_rgba(0,0,0,0.08)] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <span
             className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
@@ -191,7 +191,7 @@ export const AddaFleetView: React.FC<AddaFleetViewProps> = ({ profile, onNavigat
 
       {/* Fleet list */}
       {myTrucks.length === 0 ? (
-        <div className="bg-white rounded-3xl border border-slate-200 p-10 text-center">
+        <div className="bg-white rounded-[1.75rem] border border-white/60 shadow-[0_10px_32px_rgba(0,0,0,0.08)] p-10 text-center">
           <Truck className="w-14 h-14 text-slate-300 mx-auto mb-3" />
           <h3 className="font-extrabold text-slate-700 mb-1">ابھی کوئی گاڑی رجسٹرڈ نہیں</h3>
           <p className="text-xs text-slate-500 font-bold mb-4 leading-relaxed">
@@ -209,7 +209,7 @@ export const AddaFleetView: React.FC<AddaFleetViewProps> = ({ profile, onNavigat
       ) : (
         <div className="space-y-3">
           {myTrucks.map((t) => (
-            <div key={t.id} className="bg-white rounded-3xl border border-slate-200 p-4 space-y-3">
+            <div key={t.id} className="bg-white rounded-[1.75rem] border border-white/60 shadow-[0_10px_32px_rgba(0,0,0,0.08)] p-4 space-y-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2.5">
                   <span className="w-11 h-11 rounded-2xl bg-[#FFFFFF] flex items-center justify-center shrink-0">
@@ -291,7 +291,7 @@ export const AddaFleetView: React.FC<AddaFleetViewProps> = ({ profile, onNavigat
       {/* Add/Edit modal */}
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-slate-900/75">
-          <div className="bg-white rounded-3xl max-w-lg w-full max-h-[92vh] overflow-y-auto p-5 space-y-4" role="dialog">
+          <div className="bg-white rounded-[2rem] max-w-lg w-full max-h-[92vh] overflow-y-auto p-5 space-y-4 shadow-2xl" role="dialog">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="font-extrabold text-[#111111]">
                 {editingId ? 'گاڑی ایڈٹ کریں' : 'نئی گاڑی شامل کریں'}
