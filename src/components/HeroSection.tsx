@@ -92,7 +92,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         <section className="space-y-3">
           <div className="flex items-center justify-between px-1">
             <h2 className="text-lg font-extrabold text-[#111111] flex items-center gap-1.5">
-              <MapPin className="w-5 h-5 text-[#19A974]" />
+              <MapPin className="w-5 h-5 text-[#E8930C]" />
               <span>{userCity} کے لوڈز</span>
             </h2>
             <button
@@ -106,7 +106,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </div>
 
           {citySlips.length === 0 ? (
-            <div className="bg-emerald-50/60 rounded-3xl p-5 text-center border border-emerald-100">
+            <div className="bg-white rounded-[1.75rem] p-5 text-center border border-white/60 shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
               <p className="text-sm font-bold text-slate-600">
                 {userCity} کے لیے ابھی کوئی لوڈ نہیں — نیچے تازہ لوڈز دیکھیں
               </p>
@@ -143,8 +143,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         </div>
 
         {recentSlips.length === 0 ? (
-          <div className="bg-white rounded-3xl p-8 text-center border-2 border-dashed border-slate-200 space-y-3">
-            <Truck className="w-10 h-10 text-[#19A974] mx-auto opacity-70" />
+          <div className="bg-white rounded-[1.75rem] p-8 text-center border-2 border-dashed border-amber-200 shadow-[0_8px_24px_rgba(0,0,0,0.06)] space-y-3">
+            <Truck className="w-10 h-10 text-[#E8930C] mx-auto opacity-70" />
             <h3 className="font-bold text-slate-800 text-base">ابھی کوئی نیا لوڈ پوسٹ نہیں ہوا</h3>
             <p className="text-xs text-slate-500 max-w-md mx-auto">
               اڈا منیجر حضرات نیا لوڈ پوسٹ کرنے کے لیے 'نئی سلپ بنائیں' دبائیں اور واٹس ایپ پر فوراً شیئر کریں۔
@@ -152,8 +152,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <button
               type="button"
               onClick={onOpenCreate}
-              className="inline-flex items-center gap-2 text-[#111111] font-extrabold text-sm px-6 py-3 rounded-2xl transition active:scale-95 min-h-[48px] shadow-[0_8px_24px_rgba(245,163,1,0.35)]"
-              style={{ background: 'linear-gradient(135deg, #CDF463 0%, #B5E61D 60%, #E8930C 100%)' }}
+              className="inline-flex items-center gap-2 text-[#0B2545] font-extrabold text-sm px-6 py-3 rounded-full transition active:scale-95 min-h-[48px] shadow-[0_8px_24px_rgba(245,163,1,0.35)]"
+              style={{ background: 'linear-gradient(135deg, #FFC531 0%, #F5A301 60%, #E8930C 100%)' }}
             >
               <PlusCircle className="w-4 h-4" />
               <span>پہلی لوڈ سلپ بنائیں</span>
@@ -171,14 +171,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       )}
 
       {/* 4. TRUST STRIP (compact) */}
-      <section className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
+      <section className="bg-white rounded-[1.75rem] p-5 shadow-[0_10px_32px_rgba(0,0,0,0.08)] border border-white/60">
         <h2 className="text-base font-extrabold text-[#111111] text-center pb-3">
           PK Cargo Link کیوں؟
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {['آسان ڈیجیٹل سلپس', 'WhatsApp شیئرنگ', 'آن لائن ویریفکیشن', 'اڈا رابطہ معلومات', 'موبائل فرینڈلی', 'لوڈ-گاڑی میچنگ'].map((t) => (
-            <div key={t} className="p-3 rounded-2xl bg-[#FFFFFF] border border-slate-100 flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-[#19A974] flex-shrink-0" />
+            <div key={t} className="p-3 rounded-2xl bg-amber-50/60 border border-amber-100/60 flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-[#E8930C] flex-shrink-0" />
               <span className="font-bold text-xs text-[#111111] leading-tight">{t}</span>
             </div>
           ))}
@@ -186,7 +186,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       </section>
 
       {/* 5. ADDA MANAGER PROMO */}
-      <section className="rounded-3xl p-6 text-white shadow-lg bg-gradient-to-br from-[#1E1E1E] to-[#111111] border border-white/10">
+      <section className="rounded-[2rem] p-6 text-white shadow-[0_12px_32px_rgba(11,37,69,0.3)] overflow-hidden relative" style={{ background: 'linear-gradient(135deg, #0B2545 0%, #123a6d 50%, #1e3a5f 100%)' }}>
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="space-y-1.5 text-right">
             <h3 className="text-xl font-extrabold">
@@ -200,8 +200,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <button
               type="button"
               onClick={onOpenCreate}
-              className="text-[#111111] px-6 py-3.5 rounded-2xl font-extrabold text-base shadow-md active:scale-95 transition min-h-[52px] w-full"
-              style={{ background: 'linear-gradient(135deg, #CDF463 0%, #B5E61D 60%, #E8930C 100%)' }}
+              className="text-[#0B2545] px-6 py-3.5 rounded-full font-extrabold text-base shadow-xl active:scale-95 transition min-h-[52px] w-full"
+              style={{ background: 'linear-gradient(135deg, #FFC531 0%, #F5A301 60%, #E8930C 100%)' }}
             >
               نئی لوڈ سلپ بنائیں
             </button>
