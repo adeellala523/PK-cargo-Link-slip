@@ -65,6 +65,13 @@ function AppInner() {
   }
   // Main site: always show adda manager app, regardless of any stored driver session.
   // (Driver sessions belong to driver.pkcargolink.com only.)
+  // Clear any stale driver session so it doesn't interfere with adda mode.
+  try {
+    if (StorageService.isDriverLoggedIn()) {
+      localStorage.removeItem('pkcl_is_driver_logged_in_v3');
+      localStorage.removeItem('pkcl_current_driver_v3');
+    }
+  } catch { /* ignore */ }
 
   const [currentTab, setCurrentTab] = useState<string>('home');
   const [profile, setProfile] = useState<AddaProfile>(StorageService.getAddaProfile());
