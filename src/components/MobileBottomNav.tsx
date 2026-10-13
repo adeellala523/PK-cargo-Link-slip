@@ -34,10 +34,10 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
 
   const leftTabs = [
     { key: 'home', label: 'ہوم', icon: Home, active: currentTab === 'home', action: () => onNavigate('home') },
-    { key: 'search', label: 'لوڈز', icon: Search, active: currentTab === 'search', action: () => onNavigate('search') },
+    { key: 'my-slips', label: 'میری لوڈز', icon: Search, active: currentTab === 'my-slips', action: () => onNavigate('my-slips') },
   ];
   const rightTabs = [
-    { key: 'trucks', label: 'گاڑیاں', icon: Truck, active: currentTab === 'trucks' || currentTab === 'available-trucks', action: () => onNavigate('trucks') },
+    { key: 'fleet', label: 'میری گاڑیاں', icon: Truck, active: currentTab === 'fleet', action: () => onNavigate('fleet') },
     { key: 'profile', label: 'پروفائل', icon: User, active: profileActive, action: goProfile },
   ];
 
