@@ -223,39 +223,43 @@ export const DriverApp: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-100/70 text-slate-900 font-nafees" dir="rtl">
-      {/* Driver app header — logo left, actions right (web preview, URL hidden) */}
-      <header className="sticky top-0 z-40 bg-[#111111] text-white shadow-lg no-print">
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {driver && (
-              <span className={`inline-flex items-center gap-1.5 text-[11px] font-extrabold px-3 py-1.5 rounded-full ${online ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40' : 'bg-white/10 text-slate-300 border border-white/20'}`}>
-                <span className={`w-2 h-2 rounded-full ${online ? 'bg-emerald-400 animate-pulse' : 'bg-slate-400'}`} />
-                {online ? 'آن لائن' : 'آف لائن'}
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={() => setNotifOpen(true)}
-              className="relative w-10 h-10 rounded-2xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition"
-              aria-label="نوٹیفکیشن"
-            >
-              <Bell className="w-5 h-5 text-white" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-extrabold flex items-center justify-center">
-                  {unreadCount > 99 ? '99+' : unreadCount}
+    <div className="min-h-screen flex flex-col text-slate-900 font-nafees" dir="rtl"
+      style={{ background: 'linear-gradient(180deg, #f2f6ef 0%, #e9f0e5 40%, #f7f9f5 100%)' }}>
+      {/* Driver app header — premium floating style */}
+      <header className="sticky top-0 z-40 no-print px-3 pt-3">
+        <div className="max-w-5xl mx-auto rounded-[1.75rem] text-white shadow-[0_12px_32px_rgba(0,0,0,0.25)] overflow-hidden"
+          style={{ background: 'linear-gradient(135deg, #111111 0%, #1c1c1c 50%, #0d2818 100%)' }}>
+          <div className="px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {driver && (
+                <span className={`inline-flex items-center gap-1.5 text-[11px] font-extrabold px-3 py-1.5 rounded-full ${online ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40' : 'bg-white/10 text-slate-300 border border-white/20'}`}>
+                  <span className={`w-2 h-2 rounded-full ${online ? 'bg-emerald-400 animate-pulse' : 'bg-slate-400'}`} />
+                  {online ? 'آن لائن' : 'آف لائن'}
                 </span>
               )}
-            </button>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <div className="text-left">
-              <h1 className="font-extrabold text-base leading-tight">PK Cargo <span className="text-[#B5E61D]">Driver</span></h1>
+              <button
+                type="button"
+                onClick={() => setNotifOpen(true)}
+                className="relative w-10 h-10 rounded-2xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition active:scale-90"
+                aria-label="نوٹیفکیشن"
+              >
+                <Bell className="w-5 h-5 text-white" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-extrabold flex items-center justify-center shadow-md">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </button>
             </div>
-            <span className="w-10 h-10 rounded-2xl flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, #CDF463 0%, #B5E61D 100%)' }}>
-              <Truck className="w-5 h-5 text-[#111111]" />
-            </span>
+            <div className="flex items-center gap-2.5">
+              <div className="text-left">
+                <h1 className="font-extrabold text-base leading-tight">PK Cargo <span className="text-[#B5E61D]">Driver</span></h1>
+              </div>
+              <span className="w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg"
+                style={{ background: 'linear-gradient(135deg, #CDF463 0%, #B5E61D 100%)' }}>
+                <Truck className="w-5 h-5 text-[#111111]" />
+              </span>
+            </div>
           </div>
         </div>
       </header>
