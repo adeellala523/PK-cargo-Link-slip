@@ -207,9 +207,9 @@ export const DriverSearchView: React.FC<DriverSearchViewProps> = ({
                   key={c}
                   type="button"
                   onClick={() => setSelectedCityChip(c)}
-                  className={`text-xs px-2.5 py-1 rounded-lg border font-bold transition ${
+                  className={`text-xs px-3 py-1.5 rounded-full border font-bold transition ${
                     selectedCityChip === c
-                      ? 'bg-[#1E1E1E] text-white border-[#1E1E1E]'
+                      ? 'bg-[#0B2545] text-white border-[#0B2545] shadow-md'
                       : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
                   }`}
                 >
