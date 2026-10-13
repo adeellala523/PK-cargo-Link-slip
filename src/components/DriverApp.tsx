@@ -74,6 +74,10 @@ export const DriverApp: React.FC = () => {
     const seenRef: { current: Set<string> } = { current: new Set() };
     let first = true;
     const doSync = () => {
+      // Sync verification status from server (admin may have verified)
+      StorageService.syncUsersWithServer().then(() => {
+        setVerificationTick((t) => t + 1);
+      }).catch(() => {});
       StorageService.syncWithServer().then((s) => {
         if (Array.isArray(s) && s.length) {
           if (!first) {
