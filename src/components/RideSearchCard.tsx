@@ -225,7 +225,7 @@ export const RideSearchCard: React.FC<RideSearchCardProps> = ({
           <button
             type="button"
             onClick={onOpenCreate}
-            className="mt-2.5 w-full inline-flex items-center justify-center gap-2 bg-[#111111] hover:bg-[#1E1E1E] text-white font-extrabold text-base py-4 rounded-2xl transition active:scale-[0.98] min-h-[56px] shadow-[0_8px_24px_rgba(11,42,91,0.30)]"
+            className="mt-2.5 w-full inline-flex items-center justify-center gap-2 text-white font-extrabold text-base py-4 rounded-full transition active:scale-[0.98] min-h-[56px] shadow-[0_10px_28px_rgba(11,37,69,0.35)]" style={{ background: 'linear-gradient(135deg, #0B2545 0%, #123a6d 60%, #1e3a5f 100%)' }}
           >
             <FileText className="w-5 h-5 text-[#B5E61D]" />
             <span>لوڈ پوسٹ کریں</span>
