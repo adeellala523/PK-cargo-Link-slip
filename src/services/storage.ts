@@ -1135,6 +1135,40 @@ export const StorageService = {
     }
   },
 
+  /**
+   * Restore a lost login session from stored user data.
+   * If the login flag was somehow cleared (e.g. during an app update)
+   * but we still have valid user/driver data, restore the login silently.
+   * Returns true if a session was restored.
+   */
+  restoreSession(): boolean {
+    try {
+      // Driver session restore
+      if (localStorage.getItem(STORAGE_KEYS.IS_DRIVER_LOGGED_IN) !== 'true') {
+        const driverData = localStorage.getItem(STORAGE_KEYS.CURRENT_DRIVER);
+        if (driverData) {
+          try {
+            const driver = JSON.parse(driverData);
+            if (driver && (driver.phone || driver.id)) {
+              localStorage.setItem(STORAGE_KEYS.IS_DRIVER_LOGGED_IN, 'true');
+              return true;
+            }
+          } catch { /* invalid driver data */ }
+        }
+      }
+      // Adda session restore
+      if (localStorage.getItem(STORAGE_KEYS.IS_LOGGED_IN) !== 'true') {
+        const userData = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
+        const phone = localStorage.getItem(STORAGE_KEYS.CURRENT_USER_PHONE);
+        if ((userData && JSON.parse(userData)?.phone) || phone) {
+          localStorage.setItem(STORAGE_KEYS.IS_LOGGED_IN, 'true');
+          return true;
+        }
+      }
+    } catch { /* storage unavailable */ }
+    return false;
+  },
+
   isDriverLoggedIn(): boolean {
     return localStorage.getItem(STORAGE_KEYS.IS_DRIVER_LOGGED_IN) === 'true';
   },
