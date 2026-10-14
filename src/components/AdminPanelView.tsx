@@ -85,6 +85,20 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({
     return () => clearInterval(iv);
   }, [isAuthenticated]);
 
+  // Sync trucks from server on load (so vehicles uploaded via API appear)
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    StorageService.syncTrucksWithServer()
+      .then((trucks) => setTrucksList(trucks))
+      .catch(() => {});
+    const iv = setInterval(() => {
+      StorageService.syncTrucksWithServer()
+        .then((trucks) => setTrucksList(trucks))
+        .catch(() => {});
+    }, 15000);
+    return () => clearInterval(iv);
+  }, [isAuthenticated]);
+
   // Daily visitors counter (admin-only)
   const [visitorsWeek, setVisitorsWeek] = useState<Record<string, number>>({});
   useEffect(() => {
