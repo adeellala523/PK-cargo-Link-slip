@@ -2056,8 +2056,17 @@ export const StorageService = {
 
   async syncTrucksWithServer(): Promise<AvailableTruck[]> {
     try {
-      const res = await fetch('/api/trucks');
-      if (res.ok) {
+      // Try relative URL first, then absolute for cross-subdomain
+      let res: Response | null = null;
+      try {
+        res = await fetch('/api/trucks.php');
+      } catch {}
+      if (!res || !res.ok) {
+        try {
+          res = await fetch('https://pkcargolink.com/api/trucks.php');
+        } catch {}
+      }
+      if (res && res.ok) {
         const serverTrucks = await res.json();
         if (Array.isArray(serverTrucks)) {
           const localTrucks = this.getAvailableTrucks();
