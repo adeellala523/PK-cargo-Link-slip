@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pk-cargo-link-v5';
+const CACHE_NAME = 'pk-cargo-link-v6';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -30,6 +30,8 @@ self.addEventListener('activate', (event) => {
 });
 
 // Network-First Strategy: Always fetch fresh code from server first!
+// index.html is NEVER served from cache (always network) so users always
+// get the latest version without manual cache clear.
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
@@ -38,18 +40,31 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // index.html: network only, no cache fallback (prevents blank screens from stale HTML)
+  const isIndexHtml = event.request.url.endsWith('/index.html') ||
+    event.request.url === self.registration.scope ||
+    (event.request.mode === 'navigate');
+
   event.respondWith(
     fetch(event.request)
       .then((networkResponse) => {
         if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
+          // Don't cache index.html — always fetch fresh
+          if (!isIndexHtml) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          }
         }
         return networkResponse;
       })
       .catch(() => {
+        // Only fall back to cache for non-HTML assets
+        if (isIndexHtml) {
+          // Last resort: try cache for index.html if network completely fails
+          return caches.match(event.request);
+        }
         return caches.match(event.request);
       })
   );
